@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	CHANNEL = "MissAvantasia"
+	CHANNEL = "nephsy"
 )
 
 func (g *game) OnMessage(message twitch.PrivateMessage) {
