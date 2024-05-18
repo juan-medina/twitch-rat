@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<script src="js/tmi.min.js"></script>
+<script src="wasm_exec.js"></script>
+<script>
+    // Polyfill
+    if (!WebAssembly.instantiateStreaming) {
+        WebAssembly.instantiateStreaming = async (resp, importObject) => {
+            const source = await (await resp).arrayBuffer();
+            return await WebAssembly.instantiate(source, importObject);
+        };
+    }
+
+    const go = new Go();
+    WebAssembly.instantiateStreaming(fetch("twitch_rat.wasm"), go.importObject).then(result => {
+        go.run(result.instance);
+    });
+    
+    const client = new tmi.Client({
+        channels: ['MissAvantasia']
+    });
+    client.connect();
+    client.on('message', (channel, tags, message, self) => {
+        let username = tags['display-name'];        
+        chatMessage(username, message);
+    });    
+</script>
