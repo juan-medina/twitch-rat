@@ -37,6 +37,14 @@ endif
 
 APP_PATH="./internal/app"
 
+# get current GOROOT into a variable
+GOROOT=$(shell $(GOCMD) env GOROOT)
+
+#save current GOOS into a variable
+GOOS=$(shell $(GOCMD) env GOOS)
+#save current GOARCH into a variable
+GOARCH=$(shell $(GOCMD) env GOARCH)
+
 default: build
 
 build: clean
@@ -53,7 +61,17 @@ update:
 	$(GOGET) -u all
 	$(GOMOD) tidy
 wasm:
+ifeq ($(OS),Windows_NT)
+	copy $(GOROOT)\misc\wasm\wasm_exec.js docs\wasm_exec.js
+else
+	cp $(GOROOT)/misc/wasm/wasm_exec.js docs/wasm_exec.js
+endif
+#set GOOS & GOARCH to wasm
+	$(GOCMD) env -w GOOS=js GOARCH=wasm
 	$(GOBUILD) -o docs/twitch_rat.wasm $(APP_PATH)	
-web:
+#restore the original GOOS & GOARCH
+	$(GOCMD) env -w GOOS=$(GOOS) GOARCH=$(GOARCH)
+
+web: wasm
 	$(info "running web on http://localhost:8000/")
 	python -m http.server --directory docs
