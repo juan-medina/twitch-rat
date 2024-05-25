@@ -53,6 +53,7 @@ type game struct {
 	initialized      bool
 	lastMessage      string
 	lastMessageDO    text.DrawOptions
+	channel          string
 }
 
 func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -123,6 +124,7 @@ func New(er embed.FS) *game {
 		messageChan: make(chan twitch_message, 10),
 		fileSystem:  er,
 		initialized: false,
+		channel:     "asecrettoeverybody",
 	}
 
 	return &g

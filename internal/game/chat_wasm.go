@@ -42,5 +42,7 @@ func (g *game) Run() error {
 
 	js.Global().Set("chatMessage", js.FuncOf(g.chatMessage))
 
+	js.Global().Get("startChat").Invoke(g.channel)
+
 	return g.post_chat()
 }

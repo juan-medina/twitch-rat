@@ -28,10 +28,6 @@ import (
 	"github.com/gempir/go-twitch-irc/v4"
 )
 
-const (
-	CHANNEL = "nephsy"
-)
-
 func (g *game) OnMessage(message twitch.PrivateMessage) {
 	g.messageChan <- twitch_message{message: message.Message, sender: message.User.DisplayName}
 }
@@ -40,7 +36,7 @@ func (g *game) Run() error {
 	g.pre_chat()
 
 	client := twitch.NewAnonymousClient()
-	client.Join(CHANNEL)
+	client.Join(g.channel)
 	client.OnPrivateMessage(g.OnMessage)
 
 	go func() {

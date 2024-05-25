@@ -14,13 +14,16 @@
     WebAssembly.instantiateStreaming(fetch("twitch_rat.wasm"), go.importObject).then(result => {
         go.run(result.instance);
     });
-    
-    const client = new tmi.Client({
-        channels: ['asecrettoeverybody']
-    });
-    client.connect();
-    client.on('message', (channel, tags, message, self) => {
-        let username = tags['display-name'];        
-        chatMessage(username, message);
-    });    
+
+    function startChat(channel) {
+        const client = new tmi.Client({
+            channels: [channel]
+        });
+        client.connect();
+        client.on('message', (channel, tags, message, self) => {
+            let username = tags['display-name'];
+            chatMessage(username, message);
+        });
+    }
+
 </script>
