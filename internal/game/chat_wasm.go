@@ -32,8 +32,13 @@ func (g *game) chatMessage(this js.Value, p []js.Value) interface{} {
 	user := p[0].String()
 	message := p[1].String()
 
-	g.messageChan <- twitch_message{message: message, sender: user}
+	g.eventsChan <- twitch_event{message: message, sender: user}
 
+	return nil
+}
+
+func (g *game) OnConnect(this js.Value, p []js.Value) interface{} {
+	g.eventsChan <- twitch_event{type_: Connect}
 	return nil
 }
 
@@ -41,6 +46,7 @@ func (g *game) Run() error {
 	g.pre_chat()
 
 	js.Global().Set("chatMessage", js.FuncOf(g.chatMessage))
+	js.Global().Set("onConnect", js.FuncOf(g.OnConnect))
 
 	js.Global().Get("startChat").Invoke(g.channel)
 

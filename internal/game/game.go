@@ -39,13 +39,22 @@ const (
 	TITLE  = "Twitch Rat"
 )
 
-type twitch_message struct {
+// type event enum type
+type eventType int
+
+const (
+	Connect eventType = iota
+	Message
+)
+
+type twitch_event struct {
+	type_   eventType
 	message string
 	sender  string
 }
 
 type game struct {
-	messageChan      chan twitch_message
+	eventsChan       chan twitch_event
 	faceSource       *text.GoTextFaceSource
 	normalFace       *text.GoTextFace
 	normalFaceHeight float64
@@ -83,25 +92,35 @@ func (g *game) init() {
 	g.initialized = true
 
 	g.lastMessage = "Loading..."
+
+	g.RelocateLastMessage()
+}
+
+func (g *game) RelocateLastMessage() {
+	w, h := text.Measure(g.lastMessage, g.normalFace, g.normalFaceHeight)
+	g.lastMessageDO.GeoM.Reset()
+	g.lastMessageDO.GeoM.Translate(WIDTH/2, HEIGHT/2)
+	g.lastMessageDO.GeoM.Translate(-w/2, -h/2)
 }
 
 func (g *game) Update() error {
-
 	if !g.initialized {
 		g.init()
 	}
 
 	select {
-	case msg := <-g.messageChan:
-		g.lastMessage = fmt.Sprintf("%s: %s", msg.sender, msg.message)
+	case event := <-g.eventsChan:
+		switch event.type_ {
+		case Connect:
+			g.lastMessage = "Connected to " + g.channel
+		case Message:
+			g.lastMessage = fmt.Sprintf("%s: %s", event.sender, event.message)
+		}
 	default:
-		// No new messages
+		return nil
 	}
 
-	w, h := text.Measure(g.lastMessage, g.normalFace, g.normalFaceHeight)
-	g.lastMessageDO.GeoM.Reset()
-	g.lastMessageDO.GeoM.Translate(WIDTH/2, HEIGHT/2)
-	g.lastMessageDO.GeoM.Translate(-w/2, -h/2)
+	g.RelocateLastMessage()
 
 	return nil
 }
@@ -121,7 +140,7 @@ func (g *game) post_chat() error {
 
 func New(er embed.FS) *game {
 	g := game{
-		messageChan: make(chan twitch_message, 10),
+		eventsChan:  make(chan twitch_event, 10),
 		fileSystem:  er,
 		initialized: false,
 		channel:     "asecrettoeverybody",

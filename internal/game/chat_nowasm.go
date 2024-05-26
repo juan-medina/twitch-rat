@@ -29,7 +29,11 @@ import (
 )
 
 func (g *game) OnMessage(message twitch.PrivateMessage) {
-	g.messageChan <- twitch_message{message: message.Message, sender: message.User.DisplayName}
+	g.eventsChan <- twitch_event{type_: Message, message: message.Message, sender: message.User.DisplayName}
+}
+
+func (g *game) OnConnect() {
+	g.eventsChan <- twitch_event{type_: Connect}
 }
 
 func (g *game) Run() error {
@@ -38,6 +42,7 @@ func (g *game) Run() error {
 	client := twitch.NewAnonymousClient()
 	client.Join(g.channel)
 	client.OnPrivateMessage(g.OnMessage)
+	client.OnConnect(g.OnConnect)
 
 	go func() {
 		err := client.Connect()

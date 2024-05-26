@@ -24,6 +24,9 @@
             let username = tags['display-name'];
             chatMessage(username, message);
         });
+        client.on('connected', (address, port) => {
+            onConnect();
+        });
     }
 
 </script>
