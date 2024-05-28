@@ -23,14 +23,11 @@
 package game
 
 import (
-	"bytes"
 	"embed"
 	"fmt"
-	"io/fs"
-	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/juan-medina/twitch-rat/internal/ui"
 )
 
 const (
@@ -54,15 +51,11 @@ type twitch_event struct {
 }
 
 type game struct {
-	eventsChan       chan twitch_event
-	faceSource       *text.GoTextFaceSource
-	normalFace       *text.GoTextFace
-	normalFaceHeight float64
-	fileSystem       embed.FS
-	initialized      bool
-	lastMessage      string
-	lastMessageDO    text.DrawOptions
-	channel          string
+	eventsChan  chan twitch_event
+	fileSystem  embed.FS
+	initialized bool
+	channel     string
+	ui          ui.UI
 }
 
 func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -70,37 +63,8 @@ func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (g *game) init() {
-	// Load font
-	fontBytes, err := fs.ReadFile(g.fileSystem, "embed/fonts/default.ttf")
-	if err != nil {
-		panic(err)
-	}
-
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(fontBytes))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	g.faceSource = s
-
-	g.normalFace = &text.GoTextFace{
-		Source: g.faceSource,
-		Size:   24,
-	}
-	g.normalFaceHeight = g.normalFace.Size * 1.5
-
+	g.ui.Init(g.fileSystem, WIDTH, HEIGHT)
 	g.initialized = true
-
-	g.lastMessage = "Loading..."
-
-	g.RelocateLastMessage()
-}
-
-func (g *game) RelocateLastMessage() {
-	w, h := text.Measure(g.lastMessage, g.normalFace, g.normalFaceHeight)
-	g.lastMessageDO.GeoM.Reset()
-	g.lastMessageDO.GeoM.Translate(WIDTH/2, HEIGHT/2)
-	g.lastMessageDO.GeoM.Translate(-w/2, -h/2)
 }
 
 func (g *game) Update() error {
@@ -108,24 +72,24 @@ func (g *game) Update() error {
 		g.init()
 	}
 
+	g.ui.Update()
+
 	select {
 	case event := <-g.eventsChan:
 		switch event.type_ {
 		case Connect:
-			g.lastMessage = "Connected to " + g.channel
+			g.ui.SetStatusMessage("Connected to " + g.channel)
 		case Message:
-			g.lastMessage = fmt.Sprintf("%s: %s", event.sender, event.message)
+			g.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.sender, event.message))
 		}
 	default:
 		return nil
 	}
 
-	g.RelocateLastMessage()
-
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
-	text.Draw(screen, g.lastMessage, g.normalFace, &g.lastMessageDO)
+	g.ui.Draw(screen)
 }
 
 func (g game) pre_chat() {
@@ -143,7 +107,8 @@ func New(er embed.FS) *game {
 		eventsChan:  make(chan twitch_event, 10),
 		fileSystem:  er,
 		initialized: false,
-		channel:     "asecrettoeverybody",
+		ui:          ui.New(),
+		channel:     "ironmouse",
 	}
 
 	return &g
