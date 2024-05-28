@@ -32,7 +32,7 @@ func (g *game) chatMessage(this js.Value, p []js.Value) interface{} {
 	user := p[0].String()
 	message := p[1].String()
 
-	g.eventsChan <- twitch_event{message: message, sender: user}
+	g.eventsChan <- twitch_event{type_: Message, message: message, sender: user}
 
 	return nil
 }
