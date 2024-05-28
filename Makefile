@@ -55,6 +55,8 @@ clean:
 	$(GOCLEAN) $(APP_PATH)
 format:
 	$(GOFORMAT) "./internal/..."
+tidy:
+	$(GOMOD) tidy
 run: build
 	./$(BINARY_NAME)
 update:
