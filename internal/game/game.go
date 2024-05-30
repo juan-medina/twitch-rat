@@ -64,7 +64,13 @@ func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (g *game) init() {
 	g.ui.Init(g.fileSystem, WIDTH, HEIGHT)
+	g.ui.OnButtonClick(g.OnButtonClick)
 	g.initialized = true
+}
+func (g *game) OnButtonClick(id ui.ButtonId) {
+	if id == ui.CONNECT_BUTTON {
+		g.ui.DisableButton(ui.CONNECT_BUTTON)
+	}
 }
 
 func (g *game) Update() error {

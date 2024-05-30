@@ -25,7 +25,6 @@ package ui
 import (
 	"bytes"
 	"embed"
-	"fmt"
 	"image/color"
 	"io/fs"
 	"log"
@@ -40,12 +39,16 @@ var (
 	lightPurple = color.RGBA64{0xFFFF, 0x0000, 0xFFFF, 0xFFFF}
 	darkPurple  = color.RGBA64{0x6666, 0x0000, 0x6666, 0xFFFF}
 	purple      = color.RGBA64{0x8888, 0x0000, 0x8888, 0x0000}
+	gray        = color.RGBA64{0x6666, 0x6666, 0x6666, 0x0000}
+	darkGray    = color.RGBA64{0x3333, 0x3333, 0x3333, 0x0000}
 
-	enabledColor = darkPurple
-	hoverColor   = purple
-	pressedColor = lightPurple
+	enabledColor  = darkPurple
+	hoverColor    = purple
+	pressedColor  = lightPurple
+	disabledColor = darkGray
 
-	buttonTextColor = yellow
+	buttonEnabledTextColor  = yellow
+	buttonDisabledTextColor = gray
 )
 
 type buttonState int
@@ -84,6 +87,8 @@ type UI interface {
 	Update()
 	Draw(screen *ebiten.Image)
 	SetStatusMessage(message string)
+	OnButtonClick(callback func(id ButtonId))
+	DisableButton(id ButtonId)
 }
 
 type ui struct {
@@ -95,6 +100,7 @@ type ui struct {
 	lastMessage   string
 	lastMessageDO text.DrawOptions
 	buttons       []button
+	onButtonClick func(id ButtonId)
 }
 
 // init implements UI.
@@ -148,29 +154,21 @@ func (u *ui) Draw(screen *ebiten.Image) {
 func (u *ui) Update() {
 	x, y := ebiten.CursorPosition()
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	for i, b := range u.buttons {
+	for _, b := range u.buttons {
 		if b.visible {
 			if b.state != buttonDisabled {
 				if u.buttonHit(b, float64(x), float64(y)) {
 					if pressed {
 						if b.state != buttonPressed {
-							fmt.Printf("button %d pressed", b.id)
-							u.buttons[i].state = buttonPressed
+							u.changeButtonState(b.id, buttonDisabled)
+							u.onButtonClick(b.id)
 						}
 					} else {
-						u.buttons[i].state = buttonHover
+						u.changeButtonState(b.id, buttonHover)
 					}
 				} else {
-					u.buttons[i].state = buttonEnabled
+					u.changeButtonState(b.id, buttonEnabled)
 				}
-			}
-			switch b.state {
-			case buttonHover:
-				u.buttons[i].color = hoverColor
-			case buttonEnabled:
-				u.buttons[i].color = enabledColor
-			case buttonPressed:
-				u.buttons[i].color = pressedColor
 			}
 		}
 	}
@@ -182,13 +180,6 @@ func (u *ui) SetStatusMessage(message string) {
 
 func (u *ui) addButton(id ButtonId, x, y, w, h float64, label string) {
 	do := text.DrawOptions{}
-	do.ColorScale.Reset()
-	r := float32(buttonTextColor.R / 255.0)
-	g := float32(buttonTextColor.G / 255.0)
-	b := float32(buttonTextColor.B / 255.0)
-	a := float32(buttonTextColor.A / 255.0)
-	do.ColorScale.Scale(r, g, b, a)
-
 	dx, dy := text.Measure(label, u.normalFace, 0)
 	tx := x + (w / 2) - (dx / 2)
 	ty := y + (h / 2) - (dy / 2)
@@ -203,11 +194,11 @@ func (u *ui) addButton(id ButtonId, x, y, w, h float64, label string) {
 		w:       w,
 		h:       h,
 		label:   label,
-		color:   enabledColor,
 		visible: true,
 		do:      do,
-		state:   buttonEnabled,
 	})
+
+	u.changeButtonState(id, buttonEnabled)
 }
 
 func (u ui) buttonHit(b button, x, y float64) bool {
@@ -217,6 +208,47 @@ func (u ui) buttonHit(b button, x, y float64) bool {
 	return false
 }
 
+func (u *ui) OnButtonClick(callback func(id ButtonId)) {
+	u.onButtonClick = callback
+}
+
+// DisableButton implements UI.
+func (u *ui) DisableButton(id ButtonId) {
+	u.changeButtonState(id, buttonDisabled)
+}
+
+func (u *ui) changeButtonState(id ButtonId, state buttonState) {
+	for i, b := range u.buttons {
+		if b.id == id {
+			u.buttons[i].state = state
+			textColor := buttonEnabledTextColor
+			switch state {
+			case buttonHover:
+				u.buttons[i].color = hoverColor
+			case buttonEnabled:
+				u.buttons[i].color = enabledColor
+			case buttonPressed:
+				u.buttons[i].color = pressedColor
+			case buttonDisabled:
+				u.buttons[i].color = disabledColor
+				textColor = buttonDisabledTextColor
+			}
+
+			u.buttons[i].do.ColorScale.Reset()
+			r := float32(textColor.R / 255.0)
+			g := float32(textColor.G / 255.0)
+			b := float32(textColor.B / 255.0)
+			a := float32(textColor.A / 255.0)
+			u.buttons[i].do.ColorScale.Scale(r, g, b, a)
+
+			return
+		}
+	}
+
+}
+
 func New() UI {
-	return &ui{}
+	return &ui{
+		onButtonClick: func(id ButtonId) {},
+	}
 }
