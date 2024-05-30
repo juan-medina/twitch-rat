@@ -27,6 +27,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/juan-medina/twitch-rat/internal/chat"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 )
 
@@ -51,11 +52,12 @@ type twitch_event struct {
 }
 
 type game struct {
-	eventsChan  chan twitch_event
+	eventsChan  chan chat.Event
 	fileSystem  embed.FS
 	initialized bool
 	channel     string
 	ui          ui.UI
+	chat        chat.Chat
 }
 
 func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -65,11 +67,13 @@ func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func (g *game) init() {
 	g.ui.Init(g.fileSystem, WIDTH, HEIGHT)
 	g.ui.OnButtonClick(g.OnButtonClick)
+	g.chat.OnEvent(g.onChatEvent)
 	g.initialized = true
 }
 func (g *game) OnButtonClick(id ui.ButtonId) {
 	if id == ui.CONNECT_BUTTON {
 		g.ui.DisableButton(ui.CONNECT_BUTTON)
+		g.chat.Connect(g.channel)
 	}
 }
 
@@ -82,11 +86,11 @@ func (g *game) Update() error {
 
 	select {
 	case event := <-g.eventsChan:
-		switch event.type_ {
-		case Connect:
+		switch event.Type_ {
+		case chat.Connect:
 			g.ui.SetStatusMessage("Connected to " + g.channel)
-		case Message:
-			g.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.sender, event.message))
+		case chat.Message:
+			g.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.Sender, event.Message))
 		}
 	default:
 		return nil
@@ -98,23 +102,26 @@ func (g *game) Draw(screen *ebiten.Image) {
 	g.ui.Draw(screen)
 }
 
-func (g game) pre_chat() {
+func (g *game) Run() error {
 	ebiten.SetWindowSize(WIDTH, HEIGHT)
 	ebiten.SetWindowTitle(TITLE)
 	ebiten.SetTPS(60)
+
+	return ebiten.RunGame(g)
 }
 
-func (g *game) post_chat() error {
-	return ebiten.RunGame(g)
+func (g *game) onChatEvent(e chat.Event) {
+	g.eventsChan <- e
 }
 
 func New(er embed.FS) *game {
 	g := game{
-		eventsChan:  make(chan twitch_event, 10),
+		eventsChan:  make(chan chat.Event, 10),
 		fileSystem:  er,
 		initialized: false,
 		ui:          ui.New(),
-		channel:     "ironmouse",
+		chat:        chat.New(),
+		channel:     "zeplahq",
 	}
 
 	return &g

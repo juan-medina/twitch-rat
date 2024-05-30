@@ -91,7 +91,7 @@ type UI interface {
 	DisableButton(id ButtonId)
 }
 
-type ui struct {
+type uiImpl struct {
 	screenWidth   int
 	screenHeight  int
 	fileSystem    embed.FS
@@ -104,7 +104,7 @@ type ui struct {
 }
 
 // init implements UI.
-func (u *ui) Init(fileSystem embed.FS, width int, height int) {
+func (u *uiImpl) Init(fileSystem embed.FS, width int, height int) {
 	u.fileSystem = fileSystem
 	u.screenWidth = width
 	u.screenHeight = height
@@ -140,7 +140,7 @@ func (u *ui) Init(fileSystem embed.FS, width int, height int) {
 }
 
 // Draw implements UI.
-func (u *ui) Draw(screen *ebiten.Image) {
+func (u *uiImpl) Draw(screen *ebiten.Image) {
 	text.Draw(screen, u.lastMessage, u.normalFace, &u.lastMessageDO)
 	for _, b := range u.buttons {
 		if b.visible {
@@ -151,7 +151,7 @@ func (u *ui) Draw(screen *ebiten.Image) {
 }
 
 // Update implements UI.
-func (u *ui) Update() {
+func (u *uiImpl) Update() {
 	x, y := ebiten.CursorPosition()
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 	for _, b := range u.buttons {
@@ -160,7 +160,7 @@ func (u *ui) Update() {
 				if u.buttonHit(b, float64(x), float64(y)) {
 					if pressed {
 						if b.state != buttonPressed {
-							u.changeButtonState(b.id, buttonDisabled)
+							u.changeButtonState(b.id, buttonPressed)
 							u.onButtonClick(b.id)
 						}
 					} else {
@@ -174,11 +174,11 @@ func (u *ui) Update() {
 	}
 }
 
-func (u *ui) SetStatusMessage(message string) {
+func (u *uiImpl) SetStatusMessage(message string) {
 	u.lastMessage = message
 }
 
-func (u *ui) addButton(id ButtonId, x, y, w, h float64, label string) {
+func (u *uiImpl) addButton(id ButtonId, x, y, w, h float64, label string) {
 	do := text.DrawOptions{}
 	dx, dy := text.Measure(label, u.normalFace, 0)
 	tx := x + (w / 2) - (dx / 2)
@@ -201,23 +201,23 @@ func (u *ui) addButton(id ButtonId, x, y, w, h float64, label string) {
 	u.changeButtonState(id, buttonEnabled)
 }
 
-func (u ui) buttonHit(b button, x, y float64) bool {
+func (u uiImpl) buttonHit(b button, x, y float64) bool {
 	if x > b.x && x < b.x+BUTTON_WIDTH && y > b.y && y < b.y+BUTTON_HEIGHT {
 		return true
 	}
 	return false
 }
 
-func (u *ui) OnButtonClick(callback func(id ButtonId)) {
+func (u *uiImpl) OnButtonClick(callback func(id ButtonId)) {
 	u.onButtonClick = callback
 }
 
 // DisableButton implements UI.
-func (u *ui) DisableButton(id ButtonId) {
+func (u *uiImpl) DisableButton(id ButtonId) {
 	u.changeButtonState(id, buttonDisabled)
 }
 
-func (u *ui) changeButtonState(id ButtonId, state buttonState) {
+func (u *uiImpl) changeButtonState(id ButtonId, state buttonState) {
 	for i, b := range u.buttons {
 		if b.id == id {
 			u.buttons[i].state = state
@@ -248,7 +248,7 @@ func (u *ui) changeButtonState(id ButtonId, state buttonState) {
 }
 
 func New() UI {
-	return &ui{
+	return &uiImpl{
 		onButtonClick: func(id ButtonId) {},
 	}
 }

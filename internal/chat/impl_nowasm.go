@@ -1,4 +1,4 @@
-//go:build wasm
+//go:build !wasm
 
 /*
  * Copyright (c) 2023 Juan Antonio Medina Iglesias
@@ -22,33 +22,60 @@
  *  THE SOFTWARE.
  */
 
-package game
+package chat
 
 import (
-	"syscall/js"
+	"github.com/gempir/go-twitch-irc/v4"
 )
 
-func (g *game) chatMessage(this js.Value, p []js.Value) interface{} {
-	user := p[0].String()
-	message := p[1].String()
-
-	g.eventsChan <- twitch_event{type_: Message, message: message, sender: user}
-
-	return nil
+type chatGoTwitchIrcImpl struct {
+	client        *twitch.Client
+	eventCallback func(e Event)
 }
 
-func (g *game) OnConnect(this js.Value, p []js.Value) interface{} {
-	g.eventsChan <- twitch_event{type_: Connect}
-	return nil
+// Connect implements chatBackend.
+func (c *chatGoTwitchIrcImpl) Connect(channel string) {
+	if c.client != nil {
+		panic("We already have a twitch client")
+	}
+	c.client = twitch.NewAnonymousClient()
+	c.client.Join(channel)
+	c.client.OnPrivateMessage(c.onMessage)
+	c.client.OnConnect(c.onConnect)
+
+	go func() {
+		err := c.client.Connect()
+		if err != nil {
+			panic(err)
+		}
+	}()
 }
 
-func (g *game) Run() error {
-	g.pre_chat()
+func (c *chatGoTwitchIrcImpl) onMessage(message twitch.PrivateMessage) {
+	c.eventCallback(Event{Type_: Message, Message: message.Message, Sender: message.User.DisplayName})
+}
 
-	js.Global().Set("chatMessage", js.FuncOf(g.chatMessage))
-	js.Global().Set("onConnect", js.FuncOf(g.OnConnect))
+func (c *chatGoTwitchIrcImpl) onConnect() {
+	c.eventCallback(Event{Type_: Connect})
+}
 
-	js.Global().Get("startChat").Invoke(g.channel)
+func (c *chatGoTwitchIrcImpl) Disconnect() {
+	c.client.Disconnect()
+	c.client = nil
+}
 
-	return g.post_chat()
+// OnEvent implements Chat.
+func (c *chatGoTwitchIrcImpl) OnEvent(callback func(e Event)) {
+	c.eventCallback = callback
+}
+
+func init() {
+	registerImpl(NewGoTwitchImpl)
+}
+
+func NewGoTwitchImpl() Chat {
+	return &chatGoTwitchIrcImpl{
+		client:        nil,
+		eventCallback: func(e Event) {},
+	}
 }
