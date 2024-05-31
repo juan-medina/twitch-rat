@@ -25,6 +25,7 @@ package game
 import (
 	"embed"
 	"fmt"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/chat"
@@ -38,12 +39,13 @@ const (
 )
 
 type game struct {
-	eventsChan  chan chat.Event
-	fileSystem  embed.FS
-	initialized bool
-	channel     string
-	ui          ui.UI
-	chat        chat.Chat
+	eventsChan     chan chat.Event
+	fileSystem     embed.FS
+	initialized    bool
+	channel        string
+	lastUpdateTime time.Time
+	ui             ui.UI
+	chat           chat.Chat
 }
 
 func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -55,6 +57,7 @@ func (g *game) init() {
 	g.ui.OnButtonClick(g.OnButtonClick)
 	g.chat.OnEvent(g.onChatEvent)
 	g.initialized = true
+	g.lastUpdateTime = time.Now()
 }
 func (g *game) OnButtonClick(id ui.ButtonId) {
 	if id == ui.CONNECT_BUTTON {
@@ -68,7 +71,11 @@ func (g *game) Update() error {
 		g.init()
 	}
 
-	g.ui.Update()
+	elapsedTime := time.Since(g.lastUpdateTime)
+	g.lastUpdateTime = time.Now()
+	elapsedMillis := elapsedTime.Milliseconds()
+
+	g.ui.Update(int(elapsedMillis))
 
 	select {
 	case event := <-g.eventsChan:

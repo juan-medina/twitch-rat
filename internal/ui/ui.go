@@ -67,24 +67,26 @@ const (
 )
 
 type button struct {
-	id         ButtonId
-	x, y, w, h float64
-	label      string
-	color      color.Color
-	visible    bool
-	do         text.DrawOptions
-	state      buttonState
+	id              ButtonId
+	x, y, w, h      float64
+	label           string
+	color           color.Color
+	visible         bool
+	do              text.DrawOptions
+	state           buttonState
+	timeToSendClick int
 }
 
 const (
-	MAX_BUTTONS   = 10
-	BUTTON_WIDTH  = 150
-	BUTTON_HEIGHT = 50
+	MAX_BUTTONS      = 10
+	BUTTON_WIDTH     = 150
+	BUTTON_HEIGHT    = 50
+	CLICK_SENT_DELAY = 200
 )
 
 type UI interface {
 	Init(fileSystem embed.FS, screenWidth, screenHeight int)
-	Update()
+	Update(elapsedTime int)
 	Draw(screen *ebiten.Image)
 	SetStatusMessage(message string)
 	OnButtonClick(callback func(id ButtonId))
@@ -151,23 +153,32 @@ func (u *uiImpl) Draw(screen *ebiten.Image) {
 }
 
 // Update implements UI.
-func (u *uiImpl) Update() {
+func (u *uiImpl) Update(elapsedTime int) {
 	x, y := ebiten.CursorPosition()
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	for _, b := range u.buttons {
+	for i, b := range u.buttons {
 		if b.visible {
 			if b.state != buttonDisabled {
 				if u.buttonHit(b, float64(x), float64(y)) {
 					if pressed {
 						if b.state != buttonPressed {
-							u.changeButtonState(b.id, buttonPressed)
-							u.onButtonClick(b.id)
+							if b.timeToSendClick == 0 {
+								u.changeButtonState(b.id, buttonPressed)
+								u.buttons[i].timeToSendClick = CLICK_SENT_DELAY
+							}
 						}
 					} else {
 						u.changeButtonState(b.id, buttonHover)
 					}
 				} else {
 					u.changeButtonState(b.id, buttonEnabled)
+				}
+			}
+			if b.timeToSendClick != 0 {
+				u.buttons[i].timeToSendClick -= elapsedTime
+				if b.timeToSendClick <= 0 {
+					u.buttons[i].timeToSendClick = 0
+					u.onButtonClick(b.id)
 				}
 			}
 		}
