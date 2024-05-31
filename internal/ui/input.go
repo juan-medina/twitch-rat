@@ -28,6 +28,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 )
 
 type InputId int
@@ -39,6 +40,7 @@ const (
 type input struct {
 	id          InputId
 	x, y, w, h  float64
+	maxLength   int
 	text        string
 	placeHolder string
 	borderColor color.Color
@@ -77,11 +79,64 @@ func (i input) draw(screen *ebiten.Image) {
 	}
 }
 
-func (u *uiImpl) addInput(id InputId, x, y, w, h float64, initialText string, placeHolder string) {
-	u.inputs = append(u.inputs, newInput(id, x, y, w, h, initialText, u.normalFace, placeHolder))
+func (u *uiImpl) addInput(id InputId, x, y, w, h float64, maxLength int, initialText string, placeHolder string) {
+	u.inputs = append(u.inputs, newInput(id, x, y, w, h, maxLength, initialText, u.normalFace, placeHolder))
 }
 
-func newInput(id InputId, x, y, w, h float64, initialText string, face *text.GoTextFace, placeHolder string) input {
+func (u *uiImpl) updateInputs() {
+	for i, _ := range u.inputs {
+		u.inputs[i].Update(u.keys)
+	}
+}
+
+func (i *input) Update(keys keys.Keys) {
+	if key := keys.LastRepeatedKey(); key != ebiten.KeyMax {
+		if key >= ebiten.Key0 && key <= ebiten.Key9 {
+			i.addLetter(rune(key - ebiten.Key0 + '0'))
+		} else if key >= ebiten.KeyNumpad0 && key <= ebiten.KeyNumpad9 {
+			i.addLetter(rune(key - ebiten.KeyNumpad0 + '0'))
+		} else if key >= ebiten.KeyA && key <= ebiten.KeyZ {
+			i.addLetter(rune(key - ebiten.KeyA + 'a'))
+		} else if key == ebiten.KeyMinus {
+			if keys.IsKeyDown(ebiten.KeyShift) {
+				i.addLetter('_')
+			} else {
+				i.addLetter('-')
+			}
+		} else if key == ebiten.KeyNumpadSubtract {
+			i.addLetter('-')
+		} else if key == ebiten.KeyShift {
+			if keys.IsKeyDown(ebiten.KeyMinus) {
+				i.addLetter('_')
+			}
+		} else if key == ebiten.KeyBackspace {
+			if len(i.text) > 0 {
+				i.text = i.text[:len(i.text)-1]
+			}
+		}
+	}
+}
+
+func (i *input) addLetter(letter rune) {
+	if len(i.text) < i.maxLength {
+		i.text += string(letter)
+	}
+}
+
+func (i input) GetText() string {
+	return i.text
+}
+
+func (ui uiImpl) GetInputText(id InputId) string {
+	for _, i := range ui.inputs {
+		if i.id == id {
+			return i.GetText()
+		}
+	}
+	return ""
+}
+
+func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {
 	do := text.DrawOptions{}
 	do.GeoM.Reset()
 	do.GeoM.Translate(x+INPUT_LEFT_GAP, y+INPUT_TOP_GAP)
@@ -99,6 +154,7 @@ func newInput(id InputId, x, y, w, h float64, initialText string, face *text.GoT
 		y:           y,
 		w:           w,
 		h:           h,
+		maxLength:   maxLength,
 		text:        initialText,
 		placeHolder: placeHolder,
 		borderColor: inputBorderColor,

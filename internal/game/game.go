@@ -29,6 +29,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/chat"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 )
 
@@ -45,6 +46,7 @@ type game struct {
 	channel        string
 	lastUpdateTime time.Time
 	ui             ui.UI
+	keys           keys.Keys
 	chat           chat.Chat
 }
 
@@ -53,9 +55,11 @@ func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (g *game) init() {
-	g.ui.Init(g.fileSystem, WIDTH, HEIGHT)
-	g.ui.OnButtonClick(g.OnButtonClick)
 	g.chat.OnEvent(g.onChatEvent)
+	g.keys.Init()
+	g.ui.Init(g.fileSystem, g.keys, WIDTH, HEIGHT)
+	g.ui.OnButtonClick(g.OnButtonClick)
+
 	g.initialized = true
 	g.lastUpdateTime = time.Now()
 }
@@ -66,6 +70,12 @@ func (g *game) OnButtonClick(id ui.ButtonId) {
 		g.ui.DisableButton(ui.DISCONNECT_BUTTON)
 		g.chat.Disconnect()
 	case ui.CONNECT_BUTTON:
+		channel := g.ui.GetInputText(ui.INPUT_CHANNEL)
+		if channel == "" {
+			g.ui.SetStatusMessage("Please enter a channel name")
+			return
+		}
+		g.channel = channel
 		g.ui.SetStatusMessage("Connecting...")
 		g.ui.DisableButton(ui.CONNECT_BUTTON)
 		g.chat.Connect(g.channel)
@@ -79,9 +89,10 @@ func (g *game) Update() error {
 
 	elapsedTime := time.Since(g.lastUpdateTime)
 	g.lastUpdateTime = time.Now()
-	elapsedMillis := elapsedTime.Milliseconds()
+	elapsedMillis := int(elapsedTime.Milliseconds())
 
-	g.ui.Update(int(elapsedMillis))
+	g.ui.Update(elapsedMillis)
+	g.keys.Update(elapsedMillis)
 
 	select {
 	case event := <-g.eventsChan:
@@ -96,7 +107,7 @@ func (g *game) Update() error {
 			g.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.Sender, event.Message))
 		}
 	default:
-		return nil
+		/// no new event
 	}
 
 	return nil
@@ -124,7 +135,8 @@ func New(er embed.FS) *game {
 		initialized: false,
 		ui:          ui.New(),
 		chat:        chat.New(),
-		channel:     "iamalphinaud",
+		keys:        keys.New(),
+		channel:     "",
 	}
 
 	return &g

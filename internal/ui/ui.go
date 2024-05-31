@@ -31,6 +31,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 )
 
 var (
@@ -45,13 +46,14 @@ var (
 )
 
 type UI interface {
-	Init(fileSystem embed.FS, screenWidth, screenHeight int)
+	Init(fileSystem embed.FS, keys keys.Keys, screenWidth, screenHeight int)
 	Update(elapsedTime int)
 	Draw(screen *ebiten.Image)
 	SetStatusMessage(message string)
 	OnButtonClick(callback func(id ButtonId))
 	EnableButton(id ButtonId)
 	DisableButton(id ButtonId)
+	GetInputText(id InputId) string
 }
 
 type uiImpl struct {
@@ -65,13 +67,15 @@ type uiImpl struct {
 	buttons       []button
 	onButtonClick func(id ButtonId)
 	inputs        []input
+	keys          keys.Keys
 }
 
 // init implements UI.
-func (u *uiImpl) Init(fileSystem embed.FS, width int, height int) {
+func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, width int, height int) {
 	u.fileSystem = fileSystem
 	u.screenWidth = width
 	u.screenHeight = height
+	u.keys = keys
 
 	fontBytes, err := fs.ReadFile(u.fileSystem, "embed/fonts/default.ttf")
 	if err != nil {
@@ -106,7 +110,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, width int, height int) {
 	u.addButton(DISCONNECT_BUTTON, pxRight, by, BUTTON_WIDTH, BUTTON_HEIGHT, "DISCONNECT", buttonDisabled)
 
 	u.inputs = make([]input, 0, MAX_INPUTS)
-	u.addInput(INPUT_CHANNEL, pxLeft, by-BUTTON_GAP-BUTTON_HEIGHT, INPUT_WIDTH, INPUT_HEIGHT, "", "Input Channel Name")
+	u.addInput(INPUT_CHANNEL, pxLeft, by-BUTTON_GAP-BUTTON_HEIGHT, INPUT_WIDTH, INPUT_HEIGHT, 25, "", "Input Channel Name")
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {
@@ -127,6 +131,7 @@ func (u *uiImpl) Update(elapsedTime int) {
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 
 	u.updateButtons(x, y, pressed, elapsedTime)
+	u.updateInputs()
 }
 
 func (u *uiImpl) SetStatusMessage(message string) {
