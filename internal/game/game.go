@@ -30,6 +30,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/chat"
 	"github.com/juan-medina/twitch-rat/internal/keys"
+	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 )
 
@@ -48,6 +49,7 @@ type game struct {
 	ui             ui.UI
 	keys           keys.Keys
 	chat           chat.Chat
+	settings       settings.Settings
 }
 
 func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -55,11 +57,14 @@ func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (g *game) init() {
+	g.settings.Init("twitch-rats")
 	g.chat.OnEvent(g.onChatEvent)
 	g.keys.Init()
 	g.ui.Init(g.fileSystem, g.keys, WIDTH, HEIGHT)
 	g.ui.OnButtonClick(g.OnButtonClick)
 
+	g.channel = g.settings.GetValue("channel", "")
+	g.ui.SetInputText(ui.INPUT_CHANNEL, g.channel)
 	g.initialized = true
 	g.lastUpdateTime = time.Now()
 }
@@ -76,6 +81,8 @@ func (g *game) OnButtonClick(id ui.ButtonId) {
 			return
 		}
 		g.channel = channel
+		g.settings.SetValue("channel", g.channel)
+		g.settings.Save()
 		g.ui.SetStatusMessage("Connecting...")
 		g.ui.DisableButton(ui.CONNECT_BUTTON)
 		g.chat.Connect(g.channel)
@@ -136,6 +143,7 @@ func New(er embed.FS) *game {
 		ui:          ui.New(),
 		chat:        chat.New(),
 		keys:        keys.New(),
+		settings:    settings.New(),
 		channel:     "",
 	}
 

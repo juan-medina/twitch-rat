@@ -20,25 +20,16 @@
  *  THE SOFTWARE.
  */
 
-var client = null;
+function getSettings(application) {
+    var data = localStorage.getItem(application);
 
-function startChat(channel) {
-    client = new tmi.Client({
-        channels: [channel]
-    });
-    client.connect();
-    client.on('message', (channel, tags, message, self) => {
-        let username = tags['display-name'];
-        chatMessage(username, message);
-    });
-    client.on('join', (channel, username, self) => {
-        if (self) {
-            onSelfJoinMessage();
-        }
-    });
+    if (data == null) {
+        return "";
+    }    
+
+    return data;
 }
 
-function stopChat() {
-    client.disconnect();
-    client = null;
+function setSettings(application, data) {    
+    localStorage.setItem(application, data);
 }

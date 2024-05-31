@@ -20,25 +20,23 @@
  *  THE SOFTWARE.
  */
 
-var client = null;
+package settings
 
-function startChat(channel) {
-    client = new tmi.Client({
-        channels: [channel]
-    });
-    client.connect();
-    client.on('message', (channel, tags, message, self) => {
-        let username = tags['display-name'];
-        chatMessage(username, message);
-    });
-    client.on('join', (channel, username, self) => {
-        if (self) {
-            onSelfJoinMessage();
-        }
-    });
+type Settings interface {
+	Init(application string)
+	SetValue(key string, value string)
+	GetValue(key string, defaultValue string) string
+	Save()
 }
 
-function stopChat() {
-    client.disconnect();
-    client = null;
+var registeredImpl func() Settings = func() Settings {
+	panic("settings implementation not registered")
+}
+
+func registerImpl(impl func() Settings) {
+	registeredImpl = impl
+}
+
+func New() Settings {
+	return registeredImpl()
 }

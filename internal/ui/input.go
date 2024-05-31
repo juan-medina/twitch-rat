@@ -127,6 +127,10 @@ func (i input) GetText() string {
 	return i.text
 }
 
+func (i *input) SetText(text string) {
+	i.text = text
+}
+
 func (ui uiImpl) GetInputText(id InputId) string {
 	for _, i := range ui.inputs {
 		if i.id == id {
@@ -134,6 +138,15 @@ func (ui uiImpl) GetInputText(id InputId) string {
 		}
 	}
 	return ""
+}
+
+func (ui *uiImpl) SetInputText(id InputId, text string) {
+	for iid, i := range ui.inputs {
+		if i.id == id {
+			ui.inputs[iid].SetText(text)
+			return
+		}
+	}
 }
 
 func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {

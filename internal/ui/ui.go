@@ -54,6 +54,7 @@ type UI interface {
 	EnableButton(id ButtonId)
 	DisableButton(id ButtonId)
 	GetInputText(id InputId) string
+	SetInputText(id InputId, text string)
 }
 
 type uiImpl struct {

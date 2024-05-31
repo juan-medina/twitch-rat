@@ -43,7 +43,7 @@ type Chat interface {
 }
 
 var registeredImpl func() Chat = func() Chat {
-	panic("chat backend not registered")
+	panic("chat implementation not registered")
 }
 
 func registerImpl(impl func() Chat) {
