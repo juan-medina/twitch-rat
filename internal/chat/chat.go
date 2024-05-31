@@ -26,6 +26,7 @@ type EventType int
 
 const (
 	Connect EventType = iota
+	Disconnect
 	Message
 )
 

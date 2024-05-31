@@ -15,8 +15,10 @@
         go.run(result.instance);
     });
 
+    var client = null;
+
     function startChat(channel) {
-        const client = new tmi.Client({
+        client = new tmi.Client({
             channels: [channel]
         });
         client.connect();
@@ -29,6 +31,11 @@
                 onSelfJoinMessage();
             }
         });
+    }
+
+    function stopChat() {
+        client.disconnect();
+        client = null;
     }
 
 </script>

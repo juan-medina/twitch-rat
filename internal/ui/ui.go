@@ -64,6 +64,7 @@ type ButtonId int
 
 const (
 	CONNECT_BUTTON ButtonId = iota
+	DISCONNECT_BUTTON
 )
 
 type button struct {
@@ -79,8 +80,9 @@ type button struct {
 
 const (
 	MAX_BUTTONS      = 10
-	BUTTON_WIDTH     = 150
+	BUTTON_WIDTH     = 170
 	BUTTON_HEIGHT    = 50
+	BUTTON_GAP       = 10
 	CLICK_SENT_DELAY = 200
 )
 
@@ -90,6 +92,7 @@ type UI interface {
 	Draw(screen *ebiten.Image)
 	SetStatusMessage(message string)
 	OnButtonClick(callback func(id ButtonId))
+	EnableButton(id ButtonId)
 	DisableButton(id ButtonId)
 }
 
@@ -138,7 +141,9 @@ func (u *uiImpl) Init(fileSystem embed.FS, width int, height int) {
 
 	bx := float64((u.screenWidth / 2) - (BUTTON_WIDTH / 2))
 	by := float64((u.screenHeight / 2) - (BUTTON_HEIGHT / 2))
-	u.addButton(CONNECT_BUTTON, bx, by, BUTTON_WIDTH, BUTTON_HEIGHT, "CONNECT")
+	u.addButton(CONNECT_BUTTON, bx-(BUTTON_WIDTH/2)-BUTTON_GAP, by, BUTTON_WIDTH, BUTTON_HEIGHT, "CONNECT")
+	u.addButton(DISCONNECT_BUTTON, bx+(BUTTON_WIDTH/2)+BUTTON_GAP, by, BUTTON_WIDTH, BUTTON_HEIGHT, "DISCONNECT")
+	u.DisableButton(DISCONNECT_BUTTON)
 }
 
 // Draw implements UI.
@@ -223,7 +228,10 @@ func (u *uiImpl) OnButtonClick(callback func(id ButtonId)) {
 	u.onButtonClick = callback
 }
 
-// DisableButton implements UI.
+func (u *uiImpl) EnableButton(id ButtonId) {
+	u.changeButtonState(id, buttonEnabled)
+}
+
 func (u *uiImpl) DisableButton(id ButtonId) {
 	u.changeButtonState(id, buttonDisabled)
 }

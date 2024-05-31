@@ -60,7 +60,12 @@ func (g *game) init() {
 	g.lastUpdateTime = time.Now()
 }
 func (g *game) OnButtonClick(id ui.ButtonId) {
-	if id == ui.CONNECT_BUTTON {
+	switch id {
+	case ui.DISCONNECT_BUTTON:
+		g.ui.SetStatusMessage("Disconnecting...")
+		g.ui.DisableButton(ui.DISCONNECT_BUTTON)
+		g.chat.Disconnect()
+	case ui.CONNECT_BUTTON:
 		g.ui.SetStatusMessage("Connecting...")
 		g.ui.DisableButton(ui.CONNECT_BUTTON)
 		g.chat.Connect(g.channel)
@@ -83,6 +88,10 @@ func (g *game) Update() error {
 		switch event.Type_ {
 		case chat.Connect:
 			g.ui.SetStatusMessage("Connected to " + g.channel)
+			g.ui.EnableButton(ui.DISCONNECT_BUTTON)
+		case chat.Disconnect:
+			g.ui.SetStatusMessage("Ready!")
+			g.ui.EnableButton(ui.CONNECT_BUTTON)
 		case chat.Message:
 			g.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.Sender, event.Message))
 		}
@@ -115,7 +124,7 @@ func New(er embed.FS) *game {
 		initialized: false,
 		ui:          ui.New(),
 		chat:        chat.New(),
-		channel:     "ironmouse",
+		channel:     "sunachu_",
 	}
 
 	return &g

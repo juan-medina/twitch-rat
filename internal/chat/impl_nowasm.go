@@ -34,6 +34,15 @@ type chatGoTwitchIrcImpl struct {
 	alreadyJoined bool
 }
 
+func (c *chatGoTwitchIrcImpl) connectionGoRoutine() {
+	if err := c.client.Connect(); err != nil {
+		if err != twitch.ErrClientDisconnected {
+			panic(err)
+		}
+	}
+	c.eventCallback(Event{Type_: Disconnect})
+}
+
 // Connect implements chatBackend.
 func (c *chatGoTwitchIrcImpl) Connect(channel string) {
 	if c.client != nil {
@@ -44,12 +53,7 @@ func (c *chatGoTwitchIrcImpl) Connect(channel string) {
 	c.client.OnPrivateMessage(c.onMessage)
 	c.client.OnSelfJoinMessage(c.onSelfJoinMessage)
 
-	go func() {
-		err := c.client.Connect()
-		if err != nil {
-			panic(err)
-		}
-	}()
+	go c.connectionGoRoutine()
 }
 
 func (c *chatGoTwitchIrcImpl) onMessage(message twitch.PrivateMessage) {
@@ -67,6 +71,7 @@ func (c *chatGoTwitchIrcImpl) onSelfJoinMessage(twitch.UserJoinMessage) {
 func (c *chatGoTwitchIrcImpl) Disconnect() {
 	c.client.Disconnect()
 	c.client = nil
+	c.alreadyJoined = false
 }
 
 // OnEvent implements Chat.

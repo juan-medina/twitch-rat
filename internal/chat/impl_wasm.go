@@ -58,6 +58,9 @@ func (c *chatWasmImpl) onSelfJoinMessage(this js.Value, p []js.Value) interface{
 }
 
 func (c *chatWasmImpl) Disconnect() {
+	js.Global().Get("stopChat").Invoke()
+	c.eventCallback(Event{Type_: Disconnect})
+	c.alreadyJoined = false
 }
 
 func (c *chatWasmImpl) OnEvent(callback func(e Event)) {
