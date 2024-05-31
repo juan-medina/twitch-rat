@@ -132,7 +132,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, width int, height int) {
 	gapX := u.normalFace.Size
 	gapY := u.normalFace.Size * 1.5
 	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
-	u.lastMessage = "Loading..."
+	u.lastMessage = "Ready!"
 
 	u.buttons = make([]button, 0, MAX_BUTTONS)
 

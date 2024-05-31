@@ -61,6 +61,7 @@ func (g *game) init() {
 }
 func (g *game) OnButtonClick(id ui.ButtonId) {
 	if id == ui.CONNECT_BUTTON {
+		g.ui.SetStatusMessage("Connecting...")
 		g.ui.DisableButton(ui.CONNECT_BUTTON)
 		g.chat.Connect(g.channel)
 	}
@@ -114,7 +115,7 @@ func New(er embed.FS) *game {
 		initialized: false,
 		ui:          ui.New(),
 		chat:        chat.New(),
-		channel:     "harukakaribu",
+		channel:     "ironmouse",
 	}
 
 	return &g

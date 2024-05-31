@@ -31,6 +31,7 @@ import (
 type chatGoTwitchIrcImpl struct {
 	client        *twitch.Client
 	eventCallback func(e Event)
+	alreadyJoined bool
 }
 
 // Connect implements chatBackend.
@@ -41,7 +42,7 @@ func (c *chatGoTwitchIrcImpl) Connect(channel string) {
 	c.client = twitch.NewAnonymousClient()
 	c.client.Join(channel)
 	c.client.OnPrivateMessage(c.onMessage)
-	c.client.OnConnect(c.onConnect)
+	c.client.OnSelfJoinMessage(c.onSelfJoinMessage)
 
 	go func() {
 		err := c.client.Connect()
@@ -55,8 +56,12 @@ func (c *chatGoTwitchIrcImpl) onMessage(message twitch.PrivateMessage) {
 	c.eventCallback(Event{Type_: Message, Message: message.Message, Sender: message.User.DisplayName})
 }
 
-func (c *chatGoTwitchIrcImpl) onConnect() {
+func (c *chatGoTwitchIrcImpl) onSelfJoinMessage(twitch.UserJoinMessage) {
+	if c.alreadyJoined {
+		return
+	}
 	c.eventCallback(Event{Type_: Connect})
+	c.alreadyJoined = true
 }
 
 func (c *chatGoTwitchIrcImpl) Disconnect() {

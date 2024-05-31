@@ -30,11 +30,12 @@ import (
 
 type chatWasmImpl struct {
 	eventCallback func(e Event)
+	alreadyJoined bool
 }
 
 func (c *chatWasmImpl) Connect(channel string) {
 	js.Global().Set("chatMessage", js.FuncOf(c.chatMessage))
-	js.Global().Set("onConnect", js.FuncOf(c.onConnect))
+	js.Global().Set("onSelfJoinMessage", js.FuncOf(c.onSelfJoinMessage))
 
 	js.Global().Get("startChat").Invoke(channel)
 }
@@ -47,8 +48,12 @@ func (c *chatWasmImpl) chatMessage(this js.Value, p []js.Value) interface{} {
 	return nil
 }
 
-func (c *chatWasmImpl) onConnect(this js.Value, p []js.Value) interface{} {
+func (c *chatWasmImpl) onSelfJoinMessage(this js.Value, p []js.Value) interface{} {
+	if c.alreadyJoined {
+		return nil
+	}
 	c.eventCallback(Event{Type_: Connect})
+	c.alreadyJoined = true
 	return nil
 }
 

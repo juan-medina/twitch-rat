@@ -24,8 +24,10 @@
             let username = tags['display-name'];
             chatMessage(username, message);
         });
-        client.on('connected', (address, port) => {
-            onConnect();
+        client.on('join', (channel, username, self) => {
+            if (self) {
+                onSelfJoinMessage();
+            }
         });
     }
 
