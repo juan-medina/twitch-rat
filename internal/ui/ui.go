@@ -31,59 +31,17 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 var (
 	yellow      = color.RGBA64{0xFFFF, 0xFFFF, 0x0000, 0xFFFF}
 	lightPurple = color.RGBA64{0xFFFF, 0x0000, 0xFFFF, 0xFFFF}
 	darkPurple  = color.RGBA64{0x6666, 0x0000, 0x6666, 0xFFFF}
-	purple      = color.RGBA64{0x8888, 0x0000, 0x8888, 0x0000}
-	gray        = color.RGBA64{0x6666, 0x6666, 0x6666, 0x0000}
-	darkGray    = color.RGBA64{0x3333, 0x3333, 0x3333, 0x0000}
-
-	enabledColor  = darkPurple
-	hoverColor    = purple
-	pressedColor  = lightPurple
-	disabledColor = darkGray
-
-	buttonEnabledTextColor  = yellow
-	buttonDisabledTextColor = gray
-)
-
-type buttonState int
-
-const (
-	buttonDisabled buttonState = iota
-	buttonEnabled
-	buttonHover
-	buttonPressed
-)
-
-type ButtonId int
-
-const (
-	CONNECT_BUTTON ButtonId = iota
-	DISCONNECT_BUTTON
-)
-
-type button struct {
-	id              ButtonId
-	x, y, w, h      float64
-	label           string
-	color           color.Color
-	visible         bool
-	do              text.DrawOptions
-	state           buttonState
-	timeToSendClick int
-}
-
-const (
-	MAX_BUTTONS      = 10
-	BUTTON_WIDTH     = 170
-	BUTTON_HEIGHT    = 50
-	BUTTON_GAP       = 10
-	CLICK_SENT_DELAY = 200
+	purple      = color.RGBA64{0x8888, 0x0000, 0x8888, 0xFFFF}
+	gray        = color.RGBA64{0x6666, 0x6666, 0x6666, 0xFFFF}
+	darkGray    = color.RGBA64{0x3333, 0x3333, 0x3333, 0xFFFF}
+	white       = color.RGBA64{0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}
+	black       = color.RGBA64{0x0000, 0x0000, 0x0000, 0xFFFF}
 )
 
 type UI interface {
@@ -106,6 +64,7 @@ type uiImpl struct {
 	lastMessageDO text.DrawOptions
 	buttons       []button
 	onButtonClick func(id ButtonId)
+	inputs        []input
 }
 
 // init implements UI.
@@ -141,129 +100,37 @@ func (u *uiImpl) Init(fileSystem embed.FS, width int, height int) {
 
 	bx := float64((u.screenWidth / 2) - (BUTTON_WIDTH / 2))
 	by := float64((u.screenHeight / 2) - (BUTTON_HEIGHT / 2))
-	u.addButton(CONNECT_BUTTON, bx-(BUTTON_WIDTH/2)-BUTTON_GAP, by, BUTTON_WIDTH, BUTTON_HEIGHT, "CONNECT")
-	u.addButton(DISCONNECT_BUTTON, bx+(BUTTON_WIDTH/2)+BUTTON_GAP, by, BUTTON_WIDTH, BUTTON_HEIGHT, "DISCONNECT")
-	u.DisableButton(DISCONNECT_BUTTON)
+	pxLeft := bx - (BUTTON_WIDTH / 2) - BUTTON_GAP
+	u.addButton(CONNECT_BUTTON, pxLeft, by, BUTTON_WIDTH, BUTTON_HEIGHT, "CONNECT", buttonEnabled)
+	pxRight := bx + (BUTTON_WIDTH / 2) + BUTTON_GAP
+	u.addButton(DISCONNECT_BUTTON, pxRight, by, BUTTON_WIDTH, BUTTON_HEIGHT, "DISCONNECT", buttonDisabled)
+
+	u.inputs = make([]input, 0, MAX_INPUTS)
+	u.addInput(INPUT_CHANNEL, pxLeft, by-BUTTON_GAP-BUTTON_HEIGHT, INPUT_WIDTH, INPUT_HEIGHT, "", "Input Channel Name")
 }
 
-// Draw implements UI.
 func (u *uiImpl) Draw(screen *ebiten.Image) {
 	text.Draw(screen, u.lastMessage, u.normalFace, &u.lastMessageDO)
 	for _, b := range u.buttons {
-		if b.visible {
-			vector.DrawFilledRect(screen, float32(b.x), float32(b.y), float32(b.w), float32(b.h), b.color, false)
-			text.Draw(screen, b.label, u.normalFace, &b.do)
-		}
+		b.draw(screen)
+
+	}
+
+	for _, i := range u.inputs {
+		i.draw(screen)
 	}
 }
 
-// Update implements UI.
 func (u *uiImpl) Update(elapsedTime int) {
-	x, y := ebiten.CursorPosition()
+	xe, ye := ebiten.CursorPosition()
+	x, y := float64(xe), float64(ye)
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
-	for i, b := range u.buttons {
-		if b.visible {
-			if b.state != buttonDisabled {
-				if u.buttonHit(b, float64(x), float64(y)) {
-					if pressed {
-						if b.state != buttonPressed {
-							if b.timeToSendClick == 0 {
-								u.changeButtonState(b.id, buttonPressed)
-								u.buttons[i].timeToSendClick = CLICK_SENT_DELAY
-							}
-						}
-					} else {
-						u.changeButtonState(b.id, buttonHover)
-					}
-				} else {
-					u.changeButtonState(b.id, buttonEnabled)
-				}
-			}
-			if b.timeToSendClick != 0 {
-				u.buttons[i].timeToSendClick -= elapsedTime
-				if b.timeToSendClick <= 0 {
-					u.buttons[i].timeToSendClick = 0
-					u.onButtonClick(b.id)
-				}
-			}
-		}
-	}
+
+	u.updateButtons(x, y, pressed, elapsedTime)
 }
 
 func (u *uiImpl) SetStatusMessage(message string) {
 	u.lastMessage = message
-}
-
-func (u *uiImpl) addButton(id ButtonId, x, y, w, h float64, label string) {
-	do := text.DrawOptions{}
-	dx, dy := text.Measure(label, u.normalFace, 0)
-	tx := x + (w / 2) - (dx / 2)
-	ty := y + (h / 2) - (dy / 2)
-
-	do.GeoM.Reset()
-	do.GeoM.Translate(tx, ty)
-
-	u.buttons = append(u.buttons, button{
-		id:      id,
-		x:       x,
-		y:       y,
-		w:       w,
-		h:       h,
-		label:   label,
-		visible: true,
-		do:      do,
-	})
-
-	u.changeButtonState(id, buttonEnabled)
-}
-
-func (u uiImpl) buttonHit(b button, x, y float64) bool {
-	if x > b.x && x < b.x+BUTTON_WIDTH && y > b.y && y < b.y+BUTTON_HEIGHT {
-		return true
-	}
-	return false
-}
-
-func (u *uiImpl) OnButtonClick(callback func(id ButtonId)) {
-	u.onButtonClick = callback
-}
-
-func (u *uiImpl) EnableButton(id ButtonId) {
-	u.changeButtonState(id, buttonEnabled)
-}
-
-func (u *uiImpl) DisableButton(id ButtonId) {
-	u.changeButtonState(id, buttonDisabled)
-}
-
-func (u *uiImpl) changeButtonState(id ButtonId, state buttonState) {
-	for i, b := range u.buttons {
-		if b.id == id {
-			u.buttons[i].state = state
-			textColor := buttonEnabledTextColor
-			switch state {
-			case buttonHover:
-				u.buttons[i].color = hoverColor
-			case buttonEnabled:
-				u.buttons[i].color = enabledColor
-			case buttonPressed:
-				u.buttons[i].color = pressedColor
-			case buttonDisabled:
-				u.buttons[i].color = disabledColor
-				textColor = buttonDisabledTextColor
-			}
-
-			u.buttons[i].do.ColorScale.Reset()
-			r := float32(textColor.R / 255.0)
-			g := float32(textColor.G / 255.0)
-			b := float32(textColor.B / 255.0)
-			a := float32(textColor.A / 255.0)
-			u.buttons[i].do.ColorScale.Scale(r, g, b, a)
-
-			return
-		}
-	}
-
 }
 
 func New() UI {

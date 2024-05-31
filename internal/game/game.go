@@ -124,7 +124,7 @@ func New(er embed.FS) *game {
 		initialized: false,
 		ui:          ui.New(),
 		chat:        chat.New(),
-		channel:     "sunachu_",
+		channel:     "iamalphinaud",
 	}
 
 	return &g
