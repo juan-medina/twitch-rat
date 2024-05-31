@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <script src="js/tmi.min.js"></script>
 <script src="wasm_exec.js"></script>
+<script src="js/chat.js"></script>
+
 <script>
     // Polyfill
     if (!WebAssembly.instantiateStreaming) {
@@ -14,28 +16,4 @@
     WebAssembly.instantiateStreaming(fetch("twitch_rat.wasm"), go.importObject).then(result => {
         go.run(result.instance);
     });
-
-    var client = null;
-
-    function startChat(channel) {
-        client = new tmi.Client({
-            channels: [channel]
-        });
-        client.connect();
-        client.on('message', (channel, tags, message, self) => {
-            let username = tags['display-name'];
-            chatMessage(username, message);
-        });
-        client.on('join', (channel, username, self) => {
-            if (self) {
-                onSelfJoinMessage();
-            }
-        });
-    }
-
-    function stopChat() {
-        client.disconnect();
-        client = null;
-    }
-
 </script>
