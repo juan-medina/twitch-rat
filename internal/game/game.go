@@ -37,20 +37,6 @@ const (
 	TITLE  = "Twitch Rat"
 )
 
-// type event enum type
-type eventType int
-
-const (
-	Connect eventType = iota
-	Message
-)
-
-type twitch_event struct {
-	type_   eventType
-	message string
-	sender  string
-}
-
 type game struct {
 	eventsChan  chan chat.Event
 	fileSystem  embed.FS
@@ -121,7 +107,7 @@ func New(er embed.FS) *game {
 		initialized: false,
 		ui:          ui.New(),
 		chat:        chat.New(),
-		channel:     "zeplahq",
+		channel:     "harukakaribu",
 	}
 
 	return &g
