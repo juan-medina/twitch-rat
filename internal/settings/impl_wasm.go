@@ -25,7 +25,6 @@
 package settings
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"syscall/js"
 )
@@ -55,16 +54,10 @@ func (n *wasmSettings) load() {
 	if result == "" {
 		return
 	}
-
-	data, err := base64.StdEncoding.DecodeString(result)
-	if err != nil {
-		return
-	}
-
 	var settings = SettingFile{
 		Settings: make([]SettingValue, 0),
 	}
-	if err := json.Unmarshal(data, &settings); err == nil {
+	if err := json.Unmarshal([]byte(result), &settings); err == nil {
 		for _, setting := range settings.Settings {
 			n.settings[setting.Key] = setting.Value
 		}
@@ -88,8 +81,8 @@ func (n *wasmSettings) Save() {
 		panic(err)
 	}
 
-	encodedData := []byte(base64.StdEncoding.EncodeToString([]byte(string(data))))
-	js.Global().Get("setSettings").Invoke(n.application, string(encodedData))
+	//encodedData := []byte(base64.StdEncoding.EncodeToString([]byte(string(data))))
+	js.Global().Get("setSettings").Invoke(n.application, string(data))
 }
 
 func (n *wasmSettings) GetValue(key string, defaultValue string) string {
