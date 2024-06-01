@@ -29,6 +29,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/keys"
+	"github.com/juan-medina/twitch-rat/internal/step"
 )
 
 type InputId int
@@ -46,7 +47,9 @@ type input struct {
 	borderColor color.Color
 	color       color.Color
 	visible     bool
-	do          text.DrawOptions
+	textDo      text.DrawOptions
+	caretDo     text.DrawOptions
+	caretAlpha  step.LoopValue
 	face        *text.GoTextFace
 }
 
@@ -71,10 +74,12 @@ func (i input) draw(screen *ebiten.Image) {
 		vector.DrawFilledRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), i.color, true)
 		vector.StrokeRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), INPUT_BORDER_SIZE, i.borderColor, true)
 		if i.text != "" {
-			text.Draw(screen, i.text, i.face, &i.do)
+			text.Draw(screen, i.text, i.face, &i.textDo)
 		} else {
-			text.Draw(screen, i.placeHolder, i.face, &i.do)
+			text.Draw(screen, i.placeHolder, i.face, &i.textDo)
 		}
+
+		text.Draw(screen, "_", i.face, &i.caretDo)
 
 	}
 }
@@ -83,13 +88,13 @@ func (u *uiImpl) addInput(id InputId, x, y, w, h float64, maxLength int, initial
 	u.inputs = append(u.inputs, newInput(id, x, y, w, h, maxLength, initialText, u.normalFace, placeHolder))
 }
 
-func (u *uiImpl) updateInputs() {
+func (u *uiImpl) updateInputs(elapsedTime int) {
 	for i, _ := range u.inputs {
-		u.inputs[i].Update(u.keys)
+		u.inputs[i].Update(u.keys, elapsedTime)
 	}
 }
 
-func (i *input) Update(keys keys.Keys) {
+func (i *input) Update(keys keys.Keys, elapsedTime int) {
 	if key := keys.LastRepeatedKey(); key != ebiten.KeyMax {
 		if key >= ebiten.Key0 && key <= ebiten.Key9 {
 			i.addLetter(rune(key - ebiten.Key0 + '0'))
@@ -110,16 +115,39 @@ func (i *input) Update(keys keys.Keys) {
 				i.addLetter('_')
 			}
 		} else if key == ebiten.KeyBackspace {
-			if len(i.text) > 0 {
-				i.text = i.text[:len(i.text)-1]
-			}
+			i.removeLetter()
 		}
+	}
+
+	if i.caretAlpha.Update(elapsedTime) {
+		i.caretDo.ColorScale.Reset()
+		i.caretDo.ColorScale.ScaleWithColor(inputTextColor)
+		i.caretDo.ColorScale.ScaleAlpha(i.caretAlpha.GetValue())
 	}
 }
 
 func (i *input) addLetter(letter rune) {
 	if len(i.text) < i.maxLength {
 		i.text += string(letter)
+		i.updateTextColor()
+		i.updateCaretPosition()
+	}
+}
+
+func (i *input) removeLetter() {
+	if len(i.text) > 0 {
+		i.text = i.text[:len(i.text)-1]
+		i.updateTextColor()
+		i.updateCaretPosition()
+	}
+}
+
+func (i *input) updateTextColor() {
+	i.textDo.ColorScale.Reset()
+	if i.text == "" {
+		i.textDo.ColorScale.ScaleWithColor(inputEmptyColor)
+	} else {
+		i.textDo.ColorScale.ScaleWithColor(inputTextColor)
 	}
 }
 
@@ -129,8 +157,18 @@ func (i input) GetText() string {
 
 func (i *input) SetText(text string) {
 	i.text = text
+	i.updateTextColor()
+	i.updateCaretPosition()
 }
 
+func (i *input) updateCaretPosition() {
+	i.caretDo.GeoM.Reset()
+	i.caretDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
+	if i.text != "" {
+		move, _ := text.Measure(i.text, i.face, 0)
+		i.caretDo.GeoM.Translate(float64(move), 0)
+	}
+}
 func (ui uiImpl) GetInputText(id InputId) string {
 	for _, i := range ui.inputs {
 		if i.id == id {
@@ -150,17 +188,21 @@ func (ui *uiImpl) SetInputText(id InputId, text string) {
 }
 
 func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {
-	do := text.DrawOptions{}
-	do.GeoM.Reset()
-	do.GeoM.Translate(x+INPUT_LEFT_GAP, y+INPUT_TOP_GAP)
+	textDo := text.DrawOptions{}
+	textDo.GeoM.Reset()
+	textDo.GeoM.Translate(x+INPUT_LEFT_GAP, y+INPUT_TOP_GAP)
 
-	do.ColorScale.Reset()
+	textDo.ColorScale.Reset()
 	if initialText == "" {
-		do.ColorScale.ScaleWithColor(inputEmptyColor)
+		textDo.ColorScale.ScaleWithColor(inputEmptyColor)
 	} else {
-		do.ColorScale.ScaleWithColor(inputTextColor)
+		textDo.ColorScale.ScaleWithColor(inputTextColor)
 	}
-
+	caretDo := text.DrawOptions{}
+	caretDo.GeoM.Reset()
+	caretDo.GeoM.Translate(x+INPUT_LEFT_GAP, y+INPUT_TOP_GAP)
+	caretDo.ColorScale.Reset()
+	caretDo.ColorScale.ScaleWithColor(inputTextColor)
 	return input{
 		id:          id,
 		x:           x,
@@ -173,7 +215,9 @@ func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string,
 		borderColor: inputBorderColor,
 		color:       inputColor,
 		visible:     true,
-		do:          do,
+		textDo:      textDo,
+		caretDo:     caretDo,
+		caretAlpha:  step.NewPingPongValue(0, 1, 200, 100),
 		face:        face,
 	}
 }
