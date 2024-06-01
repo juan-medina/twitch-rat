@@ -132,7 +132,7 @@ func (u *uiImpl) Update(elapsedTime int) {
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 
 	u.updateButtons(x, y, pressed, elapsedTime)
-	u.updateInputs(elapsedTime)
+	u.updateInputs(x, y, pressed, elapsedTime)
 }
 
 func (u *uiImpl) SetStatusMessage(message string) {

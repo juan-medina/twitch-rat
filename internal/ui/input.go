@@ -50,6 +50,7 @@ type input struct {
 	textDo      text.DrawOptions
 	caretDo     text.DrawOptions
 	caretAlpha  step.LoopValue
+	focus       bool
 	face        *text.GoTextFace
 }
 
@@ -73,13 +74,18 @@ func (i input) draw(screen *ebiten.Image) {
 	if i.visible {
 		vector.DrawFilledRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), i.color, true)
 		vector.StrokeRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), INPUT_BORDER_SIZE, i.borderColor, true)
-		if i.text != "" {
-			text.Draw(screen, i.text, i.face, &i.textDo)
+		if i.focus {
+			if i.text != "" {
+				text.Draw(screen, i.text, i.face, &i.textDo)
+			}
+			text.Draw(screen, "_", i.face, &i.caretDo)
 		} else {
-			text.Draw(screen, i.placeHolder, i.face, &i.textDo)
+			if i.text != "" {
+				text.Draw(screen, i.text, i.face, &i.textDo)
+			} else {
+				text.Draw(screen, i.placeHolder, i.face, &i.textDo)
+			}
 		}
-
-		text.Draw(screen, "_", i.face, &i.caretDo)
 
 	}
 }
@@ -88,13 +94,25 @@ func (u *uiImpl) addInput(id InputId, x, y, w, h float64, maxLength int, initial
 	u.inputs = append(u.inputs, newInput(id, x, y, w, h, maxLength, initialText, u.normalFace, placeHolder))
 }
 
-func (u *uiImpl) updateInputs(elapsedTime int) {
+func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
 	for i, _ := range u.inputs {
-		u.inputs[i].Update(u.keys, elapsedTime)
+		u.inputs[i].Update(mouseX, mouseY, leftPressed, u.keys, elapsedTime)
 	}
 }
 
-func (i *input) Update(keys keys.Keys, elapsedTime int) {
+func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys, elapsedTime int) {
+
+	if leftPressed {
+		if i.hit(mouseX, mouseY) {
+			i.focus = true
+		} else {
+			i.focus = false
+		}
+	}
+
+	if !i.focus {
+		return
+	}
 	if key := keys.LastRepeatedKey(); key != ebiten.KeyMax {
 		if key >= ebiten.Key0 && key <= ebiten.Key9 {
 			i.addLetter(rune(key - ebiten.Key0 + '0'))
@@ -117,6 +135,10 @@ func (i *input) Update(keys keys.Keys, elapsedTime int) {
 		} else if key == ebiten.KeyBackspace {
 			i.removeLetter()
 		}
+	}
+
+	if keys.IsKeyDown(ebiten.KeyEnter) || keys.IsKeyDown(ebiten.KeyNumpadEnter) {
+		i.focus = false
 	}
 
 	if i.caretAlpha.Update(elapsedTime) {
@@ -165,10 +187,22 @@ func (i *input) updateCaretPosition() {
 	i.caretDo.GeoM.Reset()
 	i.caretDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
 	if i.text != "" {
-		move, _ := text.Measure(i.text, i.face, 0)
+		currentText := i.text
+		if len(currentText) >= i.maxLength {
+			currentText = currentText[:i.maxLength-1]
+		}
+		move, _ := text.Measure(currentText, i.face, 0)
 		i.caretDo.GeoM.Translate(float64(move), 0)
 	}
 }
+
+func (i input) hit(x, y float64) bool {
+	if x > i.x && x < i.x+i.w && y > i.y && y < i.y+i.h {
+		return true
+	}
+	return false
+}
+
 func (ui uiImpl) GetInputText(id InputId) string {
 	for _, i := range ui.inputs {
 		if i.id == id {
