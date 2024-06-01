@@ -111,7 +111,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, width int, height int
 	u.addButton(DISCONNECT_BUTTON, pxRight, by, BUTTON_WIDTH, BUTTON_HEIGHT, "DISCONNECT", buttonDisabled)
 
 	u.inputs = make([]input, 0, MAX_INPUTS)
-	u.addInput(INPUT_CHANNEL, pxLeft, by-BUTTON_GAP-BUTTON_HEIGHT, INPUT_WIDTH, INPUT_HEIGHT, 25, "", "Input Channel Name")
+	u.addInput(INPUT_CHANNEL, pxLeft, by-BUTTON_GAP-BUTTON_HEIGHT, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {

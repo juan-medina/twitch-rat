@@ -78,7 +78,7 @@ func (i input) draw(screen *ebiten.Image) {
 			if i.text != "" {
 				text.Draw(screen, i.text, i.face, &i.textDo)
 			}
-			text.Draw(screen, "_", i.face, &i.caretDo)
+			text.Draw(screen, "|", i.face, &i.caretDo)
 		} else {
 			if i.text != "" {
 				text.Draw(screen, i.text, i.face, &i.textDo)
@@ -187,11 +187,7 @@ func (i *input) updateCaretPosition() {
 	i.caretDo.GeoM.Reset()
 	i.caretDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
 	if i.text != "" {
-		currentText := i.text
-		if len(currentText) >= i.maxLength {
-			currentText = currentText[:i.maxLength-1]
-		}
-		move, _ := text.Measure(currentText, i.face, 0)
+		move, _ := text.Measure(i.text, i.face, 0)
 		i.caretDo.GeoM.Translate(float64(move), 0)
 	}
 }
