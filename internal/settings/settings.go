@@ -22,21 +22,91 @@
 
 package settings
 
+import "encoding/json"
+
 type Settings interface {
-	Init(application string)
+	Init()
 	SetValue(key string, value string)
 	GetValue(key string, defaultValue string) string
 	Save()
 }
 
-var registeredImpl func() Settings = func() Settings {
+type Storage interface {
+	Load() string
+	Save(data string)
+}
+
+var registeredStorage func(string) Storage = func(application string) Storage {
 	panic("settings implementation not registered")
 }
 
-func registerImpl(impl func() Settings) {
-	registeredImpl = impl
+type settingsImpl struct {
+	application string
+	settings    map[string]string
+	storage     Storage
 }
 
-func New() Settings {
-	return registeredImpl()
+type jsonSettingValue struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+type jsonSettings struct {
+	Settings []jsonSettingValue `json:"settings"`
+}
+
+func (s *settingsImpl) Init() {
+	data := s.storage.Load()
+
+	var settings = jsonSettings{
+		Settings: make([]jsonSettingValue, 0),
+	}
+
+	if err := json.Unmarshal([]byte(data), &settings); err == nil {
+		for _, setting := range settings.Settings {
+			s.settings[setting.Key] = setting.Value
+		}
+	}
+}
+
+func (s *settingsImpl) Save() {
+	var settings = jsonSettings{
+		Settings: make([]jsonSettingValue, 0),
+	}
+
+	for key, value := range s.settings {
+		settings.Settings = append(settings.Settings, jsonSettingValue{
+			Key:   key,
+			Value: value,
+		})
+	}
+
+	if data, err := json.Marshal(settings); err == nil {
+		s.storage.Save(string(data))
+	}
+}
+
+func (s *settingsImpl) GetValue(key string, defaultValue string) string {
+	if value, ok := s.settings[key]; ok {
+		return value
+	} else {
+		s.settings[key] = defaultValue
+		return defaultValue
+	}
+}
+
+func (s *settingsImpl) SetValue(key string, value string) {
+	s.settings[key] = value
+}
+
+func registerImpl(impl func(application string) Storage) {
+	registeredStorage = impl
+}
+
+func New(application string) Settings {
+	return &settingsImpl{
+		application: application,
+		settings:    make(map[string]string),
+		storage:     registeredStorage(application),
+	}
 }

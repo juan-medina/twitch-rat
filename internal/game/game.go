@@ -35,9 +35,10 @@ import (
 )
 
 const (
-	WIDTH  = 1920
-	HEIGHT = 1080
-	TITLE  = "Twitch Rat"
+	WIDTH       = 1920
+	HEIGHT      = 1080
+	TITLE       = "Twitch Rat"
+	APPLICATION = "twitch-rats"
 )
 
 type game struct {
@@ -57,7 +58,7 @@ func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (g *game) init() {
-	g.settings.Init("twitch-rats")
+	g.settings.Init()
 	g.chat.OnEvent(g.onChatEvent)
 	g.keys.Init()
 	g.ui.Init(g.fileSystem, g.keys, WIDTH, HEIGHT)
@@ -143,7 +144,7 @@ func New(er embed.FS) *game {
 		ui:          ui.New(),
 		chat:        chat.New(),
 		keys:        keys.New(),
-		settings:    settings.New(),
+		settings:    settings.New(APPLICATION),
 		channel:     "",
 	}
 
