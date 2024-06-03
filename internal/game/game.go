@@ -41,16 +41,24 @@ const (
 	APPLICATION = "twitch-rats"
 )
 
+type GameState int
+
+const (
+	LOADING GameState = iota
+	MAIN_MENU
+	PLAYING
+)
+
 type game struct {
 	eventsChan     chan chat.Event
 	fileSystem     embed.FS
-	initialized    bool
 	channel        string
 	lastUpdateTime time.Time
 	ui             ui.UI
 	keys           keys.Keys
 	chat           chat.Chat
 	settings       settings.Settings
+	state          GameState
 }
 
 func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -66,7 +74,8 @@ func (g *game) init() {
 
 	g.channel = g.settings.GetValue("channel", "")
 	g.ui.SetInputText(ui.INPUT_CHANNEL, g.channel)
-	g.initialized = true
+	g.ui.SetStatusMessage("Ready!")
+	g.state = MAIN_MENU
 	g.lastUpdateTime = time.Now()
 }
 func (g *game) OnButtonClick(id ui.ButtonId) {
@@ -91,16 +100,17 @@ func (g *game) OnButtonClick(id ui.ButtonId) {
 }
 
 func (g *game) Update() error {
-	if !g.initialized {
-		g.init()
-	}
-
 	elapsedTime := time.Since(g.lastUpdateTime)
 	g.lastUpdateTime = time.Now()
 	elapsedMillis := int(elapsedTime.Milliseconds())
 
-	g.ui.Update(elapsedMillis)
+	if g.state == LOADING {
+		g.init()
+		return nil
+	}
+
 	g.keys.Update(elapsedMillis)
+	g.ui.Update(elapsedMillis)
 
 	select {
 	case event := <-g.eventsChan:
@@ -138,14 +148,14 @@ func (g *game) onChatEvent(e chat.Event) {
 
 func New(er embed.FS) *game {
 	g := game{
-		eventsChan:  make(chan chat.Event, 10),
-		fileSystem:  er,
-		initialized: false,
-		ui:          ui.New(),
-		chat:        chat.New(),
-		keys:        keys.New(),
-		settings:    settings.New(APPLICATION),
-		channel:     "",
+		eventsChan: make(chan chat.Event, 10),
+		fileSystem: er,
+		state:      LOADING,
+		ui:         ui.New(),
+		chat:       chat.New(),
+		keys:       keys.New(),
+		settings:   settings.New(APPLICATION),
+		channel:    "",
 	}
 
 	return &g
