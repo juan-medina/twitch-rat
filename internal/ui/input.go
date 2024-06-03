@@ -50,7 +50,8 @@ type input struct {
 	textDo      text.DrawOptions
 	caretDo     text.DrawOptions
 	caretAlpha  step.LoopValue
-	focus       bool
+	editing     bool
+	savedText   string
 	face        *text.GoTextFace
 }
 
@@ -74,7 +75,7 @@ func (i input) draw(screen *ebiten.Image) {
 	if i.visible {
 		vector.DrawFilledRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), i.color, true)
 		vector.StrokeRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), INPUT_BORDER_SIZE, i.borderColor, true)
-		if i.focus {
+		if i.isEditing() {
 			if i.text != "" {
 				text.Draw(screen, i.text, i.face, &i.textDo)
 			}
@@ -90,6 +91,25 @@ func (i input) draw(screen *ebiten.Image) {
 	}
 }
 
+func (i *input) edit() {
+	i.editing = true
+	i.savedText = i.text
+}
+
+func (i *input) cancelEdit() {
+	i.editing = false
+	i.SetText(i.savedText)
+}
+
+func (i *input) saveEdit() {
+	i.editing = false
+	i.savedText = i.text
+}
+
+func (i input) isEditing() bool {
+	return i.editing
+}
+
 func (u *uiImpl) addInput(id InputId, x, y, w, h float64, maxLength int, initialText string, placeHolder string) {
 	u.inputs = append(u.inputs, newInput(id, x, y, w, h, maxLength, initialText, u.normalFace, placeHolder))
 }
@@ -100,17 +120,32 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 	}
 }
 
+func (i *input) SetVisible(visible bool) {
+	i.visible = visible
+	if i.isEditing() {
+		i.saveEdit()
+	}
+}
+
 func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys, elapsedTime int) {
+
+	if !i.visible {
+		return
+	}
 
 	if leftPressed {
 		if i.hit(mouseX, mouseY) {
-			i.focus = true
+			if !i.isEditing() {
+				i.edit()
+			}
 		} else {
-			i.focus = false
+			if i.isEditing() {
+				i.saveEdit()
+			}
 		}
 	}
 
-	if !i.focus {
+	if !i.isEditing() {
 		return
 	}
 	if key := keys.LastRepeatedKey(); key != ebiten.KeyMax {
@@ -138,7 +173,11 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 	}
 
 	if keys.IsKeyDown(ebiten.KeyEnter) || keys.IsKeyDown(ebiten.KeyNumpadEnter) {
-		i.focus = false
+		i.saveEdit()
+	}
+
+	if keys.IsKeyDown(ebiten.KeyEscape) {
+		i.cancelEdit()
 	}
 
 	if i.caretAlpha.Update(elapsedTime) {
