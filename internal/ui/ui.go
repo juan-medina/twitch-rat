@@ -49,12 +49,17 @@ type UI interface {
 	Init(fileSystem embed.FS, keys keys.Keys, screenWidth, screenHeight int)
 	Update(elapsedTime int)
 	Draw(screen *ebiten.Image)
+
 	SetStatusMessage(message string)
-	OnButtonClick(callback func(id ButtonId))
+
 	EnableButton(id ButtonId)
 	DisableButton(id ButtonId)
+	SetButtonVisible(id ButtonId, visible bool)
+	OnButtonClick(callback func(id ButtonId))
+
 	GetInputText(id InputId) string
 	SetInputText(id InputId, text string)
+	SetInputVisible(id InputId, visible bool)
 }
 
 type uiImpl struct {
@@ -105,9 +110,9 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, width int, height int
 	bx := float64((u.screenWidth / 2) - (BUTTON_WIDTH / 2))
 	by := float64((u.screenHeight / 2) - (BUTTON_HEIGHT / 2))
 	pxLeft := bx - (BUTTON_WIDTH / 2) - BUTTON_GAP
-	u.addButton(CONNECT_BUTTON, pxLeft, by, BUTTON_WIDTH, BUTTON_HEIGHT, "CONNECT", buttonEnabled)
+	u.addButton(CONNECT_BUTTON, pxLeft, by, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", buttonEnabled)
 	pxRight := bx + (BUTTON_WIDTH / 2) + BUTTON_GAP
-	u.addButton(DISCONNECT_BUTTON, pxRight, by, BUTTON_WIDTH, BUTTON_HEIGHT, "DISCONNECT", buttonDisabled)
+	u.addButton(DISCONNECT_BUTTON, pxRight, by, BUTTON_WIDTH, BUTTON_HEIGHT, "Back", buttonEnabled)
 
 	u.inputs = make([]input, 0, MAX_INPUTS)
 	u.addInput(INPUT_CHANNEL, pxLeft, by-BUTTON_GAP-BUTTON_HEIGHT, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
@@ -138,8 +143,10 @@ func (u *uiImpl) SetStatusMessage(message string) {
 	u.lastMessage = message
 }
 
+func dummyCallback(id ButtonId) {}
+
 func New() UI {
 	return &uiImpl{
-		onButtonClick: func(id ButtonId) {},
+		onButtonClick: dummyCallback,
 	}
 }

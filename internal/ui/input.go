@@ -120,7 +120,7 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 	}
 }
 
-func (i *input) SetVisible(visible bool) {
+func (i *input) setVisible(visible bool) {
 	i.visible = visible
 	if i.isEditing() {
 		i.saveEdit()
@@ -256,6 +256,15 @@ func (ui *uiImpl) SetInputText(id InputId, text string) {
 	}
 }
 
+func (ui *uiImpl) SetInputVisible(id InputId, visible bool) {
+	for iid, i := range ui.inputs {
+		if i.id == id {
+			ui.inputs[iid].setVisible(visible)
+			return
+		}
+	}
+}
+
 func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {
 	textDo := text.DrawOptions{}
 	textDo.GeoM.Reset()
@@ -283,7 +292,7 @@ func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string,
 		placeHolder: placeHolder,
 		borderColor: inputBorderColor,
 		color:       inputColor,
-		visible:     true,
+		visible:     false,
 		textDo:      textDo,
 		caretDo:     caretDo,
 		caretAlpha:  step.NewPingPongValue(0, 1, 200, 100),

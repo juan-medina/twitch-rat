@@ -24,13 +24,14 @@ package game
 
 import (
 	"embed"
-	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/juan-medina/twitch-rat/internal/chat"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
+	"github.com/juan-medina/twitch-rat/internal/stage"
+	"github.com/juan-medina/twitch-rat/internal/stage/menu"
+	"github.com/juan-medina/twitch-rat/internal/stage/playing"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 )
 
@@ -45,20 +46,18 @@ type GameState int
 
 const (
 	LOADING GameState = iota
-	MAIN_MENU
-	PLAYING
+	RUNNING
 )
 
 type game struct {
-	eventsChan     chan chat.Event
 	fileSystem     embed.FS
-	channel        string
 	lastUpdateTime time.Time
 	ui             ui.UI
 	keys           keys.Keys
-	chat           chat.Chat
 	settings       settings.Settings
 	state          GameState
+	stages         map[stage.Id]stage.Stage
+	currentStage   stage.Id
 }
 
 func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -67,71 +66,50 @@ func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (g *game) init() {
 	g.settings.Init()
-	g.chat.OnEvent(g.onChatEvent)
 	g.keys.Init()
 	g.ui.Init(g.fileSystem, g.keys, WIDTH, HEIGHT)
-	g.ui.OnButtonClick(g.OnButtonClick)
 
-	g.channel = g.settings.GetValue("channel", "")
-	g.ui.SetInputText(ui.INPUT_CHANNEL, g.channel)
-	g.ui.SetStatusMessage("Ready!")
-	g.state = MAIN_MENU
 	g.lastUpdateTime = time.Now()
+
+	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings))
+	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings))
+	g.ChangeStage(stage.MENU)
+
+	g.state = RUNNING
 }
-func (g *game) OnButtonClick(id ui.ButtonId) {
-	switch id {
-	case ui.DISCONNECT_BUTTON:
-		g.ui.SetStatusMessage("Disconnecting...")
-		g.ui.DisableButton(ui.DISCONNECT_BUTTON)
-		g.chat.Disconnect()
-	case ui.CONNECT_BUTTON:
-		channel := g.ui.GetInputText(ui.INPUT_CHANNEL)
-		if channel == "" {
-			g.ui.SetStatusMessage("Please enter a channel name")
-			return
-		}
-		g.channel = channel
-		g.settings.SetValue("channel", g.channel)
-		g.settings.Save()
-		g.ui.SetStatusMessage("Connecting...")
-		g.ui.DisableButton(ui.CONNECT_BUTTON)
-		g.chat.Connect(g.channel)
-	}
+
+func (g *game) addStage(id stage.Id, st stage.Stage) {
+	g.stages[id] = st
+}
+
+func (g *game) getElapsedTime() int {
+	elapsedTime := int(time.Since(g.lastUpdateTime).Milliseconds())
+	g.lastUpdateTime = time.Now()
+	return elapsedTime
 }
 
 func (g *game) Update() error {
-	elapsedTime := time.Since(g.lastUpdateTime)
-	g.lastUpdateTime = time.Now()
-	elapsedMillis := int(elapsedTime.Milliseconds())
+	elapsedTime := g.getElapsedTime()
 
 	if g.state == LOADING {
 		g.init()
 		return nil
 	}
 
-	g.keys.Update(elapsedMillis)
-	g.ui.Update(elapsedMillis)
+	g.keys.Update(elapsedTime)
 
-	select {
-	case event := <-g.eventsChan:
-		switch event.Type_ {
-		case chat.Connect:
-			g.ui.SetStatusMessage("Connected to " + g.channel)
-			g.ui.EnableButton(ui.DISCONNECT_BUTTON)
-		case chat.Disconnect:
-			g.ui.SetStatusMessage("Ready!")
-			g.ui.EnableButton(ui.CONNECT_BUTTON)
-		case chat.Message:
-			g.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.Sender, event.Message))
-		}
-	default:
-		/// no new event
+	if g.currentStage == stage.NONE {
+		return nil
 	}
+	g.stages[g.currentStage].Update(elapsedTime)
 
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
-	g.ui.Draw(screen)
+	if g.currentStage == stage.NONE {
+		return
+	}
+	g.stages[g.currentStage].Draw(screen)
 }
 
 func (g *game) Run() error {
@@ -142,20 +120,23 @@ func (g *game) Run() error {
 	return ebiten.RunGame(g)
 }
 
-func (g *game) onChatEvent(e chat.Event) {
-	g.eventsChan <- e
+func (g *game) ChangeStage(id stage.Id) {
+	if g.currentStage != stage.NONE {
+		g.stages[g.currentStage].End()
+	}
+	g.currentStage = id
+	g.stages[g.currentStage].Init()
 }
 
 func New(er embed.FS) *game {
 	g := game{
-		eventsChan: make(chan chat.Event, 10),
-		fileSystem: er,
-		state:      LOADING,
-		ui:         ui.New(),
-		chat:       chat.New(),
-		keys:       keys.New(),
-		settings:   settings.New(APPLICATION),
-		channel:    "",
+		fileSystem:   er,
+		state:        LOADING,
+		ui:           ui.New(),
+		keys:         keys.New(),
+		settings:     settings.New(APPLICATION),
+		stages:       make(map[stage.Id]stage.Stage),
+		currentStage: stage.NONE,
 	}
 
 	return &g

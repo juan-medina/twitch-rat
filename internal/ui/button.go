@@ -102,6 +102,10 @@ func (b *button) changeState(state buttonState) {
 	b.do.ColorScale.ScaleWithColor(textColor)
 }
 
+func (b *button) setVisible(visible bool) {
+	b.visible = visible
+}
+
 func (b button) hit(x, y float64) bool {
 	if x > b.x && x < b.x+BUTTON_WIDTH && y > b.y && y < b.y+BUTTON_HEIGHT {
 		return true
@@ -127,7 +131,11 @@ func (u *uiImpl) changeButtonState(id ButtonId, state buttonState) {
 }
 
 func (u *uiImpl) OnButtonClick(callback func(id ButtonId)) {
-	u.onButtonClick = callback
+	if callback != nil {
+		u.onButtonClick = callback
+	} else {
+		u.onButtonClick = dummyCallback
+	}
 }
 
 func (u *uiImpl) updateButtons(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
@@ -164,6 +172,15 @@ func (u *uiImpl) addButton(id ButtonId, x, y, w, h float64, label string, state 
 	u.buttons = append(u.buttons, newButton(id, x, y, w, h, label, u.normalFace, state))
 }
 
+func (u *uiImpl) SetButtonVisible(id ButtonId, visible bool) {
+	for i, b := range u.buttons {
+		if b.id == id {
+			u.buttons[i].setVisible(visible)
+			return
+		}
+	}
+}
+
 func newButton(id ButtonId, x, y, w, h float64, label string, face *text.GoTextFace, state buttonState) button {
 	do := text.DrawOptions{}
 	dx, dy := text.Measure(label, face, 0)
@@ -180,7 +197,7 @@ func newButton(id ButtonId, x, y, w, h float64, label string, face *text.GoTextF
 		w:       w,
 		h:       h,
 		label:   label,
-		visible: true,
+		visible: false,
 		do:      do,
 		face:    face,
 	}
