@@ -106,16 +106,17 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, width int, height int
 	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
 
 	u.buttons = make([]button, 0, MAX_BUTTONS)
-
-	bx := float64((u.screenWidth / 2) - (BUTTON_WIDTH / 2))
-	by := float64((u.screenHeight / 2) - (BUTTON_HEIGHT / 2))
-	pxLeft := bx - (BUTTON_WIDTH / 2) - BUTTON_GAP
-	u.addButton(CONNECT_BUTTON, pxLeft, by, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", buttonEnabled)
-	pxRight := bx + (BUTTON_WIDTH / 2) + BUTTON_GAP
-	u.addButton(DISCONNECT_BUTTON, pxRight, by, BUTTON_WIDTH, BUTTON_HEIGHT, "Back", buttonEnabled)
-
 	u.inputs = make([]input, 0, MAX_INPUTS)
-	u.addInput(INPUT_CHANNEL, pxLeft, by-BUTTON_GAP-BUTTON_HEIGHT, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
+
+	bx := float64((u.screenWidth / 2) - (BUTTON_WIDTH+BUTTON_GAP+INPUT_WIDTH)/2)
+	by := float64((u.screenHeight / 2) - (BUTTON_HEIGHT / 2))
+
+	u.addInput(INPUT_CHANNEL, bx, by, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
+
+	bx += INPUT_WIDTH + BUTTON_GAP
+	u.addButton(PLAY_BUTTON, bx, by, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", buttonEnabled)
+
+	u.addButton(BACK_BUTTON, float64(u.screenWidth)-BACK_BUTTON_WIDTH, 0, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", buttonEnabled)
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {

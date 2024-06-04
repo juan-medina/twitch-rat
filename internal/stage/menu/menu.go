@@ -35,14 +35,14 @@ func (m *menu) Init() {
 
 	m.ui.OnButtonClick(m.onButtonClick)
 
-	m.ui.SetButtonVisible(ui.CONNECT_BUTTON, true)
+	m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
 
 	m.ui.SetStatusMessage("Ready to Play!")
 }
 
 func (m *menu) End() {
-	m.ui.SetButtonVisible(ui.CONNECT_BUTTON, false)
+	m.ui.SetButtonVisible(ui.PLAY_BUTTON, false)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, false)
 
 	m.settings.Save()
@@ -64,7 +64,7 @@ func (m *menu) Draw(screen *ebiten.Image) {
 
 func (m *menu) onButtonClick(id ui.ButtonId) {
 	switch id {
-	case ui.CONNECT_BUTTON:
+	case ui.PLAY_BUTTON:
 		channel := m.ui.GetInputText(ui.INPUT_CHANNEL)
 		m.settings.SetValue("channel", channel)
 		m.settings.Save()

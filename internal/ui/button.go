@@ -52,8 +52,8 @@ const (
 type ButtonId int
 
 const (
-	CONNECT_BUTTON ButtonId = iota
-	DISCONNECT_BUTTON
+	PLAY_BUTTON ButtonId = iota
+	BACK_BUTTON
 )
 
 type button struct {
@@ -69,11 +69,12 @@ type button struct {
 }
 
 const (
-	MAX_BUTTONS      = 10
-	BUTTON_WIDTH     = 170
-	BUTTON_HEIGHT    = 50
-	BUTTON_GAP       = 10
-	CLICK_SENT_DELAY = 200
+	MAX_BUTTONS       = 10
+	BUTTON_WIDTH      = 170
+	BUTTON_HEIGHT     = 50
+	BUTTON_GAP        = 10
+	CLICK_SENT_DELAY  = 200
+	BACK_BUTTON_WIDTH = 50
 )
 
 func (b button) draw(screen *ebiten.Image) {
@@ -107,7 +108,7 @@ func (b *button) setVisible(visible bool) {
 }
 
 func (b button) hit(x, y float64) bool {
-	if x > b.x && x < b.x+BUTTON_WIDTH && y > b.y && y < b.y+BUTTON_HEIGHT {
+	if x > b.x && x < b.x+b.w && y > b.y && y < b.y+b.h {
 		return true
 	}
 	return false

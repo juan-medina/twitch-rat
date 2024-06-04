@@ -115,6 +115,7 @@ func (u *uiImpl) addInput(id InputId, x, y, w, h float64, maxLength int, initial
 }
 
 func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
+	ebiten.SetCursorShape(ebiten.CursorShapeDefault)
 	for i, _ := range u.inputs {
 		u.inputs[i].Update(mouseX, mouseY, leftPressed, u.keys, elapsedTime)
 	}
@@ -133,8 +134,13 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 		return
 	}
 
+	hit := i.hit(mouseX, mouseY)
+	if hit {
+		ebiten.SetCursorShape(ebiten.CursorShapeText)
+	}
+
 	if leftPressed {
-		if i.hit(mouseX, mouseY) {
+		if hit {
 			if !i.isEditing() {
 				i.edit()
 			}

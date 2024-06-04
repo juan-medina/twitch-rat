@@ -35,7 +35,7 @@ import (
 func (p *playing) Init() {
 	p.ui.OnButtonClick(p.onButtonClick)
 
-	p.ui.SetButtonVisible(ui.DISCONNECT_BUTTON, true)
+	p.ui.SetButtonVisible(ui.BACK_BUTTON, true)
 
 	p.ui.SetStatusMessage("Connecting..")
 
@@ -45,7 +45,7 @@ func (p *playing) Init() {
 }
 
 func (p *playing) End() {
-	p.ui.SetButtonVisible(ui.DISCONNECT_BUTTON, false)
+	p.ui.SetButtonVisible(ui.BACK_BUTTON, false)
 	p.chat.Disconnect()
 }
 
@@ -80,7 +80,7 @@ func (p *playing) Draw(screen *ebiten.Image) {
 
 func (p *playing) onButtonClick(id ui.ButtonId) {
 	switch id {
-	case ui.DISCONNECT_BUTTON:
+	case ui.BACK_BUTTON:
 		p.ui.OnButtonClick(nil)
 		p.changer.ChangeStage(stage.MENU)
 	}
