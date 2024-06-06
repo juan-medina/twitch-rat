@@ -159,6 +159,129 @@ func (u *uiImpl) OnLayoutChange(width, height int) {
 	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
 }
 
+func (u *uiImpl) EnableButton(id ButtonId) {
+	u.changeButtonState(id, buttonEnabled)
+}
+
+func (u *uiImpl) DisableButton(id ButtonId) {
+	u.changeButtonState(id, buttonDisabled)
+}
+
+func (u *uiImpl) moveButton(id ButtonId, x, y float64) {
+	for i, b := range u.buttons {
+		if b.id == id {
+			u.buttons[i].move(x, y)
+			return
+		}
+	}
+}
+
+func (u *uiImpl) addButton(id ButtonId, w, h float64, label string, state buttonState) {
+	u.buttons = append(u.buttons, newButton(id, w, h, label, u.normalFace, state))
+}
+
+func (u *uiImpl) SetButtonVisible(id ButtonId, visible bool) {
+	for i, b := range u.buttons {
+		if b.id == id {
+			u.buttons[i].setVisible(visible)
+			return
+		}
+	}
+}
+
+func (u *uiImpl) changeButtonState(id ButtonId, state buttonState) {
+	for i, b := range u.buttons {
+		if b.id == id {
+			u.buttons[i].changeState(state)
+			return
+		}
+	}
+}
+
+func (u *uiImpl) OnButtonClick(callback func(id ButtonId)) {
+	if callback != nil {
+		u.onButtonClick = callback
+	} else {
+		u.onButtonClick = dummyCallback
+	}
+}
+
+func (u *uiImpl) updateButtons(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
+	for i, b := range u.buttons {
+		if b.visible {
+			if b.state != buttonDisabled {
+				if b.hit(mouseX, mouseY) {
+					if leftPressed {
+						if b.state != buttonPressed {
+							if b.timeToSendClick == 0 {
+								u.changeButtonState(b.id, buttonPressed)
+								u.buttons[i].timeToSendClick = CLICK_SENT_DELAY
+							}
+						}
+					} else {
+						u.changeButtonState(b.id, buttonHover)
+					}
+				} else {
+					u.changeButtonState(b.id, buttonEnabled)
+				}
+			}
+			if b.timeToSendClick != 0 {
+				u.buttons[i].timeToSendClick -= elapsedTime
+				if b.timeToSendClick <= 0 {
+					u.buttons[i].timeToSendClick = 0
+					u.onButtonClick(b.id)
+				}
+			}
+		}
+	}
+}
+func (ui *uiImpl) moveInput(id InputId, x, y float64) {
+	for ix, i := range ui.inputs {
+		if i.id == id {
+			ui.inputs[ix].move(x, y)
+			return
+		}
+	}
+}
+
+func (ui uiImpl) GetInputText(id InputId) string {
+	for _, i := range ui.inputs {
+		if i.id == id {
+			return i.GetText()
+		}
+	}
+	return ""
+}
+
+func (ui *uiImpl) SetInputText(id InputId, text string) {
+	for iid, i := range ui.inputs {
+		if i.id == id {
+			ui.inputs[iid].SetText(text)
+			return
+		}
+	}
+}
+
+func (ui *uiImpl) SetInputVisible(id InputId, visible bool) {
+	for iid, i := range ui.inputs {
+		if i.id == id {
+			ui.inputs[iid].setVisible(visible)
+			return
+		}
+	}
+}
+
+func (u *uiImpl) addInput(id InputId, w, h float64, maxLength int, initialText string, placeHolder string) {
+	u.inputs = append(u.inputs, newInput(id, w, h, maxLength, initialText, u.normalFace, placeHolder))
+}
+
+func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
+	ebiten.SetCursorShape(ebiten.CursorShapeDefault)
+	for i := range u.inputs {
+		u.inputs[i].Update(mouseX, mouseY, leftPressed, u.keys, elapsedTime)
+	}
+}
+
 func New() UI {
 	return &uiImpl{
 		onButtonClick: dummyCallback,

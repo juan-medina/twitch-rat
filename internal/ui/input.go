@@ -110,17 +110,6 @@ func (i input) isEditing() bool {
 	return i.editing
 }
 
-func (u *uiImpl) addInput(id InputId, w, h float64, maxLength int, initialText string, placeHolder string) {
-	u.inputs = append(u.inputs, newInput(id, w, h, maxLength, initialText, u.normalFace, placeHolder))
-}
-
-func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
-	ebiten.SetCursorShape(ebiten.CursorShapeDefault)
-	for i := range u.inputs {
-		u.inputs[i].Update(mouseX, mouseY, leftPressed, u.keys, elapsedTime)
-	}
-}
-
 func (i *input) setVisible(visible bool) {
 	i.visible = visible
 	if i.isEditing() {
@@ -251,41 +240,6 @@ func (i *input) move(x, y float64) {
 
 	i.textDo.GeoM.Reset()
 	i.textDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
-}
-func (ui *uiImpl) moveInput(id InputId, x, y float64) {
-	for ix, i := range ui.inputs {
-		if i.id == id {
-			ui.inputs[ix].move(x, y)
-			return
-		}
-	}
-}
-
-func (ui uiImpl) GetInputText(id InputId) string {
-	for _, i := range ui.inputs {
-		if i.id == id {
-			return i.GetText()
-		}
-	}
-	return ""
-}
-
-func (ui *uiImpl) SetInputText(id InputId, text string) {
-	for iid, i := range ui.inputs {
-		if i.id == id {
-			ui.inputs[iid].SetText(text)
-			return
-		}
-	}
-}
-
-func (ui *uiImpl) SetInputVisible(id InputId, visible bool) {
-	for iid, i := range ui.inputs {
-		if i.id == id {
-			ui.inputs[iid].setVisible(visible)
-			return
-		}
-	}
 }
 
 func newInput(id InputId, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {
