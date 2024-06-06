@@ -30,6 +30,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/ui"
+	"github.com/juan-medina/twitch-rat/internal/ui/button"
 )
 
 func (p *playing) Init() {
@@ -78,7 +79,7 @@ func (p *playing) Draw(screen *ebiten.Image) {
 	p.ui.Draw(screen)
 }
 
-func (p *playing) onButtonClick(id ui.ButtonId) {
+func (p *playing) onButtonClick(id button.Id) {
 	switch id {
 	case ui.BACK_BUTTON:
 		p.ui.OnButtonClick(nil)

@@ -27,6 +27,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/ui"
+	"github.com/juan-medina/twitch-rat/internal/ui/button"
 )
 
 func (m *menu) Init() {
@@ -62,7 +63,7 @@ func (m *menu) Draw(screen *ebiten.Image) {
 	m.ui.Draw(screen)
 }
 
-func (m *menu) onButtonClick(id ui.ButtonId) {
+func (m *menu) onButtonClick(id button.Id) {
 	switch id {
 	case ui.PLAY_BUTTON:
 		channel := m.ui.GetInputText(ui.INPUT_CHANNEL)

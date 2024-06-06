@@ -31,6 +31,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/juan-medina/twitch-rat/internal/keys"
+	"github.com/juan-medina/twitch-rat/internal/ui/button"
 )
 
 type UI interface {
@@ -40,10 +41,10 @@ type UI interface {
 
 	SetStatusMessage(message string)
 
-	EnableButton(id ButtonId)
-	DisableButton(id ButtonId)
-	SetButtonVisible(id ButtonId, visible bool)
-	OnButtonClick(callback func(id ButtonId))
+	EnableButton(id button.Id)
+	DisableButton(id button.Id)
+	SetButtonVisible(id button.Id, visible bool)
+	OnButtonClick(callback func(id button.Id))
 
 	GetInputText(id InputId) string
 	SetInputText(id InputId, text string)
@@ -60,7 +61,7 @@ type uiImpl struct {
 	normalFace    *text.GoTextFace
 	lastMessage   string
 	lastMessageDO text.DrawOptions
-	buttons       []button
+	buttons       []button.Button
 	inputs        []input
 	keys          keys.Keys
 }
@@ -71,6 +72,11 @@ const (
 	BUTTON_HEIGHT     = 50
 	BUTTON_GAP        = 10
 	BACK_BUTTON_WIDTH = 50
+)
+
+const (
+	PLAY_BUTTON button.Id = iota
+	BACK_BUTTON
 )
 
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
@@ -94,18 +100,18 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 		Size:   24,
 	}
 
-	u.buttons = make([]button, 0, MAX_BUTTONS)
+	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input, 0, MAX_INPUTS)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
-	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", buttonEnabled)
-	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", buttonEnabled)
+	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", button.Enabled)
+	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", button.Enabled)
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {
 	text.Draw(screen, u.lastMessage, u.normalFace, &u.lastMessageDO)
 	for _, b := range u.buttons {
-		b.draw(screen)
+		b.Draw(screen)
 
 	}
 
@@ -151,46 +157,46 @@ func (u *uiImpl) OnLayoutChange(width, height int) {
 	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
 }
 
-func (u *uiImpl) getButton(id ButtonId) *button {
+func (u *uiImpl) getButton(id button.Id) button.Button {
 	for i, b := range u.buttons {
-		if b.id == id {
-			return &u.buttons[i]
+		if b.GetId() == id {
+			return u.buttons[i]
 		}
 	}
 	return nil
 }
 
-func (u *uiImpl) changeButtonState(id ButtonId, state buttonState) {
+func (u *uiImpl) changeButtonState(id button.Id, state button.State) {
 	if b := u.getButton(id); b != nil {
-		b.changeState(state)
+		b.ChangeState(state)
 	}
 }
 
-func (u *uiImpl) EnableButton(id ButtonId) {
-	u.changeButtonState(id, buttonEnabled)
+func (u *uiImpl) EnableButton(id button.Id) {
+	u.changeButtonState(id, button.Enabled)
 }
 
-func (u *uiImpl) DisableButton(id ButtonId) {
-	u.changeButtonState(id, buttonDisabled)
+func (u *uiImpl) DisableButton(id button.Id) {
+	u.changeButtonState(id, button.Disabled)
 }
 
-func (u *uiImpl) moveButton(id ButtonId, x, y float64) {
+func (u *uiImpl) moveButton(id button.Id, x, y float64) {
 	if b := u.getButton(id); b != nil {
-		b.move(x, y)
+		b.Move(x, y)
 	}
 }
 
-func (u *uiImpl) addButton(id ButtonId, w, h float64, label string, state buttonState) {
-	u.buttons = append(u.buttons, newButton(id, w, h, label, u.normalFace, state))
+func (u *uiImpl) addButton(id button.Id, w, h float64, label string, state button.State) {
+	u.buttons = append(u.buttons, button.New(id, w, h, label, u.normalFace, state))
 }
 
-func (u *uiImpl) SetButtonVisible(id ButtonId, visible bool) {
+func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {
 	if b := u.getButton(id); b != nil {
 		b.SetVisible(visible)
 	}
 }
 
-func (u *uiImpl) OnButtonClick(callback func(id ButtonId)) {
+func (u *uiImpl) OnButtonClick(callback func(id button.Id)) {
 	for i := range u.buttons {
 		u.buttons[i].OnButtonClick(callback)
 	}

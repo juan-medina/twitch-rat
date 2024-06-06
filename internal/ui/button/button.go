@@ -20,7 +20,7 @@
  *  THE SOFTWARE.
  */
 
-package ui
+package button
 
 import (
 	"image/color"
@@ -41,59 +41,67 @@ var (
 	buttonDisabledTextColor = colors.Gray
 )
 
-type buttonState int
+type Id int
+type Button interface {
+	GetId() Id
+	Draw(screen *ebiten.Image)
+	Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int)
+	OnButtonClick(onButtonClick func(id Id))
+	SetVisible(visible bool)
+	ChangeState(state State)
+	Move(x, y float64)
+}
+
+type State int
 
 const (
-	buttonDisabled buttonState = iota
-	buttonEnabled
-	buttonHover
-	buttonPressed
-)
-
-type ButtonId int
-
-const (
-	PLAY_BUTTON ButtonId = iota
-	BACK_BUTTON
+	Disabled State = iota
+	Enabled
+	Hover
+	Pressed
 )
 
 type button struct {
-	id                  ButtonId
+	id                  Id
 	x, y, w, h          float64
+	face                *text.GoTextFace
 	label               string
 	color               color.Color
 	visible             bool
 	do                  text.DrawOptions
-	state               buttonState
+	state               State
 	timeToSendClick     int
-	face                *text.GoTextFace
-	buttonClickCallback func(id ButtonId)
+	buttonClickCallback func(id Id)
 }
 
-func dummyButtonCallback(id ButtonId) {}
+func dummyButtonCallback(id Id) {}
 
 const (
 	CLICK_SENT_DELAY = 200
 )
 
-func (b button) draw(screen *ebiten.Image) {
+func (b button) GetId() Id {
+	return b.id
+}
+
+func (b button) Draw(screen *ebiten.Image) {
 	if b.visible {
 		vector.DrawFilledRect(screen, float32(b.x), float32(b.y), float32(b.w), float32(b.h), b.color, true)
 		text.Draw(screen, b.label, b.face, &b.do)
 	}
 }
 
-func (b *button) changeState(state buttonState) {
+func (b *button) ChangeState(state State) {
 	b.state = state
 	textColor := buttonEnabledTextColor
 	switch state {
-	case buttonHover:
+	case Hover:
 		b.color = hoverColor
-	case buttonEnabled:
+	case Enabled:
 		b.color = enabledColor
-	case buttonPressed:
+	case Pressed:
 		b.color = pressedColor
-	case buttonDisabled:
+	case Disabled:
 		b.color = disabledColor
 		textColor = buttonDisabledTextColor
 	}
@@ -113,7 +121,7 @@ func (b button) hit(x, y float64) bool {
 	return false
 }
 
-func (b *button) move(x, y float64) {
+func (b *button) Move(x, y float64) {
 	b.x = x
 	b.y = y
 
@@ -127,33 +135,33 @@ func (b *button) move(x, y float64) {
 
 func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
 	if b.visible {
-		if b.state != buttonDisabled {
+		if b.state != Disabled {
 			if b.hit(mouseX, mouseY) {
 				if leftPressed {
-					if b.state != buttonPressed {
+					if b.state != Pressed {
 						if b.timeToSendClick == 0 {
-							b.changeState(buttonPressed)
+							b.ChangeState(Pressed)
 							b.timeToSendClick = CLICK_SENT_DELAY
 						}
 					}
 				} else {
-					b.changeState(buttonHover)
+					b.ChangeState(Hover)
 				}
 			} else {
-				b.changeState(buttonEnabled)
+				b.ChangeState(Enabled)
 			}
 		}
 		if b.timeToSendClick != 0 {
 			b.timeToSendClick -= elapsedTime
 			if b.timeToSendClick <= 0 {
 				b.timeToSendClick = 0
-				b.Click()
+				b.click()
 			}
 		}
 	}
 }
 
-func (b *button) OnButtonClick(onButtonClick func(id ButtonId)) {
+func (b *button) OnButtonClick(onButtonClick func(id Id)) {
 	if onButtonClick != nil {
 		b.buttonClickCallback = onButtonClick
 	} else {
@@ -161,11 +169,11 @@ func (b *button) OnButtonClick(onButtonClick func(id ButtonId)) {
 	}
 }
 
-func (b *button) Click() {
+func (b *button) click() {
 	b.buttonClickCallback(b.id)
 }
 
-func newButton(id ButtonId, w, h float64, label string, face *text.GoTextFace, state buttonState) button {
+func New(id Id, w, h float64, label string, face *text.GoTextFace, state State) Button {
 	do := text.DrawOptions{}
 	b := button{
 		id:                  id,
@@ -177,6 +185,6 @@ func newButton(id ButtonId, w, h float64, label string, face *text.GoTextFace, s
 		face:                face,
 		buttonClickCallback: dummyButtonCallback,
 	}
-	b.changeState(state)
-	return b
+	b.ChangeState(state)
+	return &b
 }
