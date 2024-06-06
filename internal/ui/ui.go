@@ -213,39 +213,38 @@ func (u *uiImpl) updateButtons(mouseX, mouseY float64, leftPressed bool, elapsed
 		u.buttons[i].Update(mouseX, mouseY, leftPressed, elapsedTime)
 	}
 }
-func (ui *uiImpl) moveInput(id InputId, x, y float64) {
-	for ix, i := range ui.inputs {
-		if i.id == id {
-			ui.inputs[ix].move(x, y)
-			return
+
+func (u *uiImpl) getInput(id InputId) *input {
+	for i := range u.inputs {
+		if u.inputs[i].id == id {
+			return &u.inputs[i]
 		}
+	}
+	return nil
+}
+
+func (ui *uiImpl) moveInput(id InputId, x, y float64) {
+	if i := ui.getInput(id); i != nil {
+		i.move(x, y)
 	}
 }
 
 func (ui uiImpl) GetInputText(id InputId) string {
-	for _, i := range ui.inputs {
-		if i.id == id {
-			return i.GetText()
-		}
+	if i := ui.getInput(id); i != nil {
+		return i.GetText()
 	}
 	return ""
 }
 
 func (ui *uiImpl) SetInputText(id InputId, text string) {
-	for iid, i := range ui.inputs {
-		if i.id == id {
-			ui.inputs[iid].SetText(text)
-			return
-		}
+	if i := ui.getInput(id); i != nil {
+		i.SetText(text)
 	}
 }
 
 func (ui *uiImpl) SetInputVisible(id InputId, visible bool) {
-	for iid, i := range ui.inputs {
-		if i.id == id {
-			ui.inputs[iid].setVisible(visible)
-			return
-		}
+	if i := ui.getInput(id); i != nil {
+		i.setVisible(visible)
 	}
 }
 
