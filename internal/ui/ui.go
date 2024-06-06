@@ -25,24 +25,12 @@ package ui
 import (
 	"bytes"
 	"embed"
-	"image/color"
 	"io/fs"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/juan-medina/twitch-rat/internal/keys"
-)
-
-var (
-	yellow      = color.RGBA64{0xFFFF, 0xFFFF, 0x0000, 0xFFFF}
-	lightPurple = color.RGBA64{0xFFFF, 0x0000, 0xFFFF, 0xFFFF}
-	darkPurple  = color.RGBA64{0x6666, 0x0000, 0x6666, 0xFFFF}
-	purple      = color.RGBA64{0x8888, 0x0000, 0x8888, 0xFFFF}
-	gray        = color.RGBA64{0x6666, 0x6666, 0x6666, 0xFFFF}
-	darkGray    = color.RGBA64{0x3333, 0x3333, 0x3333, 0xFFFF}
-	white       = color.RGBA64{0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}
-	black       = color.RGBA64{0x0000, 0x0000, 0x0000, 0xFFFF}
 )
 
 type UI interface {

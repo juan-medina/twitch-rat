@@ -28,6 +28,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/step"
 )
@@ -65,10 +66,10 @@ const (
 )
 
 var (
-	inputBorderColor = darkPurple
-	inputColor       = white
-	inputTextColor   = black
-	inputEmptyColor  = gray
+	inputBorderColor = colors.DarkPurple
+	inputColor       = colors.White
+	inputTextColor   = colors.Black
+	inputEmptyColor  = colors.Gray
 )
 
 func (i input) draw(screen *ebiten.Image) {

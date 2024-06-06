@@ -28,16 +28,17 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 )
 
 var (
-	enabledColor  = darkPurple
-	hoverColor    = purple
-	pressedColor  = lightPurple
-	disabledColor = darkGray
+	enabledColor  = colors.DarkPurple
+	hoverColor    = colors.Purple
+	pressedColor  = colors.LightPurple
+	disabledColor = colors.DarkGray
 
-	buttonEnabledTextColor  = yellow
-	buttonDisabledTextColor = gray
+	buttonEnabledTextColor  = colors.Yellow
+	buttonDisabledTextColor = colors.Gray
 )
 
 type buttonState int
