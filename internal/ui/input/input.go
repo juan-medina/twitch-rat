@@ -20,7 +20,7 @@
  *  THE SOFTWARE.
  */
 
-package ui
+package input
 
 import (
 	"image/color"
@@ -33,14 +33,20 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/step"
 )
 
-type InputId int
+type Id int
 
-const (
-	INPUT_CHANNEL InputId = iota
-)
+type Input interface {
+	GetId() Id
+	Draw(screen *ebiten.Image)
+	Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys, elapsedTime int)
+	SetVisible(visible bool)
+	Move(x, y float64)
+	GetText() string
+	SetText(text string)
+}
 
 type input struct {
-	id          InputId
+	id          Id
 	x, y, w, h  float64
 	maxLength   int
 	text        string
@@ -57,12 +63,9 @@ type input struct {
 }
 
 const (
-	MAX_INPUTS        = 1
 	INPUT_BORDER_SIZE = 5
 	INPUT_LEFT_GAP    = 10
 	INPUT_TOP_GAP     = 10
-	INPUT_WIDTH       = BUTTON_WIDTH*2 + BUTTON_GAP*2
-	INPUT_HEIGHT      = 50
 )
 
 var (
@@ -72,7 +75,11 @@ var (
 	inputEmptyColor  = colors.Gray
 )
 
-func (i input) draw(screen *ebiten.Image) {
+func (i input) GetId() Id {
+	return i.id
+}
+
+func (i input) Draw(screen *ebiten.Image) {
 	if i.visible {
 		vector.DrawFilledRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), i.color, true)
 		vector.StrokeRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), INPUT_BORDER_SIZE, i.borderColor, true)
@@ -111,7 +118,7 @@ func (i input) isEditing() bool {
 	return i.editing
 }
 
-func (i *input) setVisible(visible bool) {
+func (i *input) SetVisible(visible bool) {
 	i.visible = visible
 	if i.isEditing() {
 		i.saveEdit()
@@ -234,7 +241,7 @@ func (i input) hit(x, y float64) bool {
 	return false
 }
 
-func (i *input) move(x, y float64) {
+func (i *input) Move(x, y float64) {
 	i.x = x
 	i.y = y
 	i.updateCaretPosition()
@@ -243,7 +250,7 @@ func (i *input) move(x, y float64) {
 	i.textDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
 }
 
-func newInput(id InputId, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {
+func New(id Id, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) Input {
 	textDo := text.DrawOptions{}
 	textDo.ColorScale.Reset()
 	if initialText == "" {
@@ -255,7 +262,7 @@ func newInput(id InputId, w, h float64, maxLength int, initialText string, face 
 	caretDo.GeoM.Reset()
 	caretDo.ColorScale.Reset()
 	caretDo.ColorScale.ScaleWithColor(inputTextColor)
-	return input{
+	return &input{
 		id:          id,
 		w:           w,
 		h:           h,

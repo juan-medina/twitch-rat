@@ -32,6 +32,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
+	"github.com/juan-medina/twitch-rat/internal/ui/input"
 )
 
 type UI interface {
@@ -46,9 +47,9 @@ type UI interface {
 	SetButtonVisible(id button.Id, visible bool)
 	OnButtonClick(callback func(id button.Id))
 
-	GetInputText(id InputId) string
-	SetInputText(id InputId, text string)
-	SetInputVisible(id InputId, visible bool)
+	GetInputText(id input.Id) string
+	SetInputText(id input.Id, text string)
+	SetInputVisible(id input.Id, visible bool)
 
 	OnLayoutChange(width, height int)
 }
@@ -62,7 +63,7 @@ type uiImpl struct {
 	lastMessage   string
 	lastMessageDO text.DrawOptions
 	buttons       []button.Button
-	inputs        []input
+	inputs        []input.Input
 	keys          keys.Keys
 }
 
@@ -72,11 +73,18 @@ const (
 	BUTTON_HEIGHT     = 50
 	BUTTON_GAP        = 10
 	BACK_BUTTON_WIDTH = 50
+	MAX_INPUTS        = 1
+	INPUT_WIDTH       = BUTTON_WIDTH*2 + BUTTON_GAP*2
+	INPUT_HEIGHT      = 50
 )
 
 const (
 	PLAY_BUTTON button.Id = iota
 	BACK_BUTTON
+)
+
+const (
+	INPUT_CHANNEL input.Id = iota
 )
 
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
@@ -101,7 +109,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	}
 
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
-	u.inputs = make([]input, 0, MAX_INPUTS)
+	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
 	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", button.Enabled)
@@ -116,7 +124,7 @@ func (u *uiImpl) Draw(screen *ebiten.Image) {
 	}
 
 	for _, i := range u.inputs {
-		i.draw(screen)
+		i.Draw(screen)
 	}
 }
 
@@ -208,42 +216,42 @@ func (u *uiImpl) updateButtons(mouseX, mouseY float64, leftPressed bool, elapsed
 	}
 }
 
-func (u *uiImpl) getInput(id InputId) *input {
+func (u *uiImpl) getInput(id input.Id) input.Input {
 	for i := range u.inputs {
-		if u.inputs[i].id == id {
-			return &u.inputs[i]
+		if u.inputs[i].GetId() == id {
+			return u.inputs[i]
 		}
 	}
 	return nil
 }
 
-func (ui *uiImpl) moveInput(id InputId, x, y float64) {
+func (ui *uiImpl) moveInput(id input.Id, x, y float64) {
 	if i := ui.getInput(id); i != nil {
-		i.move(x, y)
+		i.Move(x, y)
 	}
 }
 
-func (ui uiImpl) GetInputText(id InputId) string {
+func (ui uiImpl) GetInputText(id input.Id) string {
 	if i := ui.getInput(id); i != nil {
 		return i.GetText()
 	}
 	return ""
 }
 
-func (ui *uiImpl) SetInputText(id InputId, text string) {
+func (ui *uiImpl) SetInputText(id input.Id, text string) {
 	if i := ui.getInput(id); i != nil {
 		i.SetText(text)
 	}
 }
 
-func (ui *uiImpl) SetInputVisible(id InputId, visible bool) {
+func (ui *uiImpl) SetInputVisible(id input.Id, visible bool) {
 	if i := ui.getInput(id); i != nil {
-		i.setVisible(visible)
+		i.SetVisible(visible)
 	}
 }
 
-func (u *uiImpl) addInput(id InputId, w, h float64, maxLength int, initialText string, placeHolder string) {
-	u.inputs = append(u.inputs, newInput(id, w, h, maxLength, initialText, u.normalFace, placeHolder))
+func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText string, placeHolder string) {
+	u.inputs = append(u.inputs, input.New(id, w, h, maxLength, initialText, u.normalFace, placeHolder))
 }
 
 func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
