@@ -46,7 +46,7 @@ var (
 )
 
 type UI interface {
-	Init(fileSystem embed.FS, keys keys.Keys, screenWidth, screenHeight int)
+	Init(fileSystem embed.FS, keys keys.Keys)
 	Update(elapsedTime int)
 	Draw(screen *ebiten.Image)
 
@@ -60,6 +60,8 @@ type UI interface {
 	GetInputText(id InputId) string
 	SetInputText(id InputId, text string)
 	SetInputVisible(id InputId, visible bool)
+
+	OnLayoutChange(width, height int)
 }
 
 type uiImpl struct {
@@ -77,10 +79,8 @@ type uiImpl struct {
 }
 
 // init implements UI.
-func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, width int, height int) {
+func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.fileSystem = fileSystem
-	u.screenWidth = width
-	u.screenHeight = height
 	u.keys = keys
 
 	fontBytes, err := fs.ReadFile(u.fileSystem, "embed/fonts/default.ttf")
@@ -100,23 +100,12 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, width int, height int
 		Size:   24,
 	}
 
-	u.lastMessageDO.GeoM.Reset()
-	gapX := u.normalFace.Size
-	gapY := u.normalFace.Size * 1.5
-	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
-
 	u.buttons = make([]button, 0, MAX_BUTTONS)
 	u.inputs = make([]input, 0, MAX_INPUTS)
 
-	bx := float64((u.screenWidth / 2) - (BUTTON_WIDTH+BUTTON_GAP+INPUT_WIDTH)/2)
-	by := float64((u.screenHeight / 2) - (BUTTON_HEIGHT / 2))
-
-	u.addInput(INPUT_CHANNEL, bx, by, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
-
-	bx += INPUT_WIDTH + BUTTON_GAP
-	u.addButton(PLAY_BUTTON, bx, by, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", buttonEnabled)
-
-	u.addButton(BACK_BUTTON, float64(u.screenWidth)-BACK_BUTTON_WIDTH, 0, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", buttonEnabled)
+	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
+	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", buttonEnabled)
+	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", buttonEnabled)
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {
@@ -145,6 +134,30 @@ func (u *uiImpl) SetStatusMessage(message string) {
 }
 
 func dummyCallback(id ButtonId) {}
+
+func (u *uiImpl) OnLayoutChange(width, height int) {
+	u.screenWidth = width
+	u.screenHeight = height
+
+	cx := float64(u.screenWidth / 2)
+	cy := float64(u.screenHeight / 2)
+
+	px := cx - INPUT_WIDTH - (BUTTON_GAP / 2)
+	py := cy - (BUTTON_HEIGHT / 2)
+	u.moveInput(INPUT_CHANNEL, px, py)
+
+	px = cx + (BUTTON_GAP / 2)
+	u.moveButton(PLAY_BUTTON, px, py)
+
+	px = float64(u.screenWidth) - BACK_BUTTON_WIDTH
+	py = 0
+	u.moveButton(BACK_BUTTON, px, py)
+
+	u.lastMessageDO.GeoM.Reset()
+	gapX := u.normalFace.Size
+	gapY := u.normalFace.Size * 1.5
+	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
+}
 
 func New() UI {
 	return &uiImpl{

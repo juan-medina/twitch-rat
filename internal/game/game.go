@@ -36,9 +36,10 @@ import (
 )
 
 const (
-	WIDTH       = 1920
-	HEIGHT      = 1080
-	TITLE       = "Twitch Rat"
+	WIDTH  = 1920
+	HEIGHT = 1080
+	TITLE  = "Twitch Rat"
+
 	APPLICATION = "twitch-rats"
 )
 
@@ -58,16 +59,34 @@ type game struct {
 	state          GameState
 	stages         map[stage.Id]stage.Stage
 	currentStage   stage.Id
+	currentWidth   int
+	currentHeight  int
 }
 
-func (g game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return WIDTH, HEIGHT
+func (g *game) Layout(outsideWidth, outsideHeight int) (int, int) {
+	currentHeight := HEIGHT
+	currentWidth := (HEIGHT * outsideWidth) / outsideHeight
+
+	if currentWidth != g.currentWidth || currentHeight != g.currentHeight {
+		g.onLayoutChange(currentWidth, currentHeight)
+	}
+
+	return currentWidth, currentHeight
+}
+
+func (g *game) onLayoutChange(width, height int) {
+	g.currentWidth = width
+	g.currentHeight = height
+	if g.state == RUNNING {
+		g.ui.OnLayoutChange(width, height)
+	}
 }
 
 func (g *game) init() {
 	g.settings.Init()
 	g.keys.Init()
-	g.ui.Init(g.fileSystem, g.keys, WIDTH, HEIGHT)
+	g.ui.Init(g.fileSystem, g.keys)
+	g.ui.OnLayoutChange(g.currentWidth, g.currentHeight)
 
 	g.lastUpdateTime = time.Now()
 
@@ -116,6 +135,8 @@ func (g *game) Run() error {
 	ebiten.SetWindowSize(WIDTH, HEIGHT)
 	ebiten.SetWindowTitle(TITLE)
 	ebiten.SetTPS(60)
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	ebiten.SetFullscreen(false)
 
 	return ebiten.RunGame(g)
 }

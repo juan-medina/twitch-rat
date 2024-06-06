@@ -114,6 +114,18 @@ func (b button) hit(x, y float64) bool {
 	return false
 }
 
+func (b *button) move(x, y float64) {
+	b.x = x
+	b.y = y
+
+	dx, dy := text.Measure(b.label, b.face, 0)
+	tx := x + (b.w / 2) - (dx / 2)
+	ty := y + (b.h / 2) - (dy / 2)
+
+	b.do.GeoM.Reset()
+	b.do.GeoM.Translate(tx, ty)
+}
+
 func (u *uiImpl) EnableButton(id ButtonId) {
 	u.changeButtonState(id, buttonEnabled)
 }
@@ -169,8 +181,17 @@ func (u *uiImpl) updateButtons(mouseX, mouseY float64, leftPressed bool, elapsed
 	}
 }
 
-func (u *uiImpl) addButton(id ButtonId, x, y, w, h float64, label string, state buttonState) {
-	u.buttons = append(u.buttons, newButton(id, x, y, w, h, label, u.normalFace, state))
+func (u *uiImpl) moveButton(id ButtonId, x, y float64) {
+	for i, b := range u.buttons {
+		if b.id == id {
+			u.buttons[i].move(x, y)
+			return
+		}
+	}
+}
+
+func (u *uiImpl) addButton(id ButtonId, w, h float64, label string, state buttonState) {
+	u.buttons = append(u.buttons, newButton(id, w, h, label, u.normalFace, state))
 }
 
 func (u *uiImpl) SetButtonVisible(id ButtonId, visible bool) {
@@ -182,19 +203,10 @@ func (u *uiImpl) SetButtonVisible(id ButtonId, visible bool) {
 	}
 }
 
-func newButton(id ButtonId, x, y, w, h float64, label string, face *text.GoTextFace, state buttonState) button {
+func newButton(id ButtonId, w, h float64, label string, face *text.GoTextFace, state buttonState) button {
 	do := text.DrawOptions{}
-	dx, dy := text.Measure(label, face, 0)
-	tx := x + (w / 2) - (dx / 2)
-	ty := y + (h / 2) - (dy / 2)
-
-	do.GeoM.Reset()
-	do.GeoM.Translate(tx, ty)
-
 	b := button{
 		id:      id,
-		x:       x,
-		y:       y,
 		w:       w,
 		h:       h,
 		label:   label,

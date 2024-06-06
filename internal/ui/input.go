@@ -110,8 +110,8 @@ func (i input) isEditing() bool {
 	return i.editing
 }
 
-func (u *uiImpl) addInput(id InputId, x, y, w, h float64, maxLength int, initialText string, placeHolder string) {
-	u.inputs = append(u.inputs, newInput(id, x, y, w, h, maxLength, initialText, u.normalFace, placeHolder))
+func (u *uiImpl) addInput(id InputId, w, h float64, maxLength int, initialText string, placeHolder string) {
+	u.inputs = append(u.inputs, newInput(id, w, h, maxLength, initialText, u.normalFace, placeHolder))
 }
 
 func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
@@ -244,6 +244,23 @@ func (i input) hit(x, y float64) bool {
 	return false
 }
 
+func (i *input) move(x, y float64) {
+	i.x = x
+	i.y = y
+	i.updateCaretPosition()
+
+	i.textDo.GeoM.Reset()
+	i.textDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
+}
+func (ui *uiImpl) moveInput(id InputId, x, y float64) {
+	for ix, i := range ui.inputs {
+		if i.id == id {
+			ui.inputs[ix].move(x, y)
+			return
+		}
+	}
+}
+
 func (ui uiImpl) GetInputText(id InputId) string {
 	for _, i := range ui.inputs {
 		if i.id == id {
@@ -271,11 +288,8 @@ func (ui *uiImpl) SetInputVisible(id InputId, visible bool) {
 	}
 }
 
-func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {
+func newInput(id InputId, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) input {
 	textDo := text.DrawOptions{}
-	textDo.GeoM.Reset()
-	textDo.GeoM.Translate(x+INPUT_LEFT_GAP, y+INPUT_TOP_GAP)
-
 	textDo.ColorScale.Reset()
 	if initialText == "" {
 		textDo.ColorScale.ScaleWithColor(inputEmptyColor)
@@ -284,13 +298,10 @@ func newInput(id InputId, x, y, w, h float64, maxLength int, initialText string,
 	}
 	caretDo := text.DrawOptions{}
 	caretDo.GeoM.Reset()
-	caretDo.GeoM.Translate(x+INPUT_LEFT_GAP, y+INPUT_TOP_GAP)
 	caretDo.ColorScale.Reset()
 	caretDo.ColorScale.ScaleWithColor(inputTextColor)
 	return input{
 		id:          id,
-		x:           x,
-		y:           y,
 		w:           w,
 		h:           h,
 		maxLength:   maxLength,
