@@ -57,24 +57,22 @@ const (
 )
 
 type button struct {
-	id              ButtonId
-	x, y, w, h      float64
-	label           string
-	color           color.Color
-	visible         bool
-	do              text.DrawOptions
-	state           buttonState
-	timeToSendClick int
-	face            *text.GoTextFace
+	id                  ButtonId
+	x, y, w, h          float64
+	label               string
+	color               color.Color
+	visible             bool
+	do                  text.DrawOptions
+	state               buttonState
+	timeToSendClick     int
+	face                *text.GoTextFace
+	buttonClickCallback func(id ButtonId)
 }
 
+func dummyButtonCallback(id ButtonId) {}
+
 const (
-	MAX_BUTTONS       = 10
-	BUTTON_WIDTH      = 170
-	BUTTON_HEIGHT     = 50
-	BUTTON_GAP        = 10
-	CLICK_SENT_DELAY  = 200
-	BACK_BUTTON_WIDTH = 50
+	CLICK_SENT_DELAY = 200
 )
 
 func (b button) draw(screen *ebiten.Image) {
@@ -103,7 +101,7 @@ func (b *button) changeState(state buttonState) {
 	b.do.ColorScale.ScaleWithColor(textColor)
 }
 
-func (b *button) setVisible(visible bool) {
+func (b *button) SetVisible(visible bool) {
 	b.visible = visible
 }
 
@@ -126,16 +124,57 @@ func (b *button) move(x, y float64) {
 	b.do.GeoM.Translate(tx, ty)
 }
 
+func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
+	if b.visible {
+		if b.state != buttonDisabled {
+			if b.hit(mouseX, mouseY) {
+				if leftPressed {
+					if b.state != buttonPressed {
+						if b.timeToSendClick == 0 {
+							b.changeState(buttonPressed)
+							b.timeToSendClick = CLICK_SENT_DELAY
+						}
+					}
+				} else {
+					b.changeState(buttonHover)
+				}
+			} else {
+				b.changeState(buttonEnabled)
+			}
+		}
+		if b.timeToSendClick != 0 {
+			b.timeToSendClick -= elapsedTime
+			if b.timeToSendClick <= 0 {
+				b.timeToSendClick = 0
+				b.Click()
+			}
+		}
+	}
+}
+
+func (b *button) OnButtonClick(onButtonClick func(id ButtonId)) {
+	if onButtonClick != nil {
+		b.buttonClickCallback = onButtonClick
+	} else {
+		b.buttonClickCallback = dummyButtonCallback
+	}
+}
+
+func (b *button) Click() {
+	b.buttonClickCallback(b.id)
+}
+
 func newButton(id ButtonId, w, h float64, label string, face *text.GoTextFace, state buttonState) button {
 	do := text.DrawOptions{}
 	b := button{
-		id:      id,
-		w:       w,
-		h:       h,
-		label:   label,
-		visible: false,
-		do:      do,
-		face:    face,
+		id:                  id,
+		w:                   w,
+		h:                   h,
+		label:               label,
+		visible:             false,
+		do:                  do,
+		face:                face,
+		buttonClickCallback: dummyButtonCallback,
 	}
 	b.changeState(state)
 	return b

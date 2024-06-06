@@ -73,12 +73,18 @@ type uiImpl struct {
 	lastMessage   string
 	lastMessageDO text.DrawOptions
 	buttons       []button
-	onButtonClick func(id ButtonId)
 	inputs        []input
 	keys          keys.Keys
 }
 
-// init implements UI.
+const (
+	MAX_BUTTONS       = 10
+	BUTTON_WIDTH      = 170
+	BUTTON_HEIGHT     = 50
+	BUTTON_GAP        = 10
+	BACK_BUTTON_WIDTH = 50
+)
+
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.fileSystem = fileSystem
 	u.keys = keys
@@ -133,8 +139,6 @@ func (u *uiImpl) SetStatusMessage(message string) {
 	u.lastMessage = message
 }
 
-func dummyCallback(id ButtonId) {}
-
 func (u *uiImpl) OnLayoutChange(width, height int) {
 	u.screenWidth = width
 	u.screenHeight = height
@@ -159,6 +163,21 @@ func (u *uiImpl) OnLayoutChange(width, height int) {
 	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
 }
 
+func (u *uiImpl) getButton(id ButtonId) *button {
+	for i, b := range u.buttons {
+		if b.id == id {
+			return &u.buttons[i]
+		}
+	}
+	return nil
+}
+
+func (u *uiImpl) changeButtonState(id ButtonId, state buttonState) {
+	if b := u.getButton(id); b != nil {
+		b.changeState(state)
+	}
+}
+
 func (u *uiImpl) EnableButton(id ButtonId) {
 	u.changeButtonState(id, buttonEnabled)
 }
@@ -168,11 +187,8 @@ func (u *uiImpl) DisableButton(id ButtonId) {
 }
 
 func (u *uiImpl) moveButton(id ButtonId, x, y float64) {
-	for i, b := range u.buttons {
-		if b.id == id {
-			u.buttons[i].move(x, y)
-			return
-		}
+	if b := u.getButton(id); b != nil {
+		b.move(x, y)
 	}
 }
 
@@ -181,58 +197,20 @@ func (u *uiImpl) addButton(id ButtonId, w, h float64, label string, state button
 }
 
 func (u *uiImpl) SetButtonVisible(id ButtonId, visible bool) {
-	for i, b := range u.buttons {
-		if b.id == id {
-			u.buttons[i].setVisible(visible)
-			return
-		}
-	}
-}
-
-func (u *uiImpl) changeButtonState(id ButtonId, state buttonState) {
-	for i, b := range u.buttons {
-		if b.id == id {
-			u.buttons[i].changeState(state)
-			return
-		}
+	if b := u.getButton(id); b != nil {
+		b.SetVisible(visible)
 	}
 }
 
 func (u *uiImpl) OnButtonClick(callback func(id ButtonId)) {
-	if callback != nil {
-		u.onButtonClick = callback
-	} else {
-		u.onButtonClick = dummyCallback
+	for i := range u.buttons {
+		u.buttons[i].OnButtonClick(callback)
 	}
 }
 
 func (u *uiImpl) updateButtons(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
-	for i, b := range u.buttons {
-		if b.visible {
-			if b.state != buttonDisabled {
-				if b.hit(mouseX, mouseY) {
-					if leftPressed {
-						if b.state != buttonPressed {
-							if b.timeToSendClick == 0 {
-								u.changeButtonState(b.id, buttonPressed)
-								u.buttons[i].timeToSendClick = CLICK_SENT_DELAY
-							}
-						}
-					} else {
-						u.changeButtonState(b.id, buttonHover)
-					}
-				} else {
-					u.changeButtonState(b.id, buttonEnabled)
-				}
-			}
-			if b.timeToSendClick != 0 {
-				u.buttons[i].timeToSendClick -= elapsedTime
-				if b.timeToSendClick <= 0 {
-					u.buttons[i].timeToSendClick = 0
-					u.onButtonClick(b.id)
-				}
-			}
-		}
+	for i := range u.buttons {
+		u.buttons[i].Update(mouseX, mouseY, leftPressed, elapsedTime)
 	}
 }
 func (ui *uiImpl) moveInput(id InputId, x, y float64) {
@@ -283,7 +261,5 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 }
 
 func New() UI {
-	return &uiImpl{
-		onButtonClick: dummyCallback,
-	}
+	return &uiImpl{}
 }
