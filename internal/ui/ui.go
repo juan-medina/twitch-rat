@@ -52,12 +52,12 @@ type UI interface {
 	SetInputText(id input.Id, text string)
 	SetInputVisible(id input.Id, visible bool)
 
-	OnLayoutChange(width, height int)
+	OnLayoutChange(width, height float64)
 }
 
 type uiImpl struct {
-	screenWidth   int
-	screenHeight  int
+	screenWidth   float64
+	screenHeight  float64
 	fileSystem    embed.FS
 	faceSource    *text.GoTextFaceSource
 	normalFace    *text.GoTextFace
@@ -70,12 +70,12 @@ type uiImpl struct {
 
 const (
 	MAX_BUTTONS       = 10
-	BUTTON_WIDTH      = 170
-	BUTTON_HEIGHT     = 50
-	BUTTON_GAP        = 10
-	BACK_BUTTON_WIDTH = 50
+	BUTTON_WIDTH      = 170.0
+	BUTTON_HEIGHT     = 50.0
+	BUTTON_GAP        = 10.0
+	BACK_BUTTON_WIDTH = 50.0
 	MAX_INPUTS        = 1
-	INPUT_WIDTH       = BUTTON_WIDTH*2 + BUTTON_GAP*2
+	INPUT_WIDTH       = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
 	INPUT_HEIGHT      = 50
 )
 
@@ -142,12 +142,12 @@ func (u *uiImpl) SetStatusMessage(message string) {
 	u.lastMessage = message
 }
 
-func (u *uiImpl) OnLayoutChange(width, height int) {
+func (u *uiImpl) OnLayoutChange(width, height float64) {
 	u.screenWidth = width
 	u.screenHeight = height
 
-	cx := float64(u.screenWidth / 2)
-	cy := float64(u.screenHeight / 2)
+	cx := u.screenWidth / 2
+	cy := u.screenHeight / 2
 
 	px := cx - INPUT_WIDTH - (BUTTON_GAP / 2)
 	py := cy - (BUTTON_HEIGHT / 2)
@@ -156,14 +156,14 @@ func (u *uiImpl) OnLayoutChange(width, height int) {
 	px = cx + (BUTTON_GAP / 2)
 	u.moveButton(PLAY_BUTTON, px, py)
 
-	px = float64(u.screenWidth) - BACK_BUTTON_WIDTH
+	px = u.screenWidth - BACK_BUTTON_WIDTH
 	py = 0
 	u.moveButton(BACK_BUTTON, px, py)
 
 	u.lastMessageDO.GeoM.Reset()
 	gapX := u.normalFace.Size
 	gapY := u.normalFace.Size * 1.5
-	u.lastMessageDO.GeoM.Translate(gapX, float64(u.screenHeight)-gapY)
+	u.lastMessageDO.GeoM.Translate(gapX, u.screenHeight-gapY)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {

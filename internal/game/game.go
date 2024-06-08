@@ -36,8 +36,8 @@ import (
 )
 
 const (
-	WIDTH  = 1920
-	HEIGHT = 1080
+	WIDTH  = 1920.0
+	HEIGHT = 1080.0
 	TITLE  = "Twitch Rat"
 
 	APPLICATION = "twitch-rats"
@@ -59,22 +59,24 @@ type game struct {
 	state          GameState
 	stages         map[stage.Id]stage.Stage
 	currentStage   stage.Id
-	currentWidth   int
-	currentHeight  int
+	currentWidth   float64
+	currentHeight  float64
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return WIDTH, HEIGHT
+}
+func (g *game) LayoutF(outsideWidth, outsideHeight float64) (screenWidth, screenHeight float64) {
 	currentHeight := HEIGHT
 	currentWidth := (HEIGHT * outsideWidth) / outsideHeight
 
 	if currentWidth != g.currentWidth || currentHeight != g.currentHeight {
 		g.onLayoutChange(currentWidth, currentHeight)
 	}
-
 	return currentWidth, currentHeight
 }
 
-func (g *game) onLayoutChange(width, height int) {
+func (g *game) onLayoutChange(width, height float64) {
 	g.currentWidth = width
 	g.currentHeight = height
 	if g.state == RUNNING {
