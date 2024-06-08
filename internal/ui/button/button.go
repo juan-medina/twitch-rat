@@ -29,6 +29,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/colors"
+	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
 var (
@@ -64,11 +65,9 @@ const (
 type button struct {
 	id                  Id
 	x, y, w, h          float64
-	face                *text.GoTextFace
-	label               string
 	color               color.Color
 	visible             bool
-	textDo              text.DrawOptions
+	label               label.Label
 	state               State
 	timeToSendClick     int
 	buttonClickCallback func(id Id)
@@ -87,7 +86,7 @@ func (b button) GetId() Id {
 func (b button) Draw(screen *ebiten.Image) {
 	if b.visible {
 		vector.DrawFilledRect(screen, float32(b.x), float32(b.y), float32(b.w), float32(b.h), b.color, true)
-		text.Draw(screen, b.label, b.face, &b.textDo)
+		b.label.Draw(screen)
 	}
 }
 
@@ -105,9 +104,7 @@ func (b *button) ChangeState(state State) {
 		b.color = disabledColor
 		textColor = buttonDisabledTextColor
 	}
-
-	b.textDo.ColorScale.Reset()
-	b.textDo.ColorScale.ScaleWithColor(textColor)
+	b.label.SetColor(textColor)
 }
 
 func (b *button) SetVisible(visible bool) {
@@ -125,12 +122,11 @@ func (b *button) Move(x, y float64) {
 	b.x = x
 	b.y = y
 
-	dx, dy := text.Measure(b.label, b.face, 0)
+	dx, dy := b.label.Measure()
 	tx := x + (b.w / 2) - (dx / 2)
 	ty := y + (b.h / 2) - (dy / 2)
 
-	b.textDo.GeoM.Reset()
-	b.textDo.GeoM.Translate(tx, ty)
+	b.label.Move(tx, ty)
 }
 
 func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
@@ -173,17 +169,13 @@ func (b *button) click() {
 	b.buttonClickCallback(b.id)
 }
 
-func New(id Id, w, h float64, label string, face *text.GoTextFace, state State) Button {
-	textDo := text.DrawOptions{}
-	textDo.Filter = ebiten.FilterLinear
+func New(id Id, w, h float64, text string, face *text.GoTextFace, state State) Button {
 	b := button{
 		id:                  id,
 		w:                   w,
 		h:                   h,
-		label:               label,
+		label:               label.New(text, face, buttonEnabledTextColor),
 		visible:             false,
-		textDo:              textDo,
-		face:                face,
 		buttonClickCallback: dummyButtonCallback,
 	}
 	b.ChangeState(state)
