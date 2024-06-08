@@ -80,6 +80,9 @@ func (p *playing) Draw(screen *ebiten.Image) {
 	p.ui.Draw(screen)
 }
 
+func (p *playing) OnLayoutChange(width, height float64) {
+}
+
 func (p *playing) onButtonClick(id button.Id) {
 	switch id {
 	case ui.BACK_BUTTON:

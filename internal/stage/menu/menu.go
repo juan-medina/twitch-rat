@@ -24,6 +24,7 @@ package menu
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
@@ -54,6 +55,8 @@ type menu struct {
 	changer  stage.Changer
 	ui       ui.UI
 	settings settings.Settings
+	width    float32
+	height   float32
 }
 
 func (m *menu) Update(elapsedTime int) {
@@ -61,7 +64,13 @@ func (m *menu) Update(elapsedTime int) {
 }
 
 func (m *menu) Draw(screen *ebiten.Image) {
+	vector.DrawFilledRect(screen, 0, 0, m.width, m.height, colors.Teal, true)
 	m.ui.Draw(screen)
+}
+
+func (m *menu) OnLayoutChange(width, height float64) {
+	m.width = float32(width)
+	m.height = float32(height)
 }
 
 func (m *menu) onButtonClick(id button.Id) {
@@ -69,7 +78,7 @@ func (m *menu) onButtonClick(id button.Id) {
 	case ui.PLAY_BUTTON:
 		channel := m.ui.GetInputText(ui.INPUT_CHANNEL)
 		if channel == "" {
-			m.ui.SetStatusMessage("Please enter a channel name!", colors.Red)
+			m.ui.SetStatusMessage("Please enter a channel name!", colors.DarkRed)
 			return
 		}
 		m.settings.SetValue("channel", channel)

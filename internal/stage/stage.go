@@ -28,6 +28,7 @@ type Stage interface {
 	Init()
 	Draw(screen *ebiten.Image)
 	Update(elapsedTime int)
+	OnLayoutChange(width, height float64)
 	End()
 }
 type Id int

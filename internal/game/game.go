@@ -81,6 +81,9 @@ func (g *game) onLayoutChange(width, height float64) {
 	g.currentHeight = height
 	if g.state == RUNNING {
 		g.ui.OnLayoutChange(width, height)
+		if g.currentStage != stage.NONE {
+			g.stages[g.currentStage].OnLayoutChange(width, height)
+		}
 	}
 }
 
@@ -119,18 +122,16 @@ func (g *game) Update() error {
 
 	g.keys.Update(elapsedTime)
 
-	if g.currentStage == stage.NONE {
-		return nil
+	if g.currentStage != stage.NONE {
+		g.stages[g.currentStage].Update(elapsedTime)
 	}
-	g.stages[g.currentStage].Update(elapsedTime)
 
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
-	if g.currentStage == stage.NONE {
-		return
+	if g.currentStage != stage.NONE {
+		g.stages[g.currentStage].Draw(screen)
 	}
-	g.stages[g.currentStage].Draw(screen)
 }
 
 func (g *game) Run() error {
@@ -149,6 +150,7 @@ func (g *game) ChangeStage(id stage.Id) {
 	}
 	g.currentStage = id
 	g.stages[g.currentStage].Init()
+	g.stages[g.currentStage].OnLayoutChange(g.currentWidth, g.currentHeight)
 }
 
 func New(er embed.FS) *game {
