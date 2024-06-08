@@ -31,6 +31,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/step"
+	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
 type Id int
@@ -46,20 +47,20 @@ type Input interface {
 }
 
 type input struct {
-	id          Id
-	x, y, w, h  float64
-	maxLength   int
-	text        string
-	placeHolder string
-	borderColor color.Color
-	color       color.Color
-	visible     bool
-	textDo      text.DrawOptions
-	caretDo     text.DrawOptions
-	caretAlpha  step.LoopValue
-	editing     bool
-	savedText   string
-	face        *text.GoTextFace
+	id         Id
+	x, y, w, h float64
+	maxLength  int
+
+	borderColor     color.Color
+	color           color.Color
+	visible         bool
+	textLabel       label.Label
+	textPlaceHolder label.Label
+	caretLabel      label.Label
+	caretAlpha      step.LoopValue
+	editing         bool
+	savedText       string
+	face            *text.GoTextFace
 }
 
 const (
@@ -69,10 +70,10 @@ const (
 )
 
 var (
-	inputBorderColor = colors.DarkPurple
-	inputColor       = colors.White
-	inputTextColor   = colors.Black
-	inputEmptyColor  = colors.Gray
+	inputBorderColor      = colors.DarkPurple
+	inputColor            = colors.White
+	inputTextColor        = colors.Black
+	inputPlaceHolderColor = colors.Gray
 )
 
 func (i input) GetId() Id {
@@ -83,25 +84,23 @@ func (i input) Draw(screen *ebiten.Image) {
 	if i.visible {
 		vector.DrawFilledRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), i.color, true)
 		vector.StrokeRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), INPUT_BORDER_SIZE, i.borderColor, true)
+		i.textLabel.Draw(screen)
+
 		if i.isEditing() {
-			if i.text != "" {
-				text.Draw(screen, i.text, i.face, &i.textDo)
-			}
-			text.Draw(screen, "|", i.face, &i.caretDo)
+			i.caretLabel.Draw(screen)
 		} else {
-			if i.text != "" {
-				text.Draw(screen, i.text, i.face, &i.textDo)
-			} else {
-				text.Draw(screen, i.placeHolder, i.face, &i.textDo)
+			text := i.GetText()
+			if text == "" {
+				i.textPlaceHolder.Draw(screen)
 			}
 		}
-
 	}
 }
 
 func (i *input) edit() {
 	i.editing = true
-	i.savedText = i.text
+	i.savedText = i.textLabel.GetText()
+	i.updateCaretPosition()
 }
 
 func (i *input) cancelEdit() {
@@ -111,7 +110,7 @@ func (i *input) cancelEdit() {
 
 func (i *input) saveEdit() {
 	i.editing = false
-	i.savedText = i.text
+	i.savedText = i.textLabel.GetText()
 }
 
 func (i input) isEditing() bool {
@@ -184,54 +183,42 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 	}
 
 	if i.caretAlpha.Update(elapsedTime) {
-		i.caretDo.ColorScale.Reset()
-		i.caretDo.ColorScale.ScaleWithColor(inputTextColor)
-		i.caretDo.ColorScale.ScaleAlpha(i.caretAlpha.GetValue())
+		i.caretLabel.SetColor(inputTextColor)
+		i.caretLabel.SetAlpha(i.caretAlpha.GetValue())
 	}
 }
 
 func (i *input) addLetter(letter rune) {
-	if len(i.text) < i.maxLength {
-		i.text += string(letter)
-		i.updateTextColor()
-		i.updateCaretPosition()
+	text := i.textLabel.GetText()
+	if len(text) < i.maxLength {
+		text += string(letter)
+		i.SetText(text)
 	}
 }
 
 func (i *input) removeLetter() {
-	if len(i.text) > 0 {
-		i.text = i.text[:len(i.text)-1]
-		i.updateTextColor()
-		i.updateCaretPosition()
-	}
-}
-
-func (i *input) updateTextColor() {
-	i.textDo.ColorScale.Reset()
-	if i.text == "" {
-		i.textDo.ColorScale.ScaleWithColor(inputEmptyColor)
-	} else {
-		i.textDo.ColorScale.ScaleWithColor(inputTextColor)
+	text := i.textLabel.GetText()
+	if len(text) > 0 {
+		text = text[:len(text)-1]
+		i.SetText(text)
 	}
 }
 
 func (i input) GetText() string {
-	return i.text
+	return i.textLabel.GetText()
 }
 
 func (i *input) SetText(text string) {
-	i.text = text
-	i.updateTextColor()
+	i.textLabel.SetText(text)
 	i.updateCaretPosition()
 }
 
 func (i *input) updateCaretPosition() {
-	i.caretDo.GeoM.Reset()
-	i.caretDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
-	if i.text != "" {
-		move, _ := text.Measure(i.text, i.face, 0)
-		i.caretDo.GeoM.Translate(float64(move), 0)
+	advance := 0.0
+	if i.textLabel.GetText() != "" {
+		advance, _ = i.textLabel.Measure()
 	}
+	i.caretLabel.Move(i.x+INPUT_LEFT_GAP+advance, i.y+INPUT_TOP_GAP)
 }
 
 func (i input) hit(x, y float64) bool {
@@ -246,37 +233,23 @@ func (i *input) Move(x, y float64) {
 	i.y = y
 	i.updateCaretPosition()
 
-	i.textDo.GeoM.Reset()
-	i.textDo.GeoM.Translate(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
+	i.textLabel.Move(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
+	i.textPlaceHolder.Move(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
 }
 
-func New(id Id, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) Input {
-	textDo := text.DrawOptions{}
-	textDo.Filter = ebiten.FilterLinear
-	textDo.ColorScale.Reset()
-	if initialText == "" {
-		textDo.ColorScale.ScaleWithColor(inputEmptyColor)
-	} else {
-		textDo.ColorScale.ScaleWithColor(inputTextColor)
-	}
-	caretDo := text.DrawOptions{}
-	caretDo.Filter = ebiten.FilterLinear
-	caretDo.GeoM.Reset()
-	caretDo.ColorScale.Reset()
-	caretDo.ColorScale.ScaleWithColor(inputTextColor)
+func New(id Id, w, h float64, maxLength int, initialText string, placeholder string, face *text.GoTextFace) Input {
 	return &input{
-		id:          id,
-		w:           w,
-		h:           h,
-		maxLength:   maxLength,
-		text:        initialText,
-		placeHolder: placeHolder,
-		borderColor: inputBorderColor,
-		color:       inputColor,
-		visible:     false,
-		textDo:      textDo,
-		caretDo:     caretDo,
-		caretAlpha:  step.NewPingPongValue(0, 1, 200, 100),
-		face:        face,
+		id:              id,
+		w:               w,
+		h:               h,
+		maxLength:       maxLength,
+		borderColor:     inputBorderColor,
+		color:           inputColor,
+		visible:         false,
+		textLabel:       label.New(initialText, face, inputTextColor),
+		textPlaceHolder: label.New(placeholder, face, inputPlaceHolderColor),
+		caretLabel:      label.New("|", face, colors.LightPurple),
+		caretAlpha:      step.NewPingPongValue(0, 1, 200, 100),
+		face:            face,
 	}
 }

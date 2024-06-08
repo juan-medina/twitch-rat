@@ -57,7 +57,8 @@ func (l *LoopValue) Update(elapsedTime int) bool {
 		}
 		l.elapsedTime = 0
 	} else {
-		l.currentValue = current.initialValue + (current.endValue-current.initialValue)*float32(l.elapsedTime/current.timeToChange)
+		diff := current.endValue - current.initialValue
+		l.currentValue = current.initialValue + diff*float32(l.elapsedTime)/float32(current.timeToChange)
 	}
 
 	return currentValue != l.currentValue

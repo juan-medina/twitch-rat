@@ -25,6 +25,7 @@ package ui
 import (
 	"bytes"
 	"embed"
+	"image/color"
 	"io/fs"
 	"log"
 
@@ -42,7 +43,7 @@ type UI interface {
 	Update(elapsedTime int)
 	Draw(screen *ebiten.Image)
 
-	SetStatusMessage(message string)
+	SetStatusMessage(message string, color color.Color)
 
 	EnableButton(id button.Id)
 	DisableButton(id button.Id)
@@ -118,7 +119,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 
-	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel Name")
+	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel")
 	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", button.Enabled)
 	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", button.Enabled)
 }
@@ -144,7 +145,8 @@ func (u *uiImpl) Update(elapsedTime int) {
 	u.updateInputs(x, y, pressed, elapsedTime)
 }
 
-func (u *uiImpl) SetStatusMessage(message string) {
+func (u *uiImpl) SetStatusMessage(message string, color color.Color) {
+	u.lastMessage.SetColor(color)
 	u.lastMessage.SetText(message)
 }
 
@@ -257,7 +259,7 @@ func (ui *uiImpl) SetInputVisible(id input.Id, visible bool) {
 }
 
 func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText string, placeHolder string) {
-	u.inputs = append(u.inputs, input.New(id, w, h, maxLength, initialText, u.normalFace, placeHolder))
+	u.inputs = append(u.inputs, input.New(id, w, h, maxLength, initialText, placeHolder, u.normalFace))
 }
 
 func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {

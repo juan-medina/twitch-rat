@@ -24,6 +24,7 @@ package menu
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/ui"
@@ -39,7 +40,7 @@ func (m *menu) Init() {
 	m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
 
-	m.ui.SetStatusMessage("Ready to Play!")
+	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
 }
 
 func (m *menu) End() {
@@ -67,6 +68,10 @@ func (m *menu) onButtonClick(id button.Id) {
 	switch id {
 	case ui.PLAY_BUTTON:
 		channel := m.ui.GetInputText(ui.INPUT_CHANNEL)
+		if channel == "" {
+			m.ui.SetStatusMessage("Please enter a channel name!", colors.Red)
+			return
+		}
 		m.settings.SetValue("channel", channel)
 		m.settings.Save()
 

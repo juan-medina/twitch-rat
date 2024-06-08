@@ -31,10 +31,12 @@ import (
 
 type Label interface {
 	SetText(text string)
+	GetText() string
 	Draw(screen *ebiten.Image)
 	Move(x, y float64)
 	Measure() (float64, float64)
 	SetColor(color color.Color)
+	SetAlpha(alpha float32)
 }
 
 type label struct {
@@ -56,12 +58,20 @@ func (l *label) SetText(text string) {
 	l.text = text
 }
 
+func (l label) GetText() string {
+	return l.text
+}
+
 func (l label) Measure() (float64, float64) {
 	return ebitenText.Measure(l.text, l.face, l.face.Metrics().VLineGap)
 }
 
 func (l *label) SetColor(color color.Color) {
+	l.textDrawOptions.ColorScale.Reset()
 	l.textDrawOptions.ColorScale.ScaleWithColor(color)
+}
+func (l *label) SetAlpha(alpha float32) {
+	l.textDrawOptions.ColorScale.ScaleAlpha(alpha)
 }
 
 func New(text string, face ebitenText.Face, color color.Color) Label {

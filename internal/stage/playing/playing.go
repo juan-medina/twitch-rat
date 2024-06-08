@@ -27,6 +27,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/chat"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/ui"
@@ -38,7 +39,7 @@ func (p *playing) Init() {
 
 	p.ui.SetButtonVisible(ui.BACK_BUTTON, true)
 
-	p.ui.SetStatusMessage("Connecting..")
+	p.ui.SetStatusMessage("Connecting..", colors.White)
 
 	p.channel = p.settings.GetValue("channel", "")
 	p.chat.OnEvent(p.onChatEvent)
@@ -65,10 +66,10 @@ func (p *playing) Update(elapsedTime int) {
 	case event := <-p.eventsChan:
 		switch event.Type_ {
 		case chat.Connect:
-			p.ui.SetStatusMessage("Connected to " + p.channel)
+			p.ui.SetStatusMessage("Connected to "+p.channel, colors.White)
 		case chat.Disconnect:
 		case chat.Message:
-			p.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.Sender, event.Message))
+			p.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.Sender, event.Message), colors.White)
 		}
 	default:
 		/// no new event
