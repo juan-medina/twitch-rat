@@ -252,6 +252,7 @@ func (i *input) Move(x, y float64) {
 
 func New(id Id, w, h float64, maxLength int, initialText string, face *text.GoTextFace, placeHolder string) Input {
 	textDo := text.DrawOptions{}
+	textDo.Filter = ebiten.FilterLinear
 	textDo.ColorScale.Reset()
 	if initialText == "" {
 		textDo.ColorScale.ScaleWithColor(inputEmptyColor)
@@ -259,6 +260,7 @@ func New(id Id, w, h float64, maxLength int, initialText string, face *text.GoTe
 		textDo.ColorScale.ScaleWithColor(inputTextColor)
 	}
 	caretDo := text.DrawOptions{}
+	caretDo.Filter = ebiten.FilterLinear
 	caretDo.GeoM.Reset()
 	caretDo.ColorScale.Reset()
 	caretDo.ColorScale.ScaleWithColor(inputTextColor)

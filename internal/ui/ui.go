@@ -30,6 +30,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
@@ -262,5 +263,12 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 }
 
 func New() UI {
-	return &uiImpl{}
+	lastMessageDO := text.DrawOptions{}
+	lastMessageDO.Filter = ebiten.FilterLinear
+	lastMessageDO.ColorScale.Reset()
+	lastMessageDO.ColorScale.ScaleWithColor(colors.White)
+
+	return &uiImpl{
+		lastMessageDO: lastMessageDO,
+	}
 }

@@ -68,7 +68,7 @@ type button struct {
 	label               string
 	color               color.Color
 	visible             bool
-	do                  text.DrawOptions
+	textDo              text.DrawOptions
 	state               State
 	timeToSendClick     int
 	buttonClickCallback func(id Id)
@@ -87,7 +87,7 @@ func (b button) GetId() Id {
 func (b button) Draw(screen *ebiten.Image) {
 	if b.visible {
 		vector.DrawFilledRect(screen, float32(b.x), float32(b.y), float32(b.w), float32(b.h), b.color, true)
-		text.Draw(screen, b.label, b.face, &b.do)
+		text.Draw(screen, b.label, b.face, &b.textDo)
 	}
 }
 
@@ -106,8 +106,8 @@ func (b *button) ChangeState(state State) {
 		textColor = buttonDisabledTextColor
 	}
 
-	b.do.ColorScale.Reset()
-	b.do.ColorScale.ScaleWithColor(textColor)
+	b.textDo.ColorScale.Reset()
+	b.textDo.ColorScale.ScaleWithColor(textColor)
 }
 
 func (b *button) SetVisible(visible bool) {
@@ -129,8 +129,8 @@ func (b *button) Move(x, y float64) {
 	tx := x + (b.w / 2) - (dx / 2)
 	ty := y + (b.h / 2) - (dy / 2)
 
-	b.do.GeoM.Reset()
-	b.do.GeoM.Translate(tx, ty)
+	b.textDo.GeoM.Reset()
+	b.textDo.GeoM.Translate(tx, ty)
 }
 
 func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
@@ -174,14 +174,15 @@ func (b *button) click() {
 }
 
 func New(id Id, w, h float64, label string, face *text.GoTextFace, state State) Button {
-	do := text.DrawOptions{}
+	textDo := text.DrawOptions{}
+	textDo.Filter = ebiten.FilterLinear
 	b := button{
 		id:                  id,
 		w:                   w,
 		h:                   h,
 		label:               label,
 		visible:             false,
-		do:                  do,
+		textDo:              textDo,
 		face:                face,
 		buttonClickCallback: dummyButtonCallback,
 	}
