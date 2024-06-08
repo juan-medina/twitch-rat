@@ -34,6 +34,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
+	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
 type UI interface {
@@ -55,17 +56,20 @@ type UI interface {
 	OnLayoutChange(width, height float64)
 }
 
+var (
+	normalLabelColor = colors.White
+)
+
 type uiImpl struct {
-	screenWidth   float64
-	screenHeight  float64
-	fileSystem    embed.FS
-	faceSource    *text.GoTextFaceSource
-	normalFace    *text.GoTextFace
-	lastMessage   string
-	lastMessageDO text.DrawOptions
-	buttons       []button.Button
-	inputs        []input.Input
-	keys          keys.Keys
+	screenWidth  float64
+	screenHeight float64
+	fileSystem   embed.FS
+	faceSource   *text.GoTextFaceSource
+	normalFace   *text.GoTextFace
+	lastMessage  label.Label
+	buttons      []button.Button
+	inputs       []input.Input
+	keys         keys.Keys
 }
 
 const (
@@ -109,6 +113,8 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 		Size:   24,
 	}
 
+	u.lastMessage = label.New("", u.normalFace, normalLabelColor)
+
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 
@@ -118,7 +124,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {
-	text.Draw(screen, u.lastMessage, u.normalFace, &u.lastMessageDO)
+	u.lastMessage.Draw(screen)
 	for _, b := range u.buttons {
 		b.Draw(screen)
 
@@ -139,7 +145,7 @@ func (u *uiImpl) Update(elapsedTime int) {
 }
 
 func (u *uiImpl) SetStatusMessage(message string) {
-	u.lastMessage = message
+	u.lastMessage.SetText(message)
 }
 
 func (u *uiImpl) OnLayoutChange(width, height float64) {
@@ -160,10 +166,9 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	py = 0
 	u.moveButton(BACK_BUTTON, px, py)
 
-	u.lastMessageDO.GeoM.Reset()
 	gapX := u.normalFace.Size
 	gapY := u.normalFace.Size * 1.5
-	u.lastMessageDO.GeoM.Translate(gapX, u.screenHeight-gapY)
+	u.lastMessage.Move(gapX, u.screenHeight-gapY)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
@@ -263,12 +268,5 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 }
 
 func New() UI {
-	lastMessageDO := text.DrawOptions{}
-	lastMessageDO.Filter = ebiten.FilterLinear
-	lastMessageDO.ColorScale.Reset()
-	lastMessageDO.ColorScale.ScaleWithColor(colors.White)
-
-	return &uiImpl{
-		lastMessageDO: lastMessageDO,
-	}
+	return &uiImpl{}
 }
