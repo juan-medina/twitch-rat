@@ -77,7 +77,7 @@ func (l *label) SetAlpha(alpha float32) {
 func New(text string, face ebitenText.Face, color color.Color) Label {
 	textDrawOptions := ebitenText.DrawOptions{}
 	textDrawOptions.ColorScale.ScaleWithColor(color)
-	textDrawOptions.Filter = ebiten.FilterLinear
+	textDrawOptions.Filter = ebiten.FilterNearest
 	return &label{
 		text:            text,
 		textDrawOptions: textDrawOptions,
