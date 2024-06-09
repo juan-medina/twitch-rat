@@ -24,8 +24,8 @@ package menu
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/colors"
+	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/ui"
@@ -64,7 +64,7 @@ func (m *menu) Update(elapsedTime int) {
 }
 
 func (m *menu) Draw(screen *ebiten.Image) {
-	vector.DrawFilledRect(screen, 0, 0, m.width, m.height, colors.Teal, true)
+	draw.DrawGradientRect(screen, 0, 0, m.width, m.height, colors.Gray, colors.DarkGray, draw.Vertical, false)
 	m.ui.Draw(screen)
 }
 
