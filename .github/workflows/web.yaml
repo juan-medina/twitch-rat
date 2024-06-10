@@ -63,7 +63,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip"
+          file: "build/web/${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip"
           asset_name: "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip"
           tag: ${{ github.ref }}
           overwrite: true
