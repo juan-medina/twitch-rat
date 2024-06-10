@@ -74,18 +74,21 @@ jobs:
 
       - name: Copy wasm to blog repo
         run: |
-          find .
           rm -rf blog/docs/twitch-rat
           mkdir -p blog/docs/twitch-rat
           cp -r build-directory/* blog/docs/twitch-rat
           rm -rf build-directory
 
+      - name: Commit files
+        run: |
+          git config --local user.email "jamedina@gmail.com"
+          git config --local user.name "Juan Medina"
+          git commit -a -m "Twitch Rat Release v${{ github.event.release.tag_name }}"
+
       - name: Push to blog repo
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository: juan-medina/blog
           branch: main
           directory: blog
-          author_name: Juan Medina
-          author_email: jamedina@gmail.com
-          commit_message: "Twitch Rat Release v${{ github.event.release.tag_name }}"
