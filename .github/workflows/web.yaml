@@ -48,9 +48,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-directory
+          path: build-directory
 
       - name: Copy wasm to blog repo
         run: |
+          find .
           rm -rf blog/docs/twitch-rat
           mkdir -p blog/docs/twitch-rat
           cp build-directory/* blog/docs/twitch-rat
