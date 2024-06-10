@@ -40,11 +40,6 @@ jobs:
         with:
           go-version: '1.22.2'
 
-#      - name: Install make
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get install -y make
-
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
@@ -54,16 +49,26 @@ jobs:
       - name: Build wasm
         run: make wasm
 
-      - name: Make zip with the wasm project with the tag number
+      - name: Make zip & MD5 with the wasm project with the tag number
         run: |
           cd build/web
           zip -r "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip" *
-      
-      - name: Add file to release
+          md5sum "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip" > "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip.md5"
+
+      - name: Add zip to the release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: "build/web/${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip"
           asset_name: "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip"
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - name: Add zip MD5 to the release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: "build/web/${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip.md5"
+          asset_name: "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip.md5"
           tag: ${{ github.ref }}
           overwrite: true
