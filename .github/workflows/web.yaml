@@ -32,17 +32,29 @@ jobs:
       - name: Build wasm
         run: make wasm
 
+      - name: Archive build directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-directory
+          path: build/web        
+
       - name: Clone blog repo
         uses: actions/checkout@v3
         with:
           repository: juan-medina/blog
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Download Artifact      
+        uses: actions/download-artifact@v4
+        with:
+          name: build-directory
+
       - name: Copy wasm to blog repo
         run: |
           rm -rf ./blog/docs/twitch-rat
           mkdir -p ./blog/docs/twitch-rat
-          cp -r ./build/web/* ./blog/docs/twitch-rat
+          tar -xf build-directory.tar -C ./blog/docs/twitch-rat
+          rm -rf build-directory.tar
 
       - name: Push to blog repo
         uses: ad-m/github-push-action@v0.6.0
