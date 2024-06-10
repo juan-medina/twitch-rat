@@ -73,8 +73,8 @@ ifeq ($(OS),Windows_NT)
 else
 	mkdir -p build/web/js
 	cp $(GOROOT)/misc/wasm/wasm_exec.js build/web/wasm_exec.js
-	copy web/*.* build/web/
-	copy web/js/*.* build/web/js/
+	cp web/*.* build/web/
+	cp web/js/*.* build/web/js/
 endif
 #set GOOS & GOARCH to wasm
 	$(GOCMD) env -w GOOS=js GOARCH=wasm
