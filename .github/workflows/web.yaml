@@ -53,7 +53,7 @@ jobs:
         run: |
           rm -rf blog/docs/twitch-rat
           mkdir -p blog/docs/twitch-rat
-          cp build-directory/* -blog/docs/twitch-rat
+          cp build-directory/* blog/docs/twitch-rat
           rm -rf build-directory
 
       - name: Push to blog repo
