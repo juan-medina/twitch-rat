@@ -68,6 +68,7 @@ type uiImpl struct {
 	faceSource   *text.GoTextFaceSource
 	normalFace   *text.GoTextFace
 	lastMessage  label.Label
+	version      label.Label
 	buttons      []button.Button
 	inputs       []input.Input
 	keys         keys.Keys
@@ -116,6 +117,12 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 
 	u.lastMessage = label.New("", u.normalFace, normalLabelColor)
 
+	versionStr := "v0.0.0"
+	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
+		versionStr = "v" + string(data)
+	}
+	u.version = label.New(versionStr, u.normalFace, normalLabelColor)
+
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 
@@ -126,6 +133,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {
 	u.lastMessage.Draw(screen)
+	u.version.Draw(screen)
 	for _, b := range u.buttons {
 		b.Draw(screen)
 
@@ -171,6 +179,9 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	gapX := u.normalFace.Size
 	gapY := u.normalFace.Size * 1.5
 	u.lastMessage.Move(gapX, u.screenHeight-gapY)
+
+	cx, cy = u.version.Measure()
+	u.version.Move(u.screenWidth-cx, u.screenHeight-cy)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
