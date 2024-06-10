@@ -51,17 +51,17 @@ jobs:
 
       - name: Copy wasm to blog repo
         run: |
-          rm -rf ./blog/docs/twitch-rat
-          mkdir -p ./blog/docs/twitch-rat
-          tar -xf build-directory.tar -C ./blog/docs/twitch-rat
-          rm -rf build-directory.tar
+          rm -rf blog/docs/twitch-rat
+          mkdir -p blog/docs/twitch-rat
+          unzip build-directory.zip -d blog/docs/twitch-rat
+          rm -rf build-directory.zip
 
       - name: Push to blog repo
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
-          directory: ./blog
+          directory: blog
           author_name: Juan Medina
           author_email: jamedina@gmail.com
           commit_message: "Twitch Rat Release v${{ github.event.release.tag_name }}"
