@@ -30,9 +30,9 @@ GOMOD=$(GOCMD) mod
 BUILD_DIR=build
 
 ifeq ($(OS),Windows_NT)
-	BINARY_NAME=$(BUILD_DIR)/twitch_rat.exe
+	BINARY_NAME=$(BUILD_DIR)/desktop/twitch_rat.exe
 else
-	BINARY_NAME=$(BUILD_DIR)/twitch_rat
+	BINARY_NAME=$(BUILD_DIR)/desktop/twitch_rat
 endif	
 
 APP_PATH="./internal/app"
@@ -64,16 +64,24 @@ update:
 	$(GOMOD) tidy
 wasm:
 ifeq ($(OS),Windows_NT)
-	copy $(GOROOT)\misc\wasm\wasm_exec.js docs\wasm_exec.js
+	if not exist build mkdir build
+	if not exist build\web mkdir build\web
+	if not exist build\web\js mkdir build\web\js
+	copy $(GOROOT)\misc\wasm\wasm_exec.js build\web\wasm_exec.js
+	copy web\*.* build\web\\
+	copy web\js\*.* build\web\js\\
 else
-	cp $(GOROOT)/misc/wasm/wasm_exec.js docs/wasm_exec.js
+	mkdir -p build/web/js
+	cp $(GOROOT)/misc/wasm/wasm_exec.js build/web/wasm_exec.js
+	copy web/*.* build/web/
+	copy web/js/*.* build/web/js/
 endif
 #set GOOS & GOARCH to wasm
 	$(GOCMD) env -w GOOS=js GOARCH=wasm
-	$(GOBUILD) -o docs/twitch_rat.wasm $(APP_PATH)	
+	$(GOBUILD) -o build/web/twitch_rat.wasm $(APP_PATH)	
 #restore the original GOOS & GOARCH
 	$(GOCMD) env -w GOOS=$(GOOS) GOARCH=$(GOARCH)
 
 web: wasm
 	$(info "running web on http://localhost:8000/")
-	python -m http.server --directory docs
+	python -m http.server --directory build/web
