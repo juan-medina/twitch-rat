@@ -56,7 +56,8 @@ jobs:
 
       - name: Make zip with the wasm project with the tag number
         run: |
-          zip -r "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip" build/web/
+          cd build/web
+          zip -r "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip" *
       
       - name: Add file to release
         uses: svenstaro/upload-release-action@v2
