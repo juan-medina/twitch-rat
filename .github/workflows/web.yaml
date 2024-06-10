@@ -83,12 +83,16 @@ jobs:
         run: |
           git config --local user.email "jamedina@gmail.com"
           git config --local user.name "Juan Medina"
+          git status
+          git add blog/docs/twitch-rat
+          git status
           git commit -a -m "Twitch Rat Release v${{ github.event.release.tag_name }}"
+          git status
 
-      - name: Push to blog repo
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository: juan-medina/blog
-          branch: main
-          directory: blog
+#      - name: Push to blog repo
+#        uses: ad-m/github-push-action@v0.6.0
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          repository: juan-medina/blog
+#          branch: main
+#          directory: blog
