@@ -16,7 +16,7 @@ jobs:
       - name: Install golang and make
         run: |
           sudo apt-get update
-          sudo apt-get install -y golang-go=1.22 make
+          sudo apt-get install -y golang-1.22-go
 
       - name: Checkout original repo
         uses: actions/checkout@v3
