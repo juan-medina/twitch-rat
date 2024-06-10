@@ -1,0 +1,50 @@
+name: Web
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  releases-matrix:
+    name: Release Web
+    runs-on: ubuntu-latest
+    steps:
+       - name: Install golang and make
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y golang-go make
+
+      - name: Checkout original repo
+        uses: actions/checkout@v3
+        with:
+          repository: juan-medina/twitch-rat
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build wasm
+        run: make wasm
+
+      - name: Clone blog repo
+        uses: actions/checkout@v3
+        with:
+          repository: juan-medina/blog
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy wasm to blog repo
+        run: |
+          rm -rf ./blog/docs/twitch-rat
+          mkdir -p ./blog/docs/twitch-rat
+          cp -r ./build/web/* ./blog/docs/twitch-rat
+
+      - name: Push to blog repo
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+          directory: ./blog
+          author_name: Juan Medina
+          author_email: jamedina@gmail.com
+          commit_message: "Twitch Rat Release v${{ github.event.release.tag_name }}"
