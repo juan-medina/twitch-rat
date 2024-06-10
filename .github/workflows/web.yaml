@@ -53,8 +53,8 @@ jobs:
         run: |
           rm -rf blog/docs/twitch-rat
           mkdir -p blog/docs/twitch-rat
-          unzip build-directory.zip -d blog/docs/twitch-rat
-          rm -rf build-directory.zip
+          cp build-directory/* -blog/docs/twitch-rat
+          rm -rf build-directory
 
       - name: Push to blog repo
         uses: ad-m/github-push-action@v0.6.0
