@@ -85,3 +85,12 @@ endif
 web: wasm
 	$(info "running web on http://localhost:8000/")
 	python -m http.server --directory build/web
+publish:
+# give error if parameter VERSION has not been provided
+ifndef VERSION
+	$(error "VERSION is not set")
+else
+	git tag -a v$(VERSION) -m "Release v$(VERSION)"
+	git push --tags
+	gh release create v$(VERSION) --generate-notes
+endif
