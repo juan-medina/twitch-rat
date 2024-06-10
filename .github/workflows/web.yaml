@@ -54,45 +54,15 @@ jobs:
       - name: Build wasm
         run: make wasm
 
-      - name: Archive build directory
-        uses: actions/upload-artifact@v4
+      - name: Make zip with the wasm project with the tag number
+        run: zip -r web$-{{ github.ref }}.zip web/
+      
+      - name: Add file to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: build-directory
-          path: build/web        
-
-      - name: Clone blog repo
-        uses: actions/checkout@v3
-        with:
-          repository: juan-medina/blog
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download Artifact      
-        uses: actions/download-artifact@v4
-        with:
-          name: build-directory
-          path: build-directory
-
-      - name: Copy wasm to blog repo
-        run: |
-          rm -rf blog/docs/twitch-rat
-          mkdir -p blog/docs/twitch-rat
-          cp -r build-directory/* blog/docs/twitch-rat
-          rm -rf build-directory
-
-      - name: Commit files
-        run: |
-          git config --local user.email "jamedina@gmail.com"
-          git config --local user.name "Juan Medina"
-          git status
-          git add blog/docs/twitch-rat
-          git status
-          git commit -a -m "Twitch Rat Release v${{ github.event.release.tag_name }}"
-          git status
-
-#      - name: Push to blog repo
-#        uses: ad-m/github-push-action@v0.6.0
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          repository: juan-medina/blog
-#          branch: main
-#          directory: blog
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: web$-{{ github.ref }}.zip
+          asset_name: web$-{{ github.ref }}.zip
+          tag: ${{ github.ref }}
+          overwrite: true
+          
