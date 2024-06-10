@@ -13,7 +13,7 @@ jobs:
     name: Release Web
     runs-on: ubuntu-latest
     steps:
-       - name: Install golang and make
+      - name: Install golang and make
         run: |
           sudo apt-get update
           sudo apt-get install -y golang-go make
