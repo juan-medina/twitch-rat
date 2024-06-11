@@ -57,7 +57,7 @@ type input struct {
 	textLabel       label.Label
 	textPlaceHolder label.Label
 	caretLabel      label.Label
-	caretAlpha      step.LoopValue
+	caretAlpha      step.Value
 	editing         bool
 	savedText       string
 	face            *text.GoTextFace

@@ -22,38 +22,65 @@
 
 package step
 
-type Step struct {
+type Action int
+
+const (
+	NoAction Action = iota
+	Next
+	Loop
+	End
+)
+
+type Value interface {
+	GetValue() float32
+	Update(elapsedTime int) bool
+	Reset()
+	IsAtEnd() bool
+}
+
+type step struct {
 	initialValue float32
 	endValue     float32
 	timeToChange int
+	action       Action
 }
 
-type LoopValue struct {
-	steps        []Step
+type stepImpl struct {
+	steps        []step
 	currentStep  int
 	currentValue float32
 	elapsedTime  int
+	atEnd        bool
 }
 
-func (l *LoopValue) AddStep(initialValue float32, endValue float32, timeToChange int) {
-	l.steps = append(l.steps, Step{
+func (l *stepImpl) AddStep(initialValue float32, endValue float32, timeToChange int, action Action) {
+	l.steps = append(l.steps, step{
 		initialValue: initialValue,
 		endValue:     endValue,
 		timeToChange: timeToChange,
+		action:       action,
 	})
 }
 
-func (l *LoopValue) Update(elapsedTime int) bool {
+func (l *stepImpl) Update(elapsedTime int) bool {
 	currentValue := l.currentValue
 	current := l.steps[l.currentStep]
 	l.elapsedTime += elapsedTime
 
 	if l.elapsedTime >= current.timeToChange {
 		l.currentValue = current.endValue
-		if l.currentStep == len(l.steps)-1 {
+		switch current.action {
+		case Next:
+			if l.currentStep == len(l.steps)-1 {
+				l.currentStep = 0
+			} else {
+				l.currentStep++
+			}
+		case Loop:
 			l.currentStep = 0
-		} else {
-			l.currentStep++
+		case End:
+			l.atEnd = true
+			return true
 		}
 		l.elapsedTime = 0
 	} else {
@@ -64,22 +91,39 @@ func (l *LoopValue) Update(elapsedTime int) bool {
 	return currentValue != l.currentValue
 }
 
-func (l LoopValue) GetValue() float32 {
+func (l stepImpl) GetValue() float32 {
 	return l.currentValue
 }
+func (l *stepImpl) Reset() {
+	l.currentStep = 0
+	l.currentValue = l.steps[0].initialValue
+	l.elapsedTime = 0
+	l.atEnd = false
+}
 
-func NewLoopValue() LoopValue {
-	return LoopValue{
-		steps:       []Step{},
+func (l stepImpl) IsAtEnd() bool {
+	return l.atEnd
+}
+
+func newStep() stepImpl {
+	return stepImpl{
+		steps:       []step{},
 		currentStep: 0,
 		elapsedTime: 0,
 	}
 }
 
-func NewPingPongValue(initial, end float32, timeToChange int, middleTime int) LoopValue {
-	value := NewLoopValue()
-	value.AddStep(initial, end, timeToChange)
-	value.AddStep(end, end, middleTime)
-	value.AddStep(end, initial, timeToChange)
-	return value
+func NewPingPongValue(initial, end float32, timeToChange int, middleTime int) Value {
+	value := newStep()
+	value.AddStep(initial, end, timeToChange, Next)
+	value.AddStep(end, end, middleTime, Next)
+	value.AddStep(end, initial, timeToChange, Loop)
+	return &value
+}
+
+func NewFromToPauseValue(initial, end float32, timeToChange int, endTime int) Value {
+	value := newStep()
+	value.AddStep(initial, end, timeToChange, Next)
+	value.AddStep(end, end, endTime, End)
+	return &value
 }

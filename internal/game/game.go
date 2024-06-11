@@ -24,14 +24,17 @@ package game
 
 import (
 	"embed"
+	"image/color"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/stage/menu"
 	"github.com/juan-medina/twitch-rat/internal/stage/playing"
+	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 )
 
@@ -47,6 +50,8 @@ type GameState int
 
 const (
 	LOADING GameState = iota
+	FADING_OUT
+	FADING_IN
 	RUNNING
 )
 
@@ -59,8 +64,10 @@ type game struct {
 	state          GameState
 	stages         map[stage.Id]stage.Stage
 	currentStage   stage.Id
+	nextStage      stage.Id
 	currentWidth   float64
 	currentHeight  float64
+	valueToChange  step.Value
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -97,7 +104,7 @@ func (g *game) init() {
 
 	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, g.fileSystem))
 	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, g.fileSystem))
-	g.ChangeStage(stage.MENU)
+	g.changeStage(stage.MENU)
 
 	g.state = RUNNING
 }
@@ -123,7 +130,21 @@ func (g *game) Update() error {
 	g.keys.Update(elapsedTime)
 
 	if g.currentStage != stage.NONE {
-		g.stages[g.currentStage].Update(elapsedTime)
+		if g.state == RUNNING {
+			g.stages[g.currentStage].Update(elapsedTime)
+		} else {
+			g.valueToChange.Update(elapsedTime)
+			if g.valueToChange.IsAtEnd() {
+				if g.state == FADING_OUT {
+					g.changeStage(g.nextStage)
+					g.stages[g.currentStage].Update(0)
+					g.state = FADING_IN
+					g.valueToChange.Reset()
+				} else if g.state == FADING_IN {
+					g.state = RUNNING
+				}
+			}
+		}
 	}
 
 	return nil
@@ -131,6 +152,11 @@ func (g *game) Update() error {
 func (g *game) Draw(screen *ebiten.Image) {
 	if g.currentStage != stage.NONE {
 		g.stages[g.currentStage].Draw(screen)
+	}
+	if g.state == FADING_OUT {
+		vector.DrawFilledRect(screen, 0, 0, float32(g.currentWidth), float32(g.currentHeight), color.RGBA{0, 0, 0, uint8(g.valueToChange.GetValue())}, true)
+	} else if g.state == FADING_IN {
+		vector.DrawFilledRect(screen, 0, 0, float32(g.currentWidth), float32(g.currentHeight), color.RGBA{0, 0, 0, 255 - uint8(g.valueToChange.GetValue())}, true)
 	}
 }
 
@@ -145,6 +171,12 @@ func (g *game) Run() error {
 }
 
 func (g *game) ChangeStage(id stage.Id) {
+	g.nextStage = id
+	g.state = FADING_OUT
+	g.valueToChange.Reset()
+}
+
+func (g *game) changeStage(id stage.Id) {
 	if g.currentStage != stage.NONE {
 		g.stages[g.currentStage].End()
 	}
@@ -155,13 +187,14 @@ func (g *game) ChangeStage(id stage.Id) {
 
 func New(er embed.FS) *game {
 	g := game{
-		fileSystem:   er,
-		state:        LOADING,
-		ui:           ui.New(),
-		keys:         keys.New(),
-		settings:     settings.New(APPLICATION),
-		stages:       make(map[stage.Id]stage.Stage),
-		currentStage: stage.NONE,
+		fileSystem:    er,
+		state:         LOADING,
+		ui:            ui.New(),
+		keys:          keys.New(),
+		settings:      settings.New(APPLICATION),
+		stages:        make(map[stage.Id]stage.Stage),
+		currentStage:  stage.NONE,
+		valueToChange: step.NewFromToPauseValue(0, 255, 200, 100),
 	}
 
 	return &g
