@@ -103,6 +103,7 @@ func NewMap(fileSystem embed.FS, fileName string, level int, scale float64) Map 
 	m.renderDrawingOptions = renderer.NewDefaultDrawOptions()
 	m.renderDrawingOptions.BackgroundColorFill = false
 	m.mapRender.Render(levelData, m.mapImage, m.renderDrawingOptions)
+	m.Move(0, 0)
 
 	return &m
 }

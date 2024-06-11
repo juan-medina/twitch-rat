@@ -95,7 +95,7 @@ func (g *game) init() {
 
 	g.lastUpdateTime = time.Now()
 
-	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings))
+	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, g.fileSystem))
 	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, g.fileSystem))
 	g.ChangeStage(stage.MENU)
 

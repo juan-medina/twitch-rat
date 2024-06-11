@@ -23,6 +23,8 @@
 package menu
 
 import (
+	"embed"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
@@ -42,6 +44,7 @@ func (m *menu) Init() {
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
 
 	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
+	m.firstScroll = 0
 }
 
 func (m *menu) End() {
@@ -52,19 +55,34 @@ func (m *menu) End() {
 }
 
 type menu struct {
-	changer  stage.Changer
-	ui       ui.UI
-	settings settings.Settings
-	width    float32
-	height   float32
+	changer      stage.Changer
+	ui           ui.UI
+	settings     settings.Settings
+	width        float32
+	height       float32
+	sewerMap     draw.Map
+	firstScroll  float64
+	secondScroll float64
 }
 
 func (m *menu) Update(elapsedTime int) {
 	m.ui.Update(elapsedTime)
+	w, _ := m.sewerMap.Size()
+
+	m.firstScroll -= float64(elapsedTime) * 0.1
+	if m.firstScroll < -w {
+		m.firstScroll = 0
+	}
+	m.secondScroll = m.firstScroll + w
 }
 
 func (m *menu) Draw(screen *ebiten.Image) {
-	draw.DrawGradientRect(screen, 0, 0, m.width, m.height, colors.Gray, colors.DarkGray, draw.Vertical, false)
+	m.sewerMap.Move(m.firstScroll, 0)
+	m.sewerMap.Draw(screen)
+	if m.secondScroll < float64(m.width) {
+		m.sewerMap.Move(m.secondScroll, 0)
+		m.sewerMap.Draw(screen)
+	}
 	m.ui.Draw(screen)
 }
 
@@ -89,10 +107,11 @@ func (m *menu) onButtonClick(id button.Id) {
 	}
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem embed.FS) stage.Stage {
 	return &menu{
 		changer:  changer,
 		ui:       ui,
 		settings: settings,
+		sewerMap: draw.NewMap(fileSystem, "embed/sprites/sewer/sewer.ldtk", 1, 4),
 	}
 }
