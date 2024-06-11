@@ -86,7 +86,7 @@ func NewMap(fileSystem embed.FS, fileName string, level int, scale float64) Map 
 			basePath = basePath[:index]
 		}
 
-		for i, _ := range m.world.Tilesets {
+		for i := range m.world.Tilesets {
 			tilePath := m.world.Tilesets[i].Path
 			if !strings.Contains(tilePath, "/") {
 				m.world.Tilesets[i].Path = basePath + "/" + tilePath
