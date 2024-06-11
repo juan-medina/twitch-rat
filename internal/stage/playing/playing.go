@@ -23,6 +23,7 @@
 package playing
 
 import (
+	"embed"
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -32,6 +33,8 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
+	"github.com/solarlune/ldtkgo"
+	renderer "github.com/solarlune/ldtkgo/renderer/ebitengine"
 )
 
 func (p *playing) Init() {
@@ -52,12 +55,20 @@ func (p *playing) End() {
 }
 
 type playing struct {
-	changer    stage.Changer
-	ui         ui.UI
-	settings   settings.Settings
-	eventsChan chan chat.Event
-	chat       chat.Chat
-	channel    string
+	changer       stage.Changer
+	ui            ui.UI
+	settings      settings.Settings
+	eventsChan    chan chat.Event
+	chat          chat.Chat
+	channel       string
+	fileSystem    embed.FS
+	currentWidth  float64
+	currentHeight float64
+	sewerMap      *ldtkgo.Project
+	mapRender     *renderer.Renderer
+	mapIMage      *ebiten.Image
+	mapDO         ebiten.DrawImageOptions
+	renderOptions *renderer.DrawOptions
 }
 
 func (p *playing) Update(elapsedTime int) {
@@ -77,10 +88,20 @@ func (p *playing) Update(elapsedTime int) {
 }
 
 func (p *playing) Draw(screen *ebiten.Image) {
+	screen.DrawImage(p.mapIMage, &p.mapDO)
 	p.ui.Draw(screen)
 }
 
 func (p *playing) OnLayoutChange(width, height float64) {
+	p.currentWidth = width
+	p.currentHeight = height
+
+	level := p.sewerMap.Levels[0]
+	p.mapDO.GeoM.Reset()
+	p.mapDO.GeoM.Scale(4, 4)
+	dx := (p.currentWidth - float64(level.Width*4)) / 2
+	p.mapDO.GeoM.Translate(dx, 0)
+
 }
 
 func (p *playing) onButtonClick(id button.Id) {
@@ -94,12 +115,32 @@ func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings) stage.Stage {
-	return &playing{
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem embed.FS) stage.Stage {
+	p := playing{
 		changer:    changer,
 		settings:   settings,
 		ui:         ui,
 		eventsChan: make(chan chat.Event, 10),
 		chat:       chat.New(),
+		fileSystem: fileSystem,
 	}
+
+	var err error
+	if p.sewerMap, err = ldtkgo.Open("embed/sprites/sewer/sewer.ldtk", p.fileSystem); err != nil {
+		panic(err)
+	} else {
+		p.sewerMap.Tilesets[0].Path = "embed/sprites/sewer/" + p.sewerMap.Tilesets[0].Path
+		path := p.sewerMap.Tilesets[0].Path
+		fmt.Println(path)
+		if p.mapRender, err = renderer.New(p.fileSystem, p.sewerMap); err != nil {
+			panic(err)
+		}
+	}
+	level := p.sewerMap.Levels[0]
+	p.mapIMage = ebiten.NewImage(level.Width, level.Height)
+	p.renderOptions = renderer.NewDefaultDrawOptions()
+	p.renderOptions.BackgroundColorFill = false
+	p.mapRender.Render(level, p.mapIMage, p.renderOptions)
+
+	return &p
 }
