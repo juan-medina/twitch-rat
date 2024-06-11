@@ -121,6 +121,12 @@ func NewPingPongValue(initial, end float32, timeToChange int, middleTime int) Va
 	return &value
 }
 
+func NewLoopValue(initial, end float32, timeToChange int) Value {
+	value := newStep()
+	value.AddStep(initial, end, timeToChange, Loop)
+	return &value
+}
+
 func NewFromToPauseValue(initial, end float32, timeToChange int, endTime int) Value {
 	value := newStep()
 	value.AddStep(initial, end, timeToChange, Next)

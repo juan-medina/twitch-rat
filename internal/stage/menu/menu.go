@@ -24,14 +24,22 @@ package menu
 
 import (
 	"embed"
+	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/settings"
+	"github.com/juan-medina/twitch-rat/internal/sprites"
 	"github.com/juan-medina/twitch-rat/internal/stage"
+	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
+)
+
+const (
+	RAT_SPEED    = 400
+	SCROLL_SPEED = 250
 )
 
 func (m *menu) Init() {
@@ -65,17 +73,28 @@ type menu struct {
 	sewerMap     draw.Map
 	firstScroll  float64
 	secondScroll float64
+	rats         sprites.Sheet
+	rat          sprites.Sprite
+	currentFrame step.Value
+	ratX         float64
+	ratY         float64
 }
 
 func (m *menu) Update(elapsedTime int) {
 	m.ui.Update(elapsedTime)
 	w, _ := m.sewerMap.Size()
 
-	m.firstScroll -= float64(elapsedTime) * 0.1
+	m.firstScroll -= float64(elapsedTime) * SCROLL_SPEED / 1000
 	if m.firstScroll < -w {
 		m.firstScroll = 0
 	}
 	m.secondScroll = m.firstScroll + w
+
+	if m.currentFrame.Update(elapsedTime) {
+		frame := fmt.Sprintf("rat_run_%02d", int(m.currentFrame.GetValue()))
+		m.rat = m.rats.Sprite(frame)
+		m.rat.SetScale(4)
+	}
 }
 
 func (m *menu) Draw(screen *ebiten.Image) {
@@ -85,12 +104,20 @@ func (m *menu) Draw(screen *ebiten.Image) {
 		m.sewerMap.Move(m.secondScroll, 0)
 		m.sewerMap.Draw(screen)
 	}
+
+	m.rat.Draw(screen, m.ratX, m.ratY)
+
 	m.ui.Draw(screen)
 }
 
 func (m *menu) OnLayoutChange(width, height float64) {
 	m.width = float32(width)
 	m.height = float32(height)
+
+	cx := float64(m.width / 2)
+	ratW, _ := m.rat.Size()
+	m.ratX = cx - (ratW / 2)
+	m.ratY = 640
 }
 
 func (m *menu) onButtonClick(id button.Id) {
@@ -110,10 +137,15 @@ func (m *menu) onButtonClick(id button.Id) {
 }
 
 func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem embed.FS) stage.Stage {
-	return &menu{
-		changer:  changer,
-		ui:       ui,
-		settings: settings,
-		sewerMap: draw.NewMap(fileSystem, "embed/sprites/sewer/sewer.ldtk", 1, 4),
+	m := menu{
+		changer:      changer,
+		ui:           ui,
+		settings:     settings,
+		sewerMap:     draw.NewMap(fileSystem, "embed/sprites/sewer/sewer.ldtk", 1, 4),
+		rats:         sprites.NewSheet(fileSystem, "embed/sprites/rats/rats.json"),
+		currentFrame: step.NewLoopValue(1, 8, RAT_SPEED),
 	}
+	m.rat = m.rats.Sprite("rat_run_01")
+	m.rat.SetScale(4)
+	return &m
 }
