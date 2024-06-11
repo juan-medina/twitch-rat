@@ -29,7 +29,9 @@ import (
 	ebitenText "github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
+type Id int
 type Label interface {
+	GetId() Id
 	SetText(text string)
 	GetText() string
 	Draw(screen *ebiten.Image)
@@ -37,16 +39,25 @@ type Label interface {
 	Measure() (float64, float64)
 	SetColor(color color.Color)
 	SetAlpha(alpha float32)
+	SetVisible(visible bool)
 }
 
 type label struct {
+	id              Id
 	text            string
 	textDrawOptions ebitenText.DrawOptions
 	face            ebitenText.Face
+	visible         bool
+}
+
+func (l label) GetId() Id {
+	return l.id
 }
 
 func (l *label) Draw(screen *ebiten.Image) {
-	ebitenText.Draw(screen, l.text, l.face, &l.textDrawOptions)
+	if l.visible {
+		ebitenText.Draw(screen, l.text, l.face, &l.textDrawOptions)
+	}
 }
 
 func (l *label) Move(x float64, y float64) {
@@ -74,11 +85,16 @@ func (l *label) SetAlpha(alpha float32) {
 	l.textDrawOptions.ColorScale.ScaleAlpha(alpha)
 }
 
-func New(text string, face ebitenText.Face, color color.Color) Label {
+func (l *label) SetVisible(visible bool) {
+	l.visible = visible
+}
+
+func New(id Id, text string, face ebitenText.Face, color color.Color) Label {
 	textDrawOptions := ebitenText.DrawOptions{}
 	textDrawOptions.ColorScale.ScaleWithColor(color)
 	textDrawOptions.Filter = ebiten.FilterNearest
 	return &label{
+		id:              id,
 		text:            text,
 		textDrawOptions: textDrawOptions,
 		face:            face,

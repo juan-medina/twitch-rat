@@ -122,6 +122,9 @@ func (i *input) SetVisible(visible bool) {
 	if i.isEditing() {
 		i.saveEdit()
 	}
+	i.caretLabel.SetVisible(visible)
+	i.textLabel.SetVisible(visible)
+	i.textPlaceHolder.SetVisible(visible)
 }
 
 func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys, elapsedTime int) {
@@ -246,9 +249,9 @@ func New(id Id, w, h float64, maxLength int, initialText string, placeholder str
 		borderColor:     inputBorderColor,
 		color:           inputColor,
 		visible:         false,
-		textLabel:       label.New(initialText, face, inputTextColor),
-		textPlaceHolder: label.New(placeholder, face, inputPlaceHolderColor),
-		caretLabel:      label.New("|", face, colors.LightPurple),
+		textLabel:       label.New(0, initialText, face, inputTextColor),
+		textPlaceHolder: label.New(0, placeholder, face, inputPlaceHolderColor),
+		caretLabel:      label.New(0, "|", face, colors.LightPurple),
 		caretAlpha:      step.NewPingPongValue(0, 1, 200, 100),
 		face:            face,
 	}

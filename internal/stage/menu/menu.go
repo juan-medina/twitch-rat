@@ -42,6 +42,7 @@ func (m *menu) Init() {
 
 	m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
+	m.ui.SetLabelVisible(ui.LABEL_TITLE, true)
 
 	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
 	m.firstScroll = 0
@@ -50,6 +51,7 @@ func (m *menu) Init() {
 func (m *menu) End() {
 	m.ui.SetButtonVisible(ui.PLAY_BUTTON, false)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, false)
+	m.ui.SetLabelVisible(ui.LABEL_TITLE, false)
 
 	m.settings.Save()
 }

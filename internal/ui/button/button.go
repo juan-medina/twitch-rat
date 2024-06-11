@@ -109,6 +109,7 @@ func (b *button) ChangeState(state State) {
 
 func (b *button) SetVisible(visible bool) {
 	b.visible = visible
+	b.label.SetVisible(visible)
 }
 
 func (b button) hit(x, y float64) bool {
@@ -174,7 +175,7 @@ func New(id Id, w, h float64, text string, face *text.GoTextFace, state State) B
 		id:                  id,
 		w:                   w,
 		h:                   h,
-		label:               label.New(text, face, buttonEnabledTextColor),
+		label:               label.New(0, text, face, buttonEnabledTextColor),
 		visible:             false,
 		buttonClickCallback: dummyButtonCallback,
 	}

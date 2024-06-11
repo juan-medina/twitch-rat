@@ -55,6 +55,10 @@ type UI interface {
 	SetInputVisible(id input.Id, visible bool)
 
 	OnLayoutChange(width, height float64)
+
+	SetLabelText(id label.Id, text string)
+	SetLabelColor(id label.Id, color color.Color)
+	SetLabelVisible(id label.Id, visible bool)
 }
 
 var (
@@ -67,10 +71,10 @@ type uiImpl struct {
 	fileSystem   embed.FS
 	faceSource   *text.GoTextFaceSource
 	normalFace   *text.GoTextFace
-	lastMessage  label.Label
-	version      label.Label
+	bigFace      *text.GoTextFace
 	buttons      []button.Button
 	inputs       []input.Input
+	labels       []label.Label
 	keys         keys.Keys
 }
 
@@ -83,6 +87,7 @@ const (
 	MAX_INPUTS        = 1
 	INPUT_WIDTH       = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
 	INPUT_HEIGHT      = 50
+	MAX_LABELS        = 10
 )
 
 const (
@@ -92,6 +97,12 @@ const (
 
 const (
 	INPUT_CHANNEL input.Id = iota
+)
+
+const (
+	LABEL_LAST_MESSAGE label.Id = iota
+	LABEL_VERSION
+	LABEL_TITLE
 )
 
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
@@ -115,13 +126,19 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 		Size:   24,
 	}
 
-	u.lastMessage = label.New("", u.normalFace, normalLabelColor)
+	u.bigFace = &text.GoTextFace{
+		Source: u.faceSource,
+		Size:   40,
+	}
+
+	u.AddLabel(LABEL_LAST_MESSAGE, "", u.normalFace, normalLabelColor)
+	u.AddLabel(LABEL_TITLE, "Twitch Rat", u.bigFace, normalLabelColor)
 
 	versionStr := "v0.0.0"
 	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
 		versionStr = "v" + string(data)
 	}
-	u.version = label.New(versionStr, u.normalFace, normalLabelColor)
+	u.AddLabel(LABEL_VERSION, versionStr, u.normalFace, normalLabelColor)
 
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
@@ -129,11 +146,16 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel")
 	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", button.Enabled)
 	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", button.Enabled)
+
+	u.SetLabelVisible(LABEL_LAST_MESSAGE, true)
+	u.SetLabelVisible(LABEL_VERSION, true)
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {
-	u.lastMessage.Draw(screen)
-	u.version.Draw(screen)
+	for _, l := range u.labels {
+		l.Draw(screen)
+	}
+
 	for _, b := range u.buttons {
 		b.Draw(screen)
 
@@ -154,8 +176,8 @@ func (u *uiImpl) Update(elapsedTime int) {
 }
 
 func (u *uiImpl) SetStatusMessage(message string, color color.Color) {
-	u.lastMessage.SetColor(color)
-	u.lastMessage.SetText(message)
+	u.SetLabelColor(LABEL_LAST_MESSAGE, color)
+	u.SetLabelText(LABEL_LAST_MESSAGE, message)
 }
 
 func (u *uiImpl) OnLayoutChange(width, height float64) {
@@ -165,11 +187,12 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	cx := u.screenWidth / 2
 	cy := u.screenHeight / 2
 
-	px := cx - INPUT_WIDTH - (BUTTON_GAP / 2)
-	py := cy - (BUTTON_HEIGHT / 2)
+	px := cx - (INPUT_WIDTH / 2)
+	py := cy - (INPUT_HEIGHT / 2) - BUTTON_GAP
 	u.moveInput(INPUT_CHANNEL, px, py)
 
-	px = cx + (BUTTON_GAP / 2)
+	px = cx - (BUTTON_WIDTH / 2)
+	py = py + INPUT_HEIGHT + BUTTON_GAP
 	u.moveButton(PLAY_BUTTON, px, py)
 
 	px = u.screenWidth - BACK_BUTTON_WIDTH
@@ -178,10 +201,15 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 
 	gapX := u.normalFace.Size
 	gapY := u.normalFace.Size * 1.5
-	u.lastMessage.Move(gapX, u.screenHeight-gapY)
+	u.getLabel(LABEL_LAST_MESSAGE).Move(gapX, u.screenHeight-gapY)
 
-	cx, cy = u.version.Measure()
-	u.version.Move(u.screenWidth-cx, u.screenHeight-cy)
+	versionLabel := u.getLabel(LABEL_VERSION)
+	cx, cy = versionLabel.Measure()
+	versionLabel.Move(u.screenWidth-cx, u.screenHeight-cy)
+
+	titleLabel := u.getLabel(LABEL_TITLE)
+	cx, cy = titleLabel.Measure()
+	titleLabel.Move(u.screenWidth/2-cx/2, u.screenHeight/2-cy-INPUT_HEIGHT-gapY)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
@@ -277,6 +305,36 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 	ebiten.SetCursorShape(ebiten.CursorShapeDefault)
 	for i := range u.inputs {
 		u.inputs[i].Update(mouseX, mouseY, leftPressed, u.keys, elapsedTime)
+	}
+}
+
+func (u *uiImpl) AddLabel(id label.Id, text string, face *text.GoTextFace, color color.Color) {
+	u.labels = append(u.labels, label.New(id, text, face, color))
+}
+
+func (u *uiImpl) getLabel(id label.Id) label.Label {
+	for i := range u.labels {
+		if u.labels[i].GetId() == id {
+			return u.labels[i]
+		}
+	}
+	return nil
+}
+
+func (u *uiImpl) SetLabelText(id label.Id, text string) {
+	if l := u.getLabel(id); l != nil {
+		l.SetText(text)
+	}
+}
+func (u *uiImpl) SetLabelColor(id label.Id, color color.Color) {
+	if l := u.getLabel(id); l != nil {
+		l.SetColor(color)
+	}
+}
+
+func (ui *uiImpl) SetLabelVisible(id label.Id, visible bool) {
+	if l := ui.getLabel(id); l != nil {
+		l.SetVisible(visible)
 	}
 }
 
