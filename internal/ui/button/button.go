@@ -28,6 +28,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
@@ -71,12 +72,14 @@ type button struct {
 	state               State
 	timeToSendClick     int
 	buttonClickCallback func(id Id)
+	audioPlayer         audio.Player
 }
 
 func dummyButtonCallback(id Id) {}
 
 const (
 	CLICK_SENT_DELAY = 200
+	CLICK_SOUND      = "embed/sounds/click.ogg"
 )
 
 func (b button) GetId() Id {
@@ -139,6 +142,7 @@ func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime in
 						if b.timeToSendClick == 0 {
 							b.ChangeState(Pressed)
 							b.timeToSendClick = CLICK_SENT_DELAY
+							b.audioPlayer.PlaySound(CLICK_SOUND)
 						}
 					}
 				} else {
@@ -170,7 +174,8 @@ func (b *button) click() {
 	b.buttonClickCallback(b.id)
 }
 
-func New(id Id, w, h float64, text string, face *text.GoTextFace, state State) Button {
+func New(id Id, w, h float64, text string, face *text.GoTextFace, audioPlayer audio.Player, state State) Button {
+	audioPlayer.LoadSound(CLICK_SOUND)
 	b := button{
 		id:                  id,
 		w:                   w,
@@ -178,6 +183,7 @@ func New(id Id, w, h float64, text string, face *text.GoTextFace, state State) B
 		label:               label.New(0, text, face, buttonEnabledTextColor),
 		visible:             false,
 		buttonClickCallback: dummyButtonCallback,
+		audioPlayer:         audioPlayer,
 	}
 	b.ChangeState(state)
 	return &b

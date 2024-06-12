@@ -51,13 +51,13 @@ func (p *playing) Init() {
 	p.chat.OnEvent(p.onChatEvent)
 	p.chat.Connect(p.channel)
 	p.sewerMap.SetLevel(0)
-	p.music.PlaySong(GAME_MUSIC)
+	p.audioPlayer.PlaySong(GAME_MUSIC)
 }
 
 func (p *playing) End() {
 	p.ui.SetButtonVisible(ui.BACK_BUTTON, false)
 	p.chat.Disconnect()
-	p.music.StopCurrentSong()
+	p.audioPlayer.Stop()
 }
 
 type playing struct {
@@ -70,7 +70,7 @@ type playing struct {
 	currentWidth  float64
 	currentHeight float64
 	sewerMap      draw.Map
-	music         audio.Player
+	audioPlayer   audio.Player
 }
 
 func (p *playing) Update(elapsedTime int) {
@@ -114,16 +114,16 @@ func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, music audio.Player) stage.Stage {
-	music.LoadSong(GAME_MUSIC)
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, audioPlayer audio.Player) stage.Stage {
+	audioPlayer.LoadSong(GAME_MUSIC)
 	p := playing{
-		changer:    changer,
-		settings:   settings,
-		ui:         ui,
-		eventsChan: make(chan chat.Event, 10),
-		chat:       chat.New(),
-		sewerMap:   sewerMap,
-		music:      music,
+		changer:     changer,
+		settings:    settings,
+		ui:          ui,
+		eventsChan:  make(chan chat.Event, 10),
+		chat:        chat.New(),
+		sewerMap:    sewerMap,
+		audioPlayer: audioPlayer,
 	}
 	return &p
 }

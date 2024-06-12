@@ -34,6 +34,13 @@ type Player interface {
 	LoadSong(song string)
 	PlaySong(song string)
 	StopCurrentSong()
+
+	LoadSound(sound string)
+	PlaySound(sound string)
+	StopAllSounds()
+
+	Stop()
+
 	Update()
 }
 
@@ -42,6 +49,7 @@ type playerImpl struct {
 	musicPlayer  *ebitenAudio.Player
 	fileSystem   embed.FS
 	songs        map[string]*vorbis.Stream
+	sounds       map[string]*ebitenAudio.Player
 }
 
 func (p *playerImpl) LoadSong(song string) {
@@ -93,10 +101,54 @@ func (p *playerImpl) Update() {
 	}
 }
 
+func (p *playerImpl) LoadSound(sound string) {
+	if _, ok := p.sounds[sound]; ok {
+		return
+	}
+	if soundData, err := p.fileSystem.ReadFile(sound); err == nil {
+		if stream, err := vorbis.DecodeWithoutResampling(bytes.NewReader(soundData)); err == nil {
+			if p.sounds[sound], err = p.audioContext.NewPlayer(stream); err != nil {
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
+	} else {
+		panic(err)
+	}
+}
+
+func (p *playerImpl) PlaySound(sound string) {
+	if player, ok := p.sounds[sound]; !ok {
+		panic("sound not found")
+	} else {
+		if player.IsPlaying() {
+			player.Pause()
+		}
+		player.SetPosition(0)
+		player.Play()
+	}
+}
+
+func (p *playerImpl) StopAllSounds() {
+	for _, player := range p.sounds {
+		if player.IsPlaying() {
+			player.Pause()
+			player.SetPosition(0)
+		}
+	}
+}
+
+func (p *playerImpl) Stop() {
+	p.StopCurrentSong()
+	p.StopAllSounds()
+}
+
 func NewPlayer(fileSystem embed.FS) Player {
 	return &playerImpl{
 		audioContext: ebitenAudio.NewContext(44100),
 		fileSystem:   fileSystem,
 		songs:        make(map[string]*vorbis.Stream),
+		sounds:       make(map[string]*ebitenAudio.Player),
 	}
 }

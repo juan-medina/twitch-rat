@@ -70,7 +70,7 @@ type game struct {
 	currentWidth   float64
 	currentHeight  float64
 	valueToChange  step.Value
-	music          audio.Player
+	audioPlayer    audio.Player
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -108,8 +108,8 @@ func (g *game) init() {
 	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
 	rats := draw.NewSheet(g.fileSystem, "embed/sprites/rats/rats.json")
 
-	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.music))
-	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, g.music))
+	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.audioPlayer))
+	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, g.audioPlayer))
 	g.changeStage(stage.MENU)
 
 	g.state = RUNNING
@@ -134,7 +134,7 @@ func (g *game) Update() error {
 		return nil
 	}
 
-	g.music.Update()
+	g.audioPlayer.Update()
 
 	g.keys.Update(elapsedTime)
 
@@ -195,16 +195,17 @@ func (g *game) changeStage(id stage.Id) {
 }
 
 func New(er embed.FS) *game {
+	audioPlayer := audio.NewPlayer(er)
 	g := game{
 		fileSystem:    er,
 		state:         LOADING,
-		ui:            ui.New(),
+		ui:            ui.New(audioPlayer),
 		keys:          keys.New(),
 		settings:      settings.New(APPLICATION),
 		stages:        make(map[stage.Id]stage.Stage),
 		currentStage:  stage.NONE,
 		valueToChange: step.NewFromToPauseValue(0, 255, 200, 100),
-		music:         audio.NewPlayer(er),
+		audioPlayer:   audioPlayer,
 	}
 
 	return &g

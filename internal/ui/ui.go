@@ -31,6 +31,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
@@ -76,6 +77,7 @@ type uiImpl struct {
 	inputs       []input.Input
 	labels       []label.Label
 	keys         keys.Keys
+	audioPlayer  audio.Player
 }
 
 const (
@@ -245,7 +247,7 @@ func (u *uiImpl) moveButton(id button.Id, x, y float64) {
 }
 
 func (u *uiImpl) addButton(id button.Id, w, h float64, label string, state button.State) {
-	u.buttons = append(u.buttons, button.New(id, w, h, label, u.normalFace, state))
+	u.buttons = append(u.buttons, button.New(id, w, h, label, u.normalFace, u.audioPlayer, state))
 }
 
 func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {
@@ -341,6 +343,8 @@ func (ui *uiImpl) SetLabelVisible(id label.Id, visible bool) {
 	}
 }
 
-func New() UI {
-	return &uiImpl{}
+func New(audioPlayer audio.Player) UI {
+	return &uiImpl{
+		audioPlayer: audioPlayer,
+	}
 }
