@@ -29,6 +29,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
@@ -102,8 +103,10 @@ func (g *game) init() {
 
 	g.lastUpdateTime = time.Now()
 
-	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, g.fileSystem))
-	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, g.fileSystem))
+	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
+
+	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, g.fileSystem, sewerMap))
+	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap))
 	g.changeStage(stage.MENU)
 
 	g.state = RUNNING

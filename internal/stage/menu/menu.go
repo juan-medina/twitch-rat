@@ -135,15 +135,16 @@ func (m *menu) onButtonClick(id button.Id) {
 	}
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem embed.FS) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem embed.FS, sewerMap draw.Map) stage.Stage {
 	m := menu{
 		changer:      changer,
 		ui:           ui,
 		settings:     settings,
-		sewerMap:     draw.NewMap(fileSystem, "embed/sprites/sewer/sewer.ldtk", 1, 4),
+		sewerMap:     sewerMap,
 		rats:         draw.NewSheet(fileSystem, "embed/sprites/rats/rats.json"),
 		currentFrame: step.NewLoopValue(1, 8, RAT_SPEED),
 	}
+	m.sewerMap.SetLevel(1)
 	m.rat = m.rats.Sprite("rat_run_01")
 	m.rat.SetScale(4)
 	return &m

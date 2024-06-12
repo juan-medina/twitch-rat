@@ -23,7 +23,6 @@
 package playing
 
 import (
-	"embed"
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -60,7 +59,6 @@ type playing struct {
 	eventsChan    chan chat.Event
 	chat          chat.Chat
 	channel       string
-	fileSystem    embed.FS
 	currentWidth  float64
 	currentHeight float64
 	sewerMap      draw.Map
@@ -107,14 +105,17 @@ func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem embed.FS) stage.Stage {
-	return &playing{
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map) stage.Stage {
+	p := playing{
 		changer:    changer,
 		settings:   settings,
 		ui:         ui,
 		eventsChan: make(chan chat.Event, 10),
 		chat:       chat.New(),
-		fileSystem: fileSystem,
-		sewerMap:   draw.NewMap(fileSystem, "embed/sprites/sewer/sewer.ldtk", 0, 4),
+		sewerMap:   sewerMap,
 	}
+
+	p.sewerMap.SetLevel(0)
+
+	return &p
 }

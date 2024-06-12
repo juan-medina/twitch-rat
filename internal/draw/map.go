@@ -35,20 +35,21 @@ type Map interface {
 	Move(x, y float64)
 	Draw(screen *ebiten.Image)
 	Size() (float64, float64)
+	SetLevel(level int)
 }
 
 type mapImpl struct {
 	fileSystem        embed.FS
 	fileName          string
 	level             int
-	mapImage          *ebiten.Image
+	mapImages         []*ebiten.Image
 	mapDrawingOptions ebiten.DrawImageOptions
 	x, y              float64
 	scale             float64
 }
 
 func (m mapImpl) Draw(screen *ebiten.Image) {
-	screen.DrawImage(m.mapImage, &m.mapDrawingOptions)
+	screen.DrawImage(m.mapImages[m.level], &m.mapDrawingOptions)
 }
 
 func (m *mapImpl) Move(x float64, y float64) {
@@ -59,15 +60,18 @@ func (m *mapImpl) Move(x float64, y float64) {
 	m.mapDrawingOptions.GeoM.Translate(m.x, m.y)
 }
 
-func (m *mapImpl) Size() (float64, float64) {
-	return float64(m.mapImage.Bounds().Dx()) * m.scale, float64(m.mapImage.Bounds().Dy()) * m.scale
+func (m *mapImpl) SetLevel(level int) {
+	m.level = level
 }
 
-func NewMap(fileSystem embed.FS, fileName string, level int, scale float64) Map {
+func (m mapImpl) Size() (float64, float64) {
+	return float64(m.mapImages[m.level].Bounds().Dx()) * m.scale, float64(m.mapImages[m.level].Bounds().Dy()) * m.scale
+}
+
+func NewMap(fileSystem embed.FS, fileName string, scale float64) Map {
 	m := mapImpl{
 		fileSystem: fileSystem,
 		fileName:   fileName,
-		level:      level,
 		scale:      scale,
 	}
 
@@ -91,11 +95,13 @@ func NewMap(fileSystem embed.FS, fileName string, level int, scale float64) Map 
 		if mapRender, err := renderer.New(m.fileSystem, world); err != nil {
 			panic(err)
 		} else {
-			levelData := world.Levels[level]
-			m.mapImage = ebiten.NewImage(levelData.Width, levelData.Height)
-			renderDrawingOptions := renderer.NewDefaultDrawOptions()
-			renderDrawingOptions.BackgroundColorFill = false
-			mapRender.Render(levelData, m.mapImage, renderDrawingOptions)
+			for i := range world.Levels {
+				levelData := world.Levels[i]
+				m.mapImages = append(m.mapImages, ebiten.NewImage(levelData.Width, levelData.Height))
+				renderDrawingOptions := renderer.NewDefaultDrawOptions()
+				renderDrawingOptions.BackgroundColorFill = false
+				mapRender.Render(levelData, m.mapImages[i], renderDrawingOptions)
+			}
 			m.Move(0, 0)
 		}
 	}
