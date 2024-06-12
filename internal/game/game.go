@@ -104,8 +104,9 @@ func (g *game) init() {
 	g.lastUpdateTime = time.Now()
 
 	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
+	rats := draw.NewSheet(g.fileSystem, "embed/sprites/rats/rats.json")
 
-	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, g.fileSystem, sewerMap))
+	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap))
 	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap))
 	g.changeStage(stage.MENU)
 

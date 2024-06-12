@@ -45,6 +45,7 @@ func (p *playing) Init() {
 	p.channel = p.settings.GetValue("channel", "")
 	p.chat.OnEvent(p.onChatEvent)
 	p.chat.Connect(p.channel)
+	p.sewerMap.SetLevel(0)
 }
 
 func (p *playing) End() {
@@ -113,9 +114,6 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 		eventsChan: make(chan chat.Event, 10),
 		chat:       chat.New(),
 		sewerMap:   sewerMap,
-	}
-
-	p.sewerMap.SetLevel(0)
-
+	}	
 	return &p
 }

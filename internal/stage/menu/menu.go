@@ -23,7 +23,6 @@
 package menu
 
 import (
-	"embed"
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -53,6 +52,7 @@ func (m *menu) Init() {
 
 	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
 	m.firstScroll = 0
+	m.sewerMap.SetLevel(1)
 }
 
 func (m *menu) End() {
@@ -135,16 +135,15 @@ func (m *menu) onButtonClick(id button.Id) {
 	}
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem embed.FS, sewerMap draw.Map) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.Sheet, sewerMap draw.Map) stage.Stage {
 	m := menu{
 		changer:      changer,
 		ui:           ui,
 		settings:     settings,
 		sewerMap:     sewerMap,
-		rats:         draw.NewSheet(fileSystem, "embed/sprites/rats/rats.json"),
+		rats:         rats,
 		currentFrame: step.NewLoopValue(1, 8, RAT_SPEED),
 	}
-	m.sewerMap.SetLevel(1)
 	m.rat = m.rats.Sprite("rat_run_01")
 	m.rat.SetScale(4)
 	return &m
