@@ -29,6 +29,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
@@ -69,6 +70,7 @@ type game struct {
 	currentWidth   float64
 	currentHeight  float64
 	valueToChange  step.Value
+	music          audio.Player
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -106,11 +108,12 @@ func (g *game) init() {
 	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
 	rats := draw.NewSheet(g.fileSystem, "embed/sprites/rats/rats.json")
 
-	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap))
-	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap))
+	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.music))
+	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, g.music))
 	g.changeStage(stage.MENU)
 
 	g.state = RUNNING
+
 }
 
 func (g *game) addStage(id stage.Id, st stage.Stage) {
@@ -130,6 +133,8 @@ func (g *game) Update() error {
 		g.init()
 		return nil
 	}
+
+	g.music.Update()
 
 	g.keys.Update(elapsedTime)
 
@@ -199,6 +204,7 @@ func New(er embed.FS) *game {
 		stages:        make(map[stage.Id]stage.Stage),
 		currentStage:  stage.NONE,
 		valueToChange: step.NewFromToPauseValue(0, 255, 200, 100),
+		music:         audio.NewPlayer(er),
 	}
 
 	return &g

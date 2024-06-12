@@ -26,6 +26,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/settings"
@@ -38,6 +39,7 @@ import (
 const (
 	RAT_SPEED    = 400
 	SCROLL_SPEED = 250
+	MENU_MUSIC   = "embed/music/menu.ogg"
 )
 
 func (m *menu) Init() {
@@ -53,6 +55,7 @@ func (m *menu) Init() {
 	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
 	m.firstScroll = 0
 	m.sewerMap.SetLevel(1)
+	m.music.PlaySong(MENU_MUSIC)
 }
 
 func (m *menu) End() {
@@ -61,6 +64,7 @@ func (m *menu) End() {
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, false)
 
 	m.settings.Save()
+	m.music.StopCurrentSong()
 }
 
 type menu struct {
@@ -77,6 +81,7 @@ type menu struct {
 	currentFrame step.Value
 	ratX         float64
 	ratY         float64
+	music        audio.Player
 }
 
 func (m *menu) Update(elapsedTime int) {
@@ -135,7 +140,8 @@ func (m *menu) onButtonClick(id button.Id) {
 	}
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.Sheet, sewerMap draw.Map) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.Sheet, sewerMap draw.Map, music audio.Player) stage.Stage {
+	music.LoadSong(MENU_MUSIC)
 	m := menu{
 		changer:      changer,
 		ui:           ui,
@@ -143,6 +149,7 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.
 		sewerMap:     sewerMap,
 		rats:         rats,
 		currentFrame: step.NewLoopValue(1, 8, RAT_SPEED),
+		music:        music,
 	}
 	m.rat = m.rats.Sprite("rat_run_01")
 	m.rat.SetScale(4)
