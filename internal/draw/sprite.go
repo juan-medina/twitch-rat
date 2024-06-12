@@ -20,7 +20,7 @@
  *  THE SOFTWARE.
  */
 
-package sprites
+package draw
 
 import "github.com/hajimehoshi/ebiten/v2"
 

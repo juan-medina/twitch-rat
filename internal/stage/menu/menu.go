@@ -30,7 +30,6 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/settings"
-	"github.com/juan-medina/twitch-rat/internal/sprites"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui"
@@ -73,8 +72,8 @@ type menu struct {
 	sewerMap     draw.Map
 	firstScroll  float64
 	secondScroll float64
-	rats         sprites.Sheet
-	rat          sprites.Sprite
+	rats         draw.Sheet
+	rat          draw.Sprite
 	currentFrame step.Value
 	ratX         float64
 	ratY         float64
@@ -142,7 +141,7 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, fileSystem
 		ui:           ui,
 		settings:     settings,
 		sewerMap:     draw.NewMap(fileSystem, "embed/sprites/sewer/sewer.ldtk", 1, 4),
-		rats:         sprites.NewSheet(fileSystem, "embed/sprites/rats/rats.json"),
+		rats:         draw.NewSheet(fileSystem, "embed/sprites/rats/rats.json"),
 		currentFrame: step.NewLoopValue(1, 8, RAT_SPEED),
 	}
 	m.rat = m.rats.Sprite("rat_run_01")
