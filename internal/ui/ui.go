@@ -80,9 +80,10 @@ type uiImpl struct {
 
 const (
 	MAX_BUTTONS       = 10
+	MENU_START        = 250.0
 	BUTTON_WIDTH      = 170.0
 	BUTTON_HEIGHT     = 50.0
-	BUTTON_GAP        = 10.0
+	BUTTON_GAP        = 20.0
 	BACK_BUTTON_WIDTH = 50.0
 	MAX_INPUTS        = 1
 	INPUT_WIDTH       = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
@@ -185,10 +186,16 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	u.screenHeight = height
 
 	cx := u.screenWidth / 2
-	cy := u.screenHeight / 2
+	cy := MENU_START
 
-	px := cx - (INPUT_WIDTH / 2)
-	py := cy - (INPUT_HEIGHT / 2) - BUTTON_GAP
+	titleLabel := u.getLabel(LABEL_TITLE)
+	ix, iy := titleLabel.Measure()
+	px := cx - (ix / 2)
+	py := cy
+	titleLabel.Move(px, py)
+
+	px = cx - (INPUT_WIDTH / 2)
+	py = cy + (INPUT_HEIGHT / 2) + iy + BUTTON_GAP
 	u.moveInput(INPUT_CHANNEL, px, py)
 
 	px = cx - (BUTTON_WIDTH / 2)
@@ -206,10 +213,6 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	versionLabel := u.getLabel(LABEL_VERSION)
 	cx, cy = versionLabel.Measure()
 	versionLabel.Move(u.screenWidth-cx, u.screenHeight-cy)
-
-	titleLabel := u.getLabel(LABEL_TITLE)
-	cx, cy = titleLabel.Measure()
-	titleLabel.Move(u.screenWidth/2-cx/2, u.screenHeight/2-cy-INPUT_HEIGHT-gapY)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
