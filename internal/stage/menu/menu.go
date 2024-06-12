@@ -129,7 +129,7 @@ func (m *menu) onButtonClick(id button.Id) {
 	case ui.PLAY_BUTTON:
 		channel := m.ui.GetInputText(ui.INPUT_CHANNEL)
 		if channel == "" {
-			m.ui.SetStatusMessage("Please enter a channel name!", colors.DarkRed)
+			m.ui.SetStatusMessage("Please enter a channel name!", colors.Red)
 			return
 		}
 		m.settings.SetValue("channel", channel)
