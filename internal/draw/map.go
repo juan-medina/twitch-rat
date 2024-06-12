@@ -38,16 +38,13 @@ type Map interface {
 }
 
 type mapImpl struct {
-	fileSystem           embed.FS
-	fileName             string
-	level                int
-	world                *ldtkgo.Project
-	mapRender            *renderer.Renderer
-	mapImage             *ebiten.Image
-	mapDrawingOptions    ebiten.DrawImageOptions
-	renderDrawingOptions *renderer.DrawOptions
-	x, y                 float64
-	scale                float64
+	fileSystem        embed.FS
+	fileName          string
+	level             int
+	mapImage          *ebiten.Image
+	mapDrawingOptions ebiten.DrawImageOptions
+	x, y              float64
+	scale             float64
 }
 
 func (m mapImpl) Draw(screen *ebiten.Image) {
@@ -63,8 +60,7 @@ func (m *mapImpl) Move(x float64, y float64) {
 }
 
 func (m *mapImpl) Size() (float64, float64) {
-	return float64(m.world.Levels[m.level].Width) * m.scale,
-		float64(m.world.Levels[m.level].Height) * m.scale
+	return float64(m.mapImage.Bounds().Dx()) * m.scale, float64(m.mapImage.Bounds().Dy()) * m.scale
 }
 
 func NewMap(fileSystem embed.FS, fileName string, level int, scale float64) Map {
@@ -75,8 +71,7 @@ func NewMap(fileSystem embed.FS, fileName string, level int, scale float64) Map 
 		scale:      scale,
 	}
 
-	var err error
-	if m.world, err = ldtkgo.Open(fileName, fileSystem); err != nil {
+	if world, err := ldtkgo.Open(fileName, fileSystem); err != nil {
 		panic(err)
 	} else {
 		basePath := fileName
@@ -86,24 +81,24 @@ func NewMap(fileSystem embed.FS, fileName string, level int, scale float64) Map 
 			basePath = basePath[:index]
 		}
 
-		for i := range m.world.Tilesets {
-			tilePath := m.world.Tilesets[i].Path
+		for i := range world.Tilesets {
+			tilePath := world.Tilesets[i].Path
 			if !strings.Contains(tilePath, "/") {
-				m.world.Tilesets[i].Path = basePath + "/" + tilePath
+				world.Tilesets[i].Path = basePath + "/" + tilePath
 			}
 		}
 
-		if m.mapRender, err = renderer.New(m.fileSystem, m.world); err != nil {
+		if mapRender, err := renderer.New(m.fileSystem, world); err != nil {
 			panic(err)
+		} else {
+			levelData := world.Levels[level]
+			m.mapImage = ebiten.NewImage(levelData.Width, levelData.Height)
+			renderDrawingOptions := renderer.NewDefaultDrawOptions()
+			renderDrawingOptions.BackgroundColorFill = false
+			mapRender.Render(levelData, m.mapImage, renderDrawingOptions)
+			m.Move(0, 0)
 		}
 	}
-
-	levelData := m.world.Levels[level]
-	m.mapImage = ebiten.NewImage(levelData.Width, levelData.Height)
-	m.renderDrawingOptions = renderer.NewDefaultDrawOptions()
-	m.renderDrawingOptions.BackgroundColorFill = false
-	m.mapRender.Render(levelData, m.mapImage, m.renderDrawingOptions)
-	m.Move(0, 0)
 
 	return &m
 }
