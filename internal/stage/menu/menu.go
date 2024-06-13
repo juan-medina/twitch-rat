@@ -39,15 +39,17 @@ import (
 )
 
 const (
-	RAT_SPEED      = 400
-	SCROLL_SPEED   = 250
-	MENU_MUSIC     = "embed/music/menu.ogg"
-	RAT_FRAME      = "rat_run_%02d"
-	INITIAL_FRAME  = 1
-	END_FRAME      = 8
-	RAT_SCALE      = 4
-	RAT_Y_POS      = 640
-	CHANNEL_REGEXP = `^[a-zA-Z][a-zA-Z0-9\-_]*$`
+	RAT_SPEED         = 400
+	SCROLL_SPEED      = 250
+	MENU_MUSIC        = "embed/music/menu.ogg"
+	RAT_FRAME         = "rat_run_%02d"
+	INITIAL_FRAME     = 1
+	END_FRAME         = 8
+	RAT_SCALE         = 4
+	RAT_Y_POS         = 640
+	CHANNEL_REGEXP    = `^[a-zA-Z][a-zA-Z0-9\-_]*$`
+	CHANNEL_NOT_EMPTY = "Please enter a channel name!"
+	CHANNEL_NOT_VALID = "Channel name is invalid!"
 )
 
 func (m *menu) Init() {
@@ -153,11 +155,11 @@ func (m *menu) onButtonClick(id button.Id) {
 	case ui.PLAY_BUTTON:
 		channel := m.ui.GetInputText(ui.INPUT_CHANNEL)
 		if channel == "" {
-			m.ui.SetStatusMessage("Please enter a channel name!", colors.Red)
+			m.ui.SetStatusMessage(CHANNEL_NOT_EMPTY, colors.Red)
 			return
 		} else {
 			if !m.channelRegex.MatchString(channel) {
-				m.ui.SetStatusMessage("Channel name is invalid!", colors.Red)
+				m.ui.SetStatusMessage(CHANNEL_NOT_VALID, colors.Red)
 				return
 			}
 		}
