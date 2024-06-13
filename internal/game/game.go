@@ -141,7 +141,7 @@ func (g *game) Update() error {
 
 	if g.currentStage != stage.NONE {
 		if g.state == RUNNING {
-			g.stages[g.currentStage].Update(elapsedTime)
+			g.stages[g.currentStage].Update(elapsedTime, g.keys)
 		} else {
 			g.valueToChange.Update(elapsedTime)
 			if g.valueToChange.IsAtEnd() {
@@ -151,7 +151,7 @@ func (g *game) Update() error {
 						return ebiten.Termination
 					}
 					g.changeStage(g.nextStage)
-					g.stages[g.currentStage].Update(0)
+					g.stages[g.currentStage].Update(0, g.keys)
 					g.state = FADING_IN
 					g.valueToChange.Reset()
 				} else if g.state == FADING_IN {

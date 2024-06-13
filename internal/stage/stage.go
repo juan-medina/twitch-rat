@@ -22,12 +22,15 @@
 
 package stage
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/juan-medina/twitch-rat/internal/keys"
+)
 
 type Stage interface {
 	Init()
 	Draw(screen *ebiten.Image)
-	Update(elapsedTime int)
+	Update(elapsedTime int, keys keys.Keys)
 	OnLayoutChange(width, height float64)
 	End()
 }

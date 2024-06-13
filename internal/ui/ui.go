@@ -49,11 +49,13 @@ type UI interface {
 	EnableButton(id button.Id)
 	DisableButton(id button.Id)
 	SetButtonVisible(id button.Id, visible bool)
+	ClickButton(id button.Id)
 	SetButtonClickCallback(callback func(id button.Id))
 
 	GetInputText(id input.Id) string
 	SetInputText(id input.Id, text string)
 	SetInputVisible(id input.Id, visible bool)
+	IsInputEditing(id input.Id) bool
 
 	OnLayoutChange(width, height float64)
 
@@ -286,6 +288,12 @@ func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {
 	}
 }
 
+func (u *uiImpl) ClickButton(id button.Id) {
+	if b := u.getButton(id); b != nil {
+		b.Click()
+	}
+}
+
 func (u *uiImpl) SetButtonClickCallback(callback func(id button.Id)) {
 	for i := range u.buttons {
 		u.buttons[i].OnButtonClickCallback(callback)
@@ -330,6 +338,13 @@ func (ui *uiImpl) SetInputVisible(id input.Id, visible bool) {
 	if i := ui.getInput(id); i != nil {
 		i.SetVisible(visible)
 	}
+}
+
+func (ui uiImpl) IsInputEditing(id input.Id) bool {
+	if i := ui.getInput(id); i != nil {
+		return i.IsEditing()
+	}
+	return false
 }
 
 func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText string, placeHolder string) {

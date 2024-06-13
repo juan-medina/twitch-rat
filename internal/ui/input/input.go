@@ -45,6 +45,7 @@ type Input interface {
 	Move(x, y float64)
 	GetText() string
 	SetText(text string)
+	IsEditing() bool
 }
 
 type input struct {
@@ -91,7 +92,7 @@ func (i input) Draw(screen *ebiten.Image) {
 		vector.StrokeRect(screen, float32(i.x), float32(i.y), float32(i.w), float32(i.h), INPUT_BORDER_SIZE, i.borderColor, true)
 		i.textLabel.Draw(screen)
 
-		if i.isEditing() {
+		if i.IsEditing() {
 			i.caretLabel.Draw(screen)
 		} else {
 			text := i.GetText()
@@ -119,13 +120,13 @@ func (i *input) saveEdit() {
 	i.savedText = i.textLabel.GetText()
 }
 
-func (i input) isEditing() bool {
+func (i input) IsEditing() bool {
 	return i.editing
 }
 
 func (i *input) SetVisible(visible bool) {
 	i.visible = visible
-	if i.isEditing() {
+	if i.IsEditing() {
 		i.saveEdit()
 	}
 	i.caretLabel.SetVisible(visible)
@@ -146,17 +147,17 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 
 	if leftPressed {
 		if hit {
-			if !i.isEditing() {
+			if !i.IsEditing() {
 				i.edit()
 			}
 		} else {
-			if i.isEditing() {
+			if i.IsEditing() {
 				i.saveEdit()
 			}
 		}
 	}
 
-	if !i.isEditing() {
+	if !i.IsEditing() {
 		return
 	}
 
@@ -175,11 +176,14 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 	if keys.IsDownNoRepeat(ebiten.KeyEnter) || keys.IsDownNoRepeat(ebiten.KeyNumpadEnter) {
 		playSound = true
 		i.saveEdit()
+		keys.SwallowKey(ebiten.KeyEnter)
+		keys.SwallowKey(ebiten.KeyNumpadEnter)
 	}
 
 	if keys.IsDownNoRepeat(ebiten.KeyEscape) {
 		playSound = true
 		i.cancelEdit()
+		keys.SwallowKey(ebiten.KeyEscape)
 	}
 
 	if playSound {

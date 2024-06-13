@@ -30,6 +30,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/chat"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/ui"
@@ -73,7 +74,7 @@ type playing struct {
 	audioPlayer   audio.Player
 }
 
-func (p *playing) Update(elapsedTime int) {
+func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 	p.ui.Update(elapsedTime)
 	select {
 	case event := <-p.eventsChan:
@@ -86,6 +87,12 @@ func (p *playing) Update(elapsedTime int) {
 		}
 	default:
 		/// no new event
+	}
+
+	if !p.ui.IsInputEditing(ui.INPUT_CHANNEL) {
+		if keys.IsDownNoRepeat(ebiten.KeyEscape) {
+			p.ui.ClickButton(ui.BACK_BUTTON)
+		}
 	}
 }
 

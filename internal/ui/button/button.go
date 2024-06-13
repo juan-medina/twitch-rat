@@ -52,6 +52,7 @@ type Button interface {
 	SetVisible(visible bool)
 	ChangeState(state State)
 	Move(x, y float64)
+	Click()
 }
 
 type State int
@@ -138,13 +139,7 @@ func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime in
 		if b.state != Disabled {
 			if b.hit(mouseX, mouseY) {
 				if leftPressed {
-					if b.state != Pressed {
-						if b.timeToSendClick == 0 {
-							b.ChangeState(Pressed)
-							b.timeToSendClick = CLICK_SENT_DELAY
-							b.audioPlayer.PlaySound(CLICK_SOUND)
-						}
-					}
+					b.Click()
 				} else {
 					b.ChangeState(Hover)
 				}
@@ -156,7 +151,7 @@ func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime in
 			b.timeToSendClick -= elapsedTime
 			if b.timeToSendClick <= 0 {
 				b.timeToSendClick = 0
-				b.click()
+				b.buttonClickCallback(b.id)
 			}
 		}
 	}
@@ -170,8 +165,14 @@ func (b *button) OnButtonClickCallback(onButtonClick func(id Id)) {
 	}
 }
 
-func (b *button) click() {
-	b.buttonClickCallback(b.id)
+func (b *button) Click() {
+	if b.state != Pressed {
+		if b.timeToSendClick == 0 {
+			b.ChangeState(Pressed)
+			b.timeToSendClick = CLICK_SENT_DELAY
+			b.audioPlayer.PlaySound(CLICK_SOUND)
+		}
+	}
 }
 
 func New(id Id, w, h float64, text string, face *text.GoTextFace, audioPlayer audio.Player, state State) Button {

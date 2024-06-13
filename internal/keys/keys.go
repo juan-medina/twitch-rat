@@ -30,6 +30,7 @@ type Keys interface {
 	IsDown(key ebiten.Key) bool
 	IsDownNoRepeat(key ebiten.Key) bool
 	LastInputChar() rune
+	SwallowKey(key ebiten.Key)
 }
 
 var (
@@ -88,6 +89,10 @@ func (k keyManagerImpl) IsDownNoRepeat(key ebiten.Key) bool {
 
 func (k keyManagerImpl) LastInputChar() rune {
 	return k.lastInputChar
+}
+
+func (k *keyManagerImpl) SwallowKey(key ebiten.Key) {
+	k.status[key].isDownNotRepeat = false
 }
 
 func New() Keys {

@@ -31,6 +31,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/step"
@@ -106,7 +107,7 @@ type menu struct {
 	channelRegex *regexp.Regexp
 }
 
-func (m *menu) Update(elapsedTime int) {
+func (m *menu) Update(elapsedTime int, keys keys.Keys) {
 	m.ui.Update(elapsedTime)
 	w, _ := m.sewerMap.Size()
 
@@ -118,6 +119,17 @@ func (m *menu) Update(elapsedTime int) {
 
 	if m.currentFrame.Update(elapsedTime) {
 		m.updateRatFrame()
+	}
+
+	if !m.ui.IsInputEditing(ui.INPUT_CHANNEL) {
+		if keys.IsDownNoRepeat(ebiten.KeyEnter) || keys.IsDownNoRepeat(ebiten.KeyNumpadEnter) {
+			m.ui.ClickButton(ui.PLAY_BUTTON)
+		}
+		if runtime.GOOS != "js" {
+			if keys.IsDownNoRepeat(ebiten.KeyEscape) {
+				m.ui.ClickButton(ui.BACK_BUTTON)
+			}
+		}
 	}
 }
 
