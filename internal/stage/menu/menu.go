@@ -38,9 +38,14 @@ import (
 )
 
 const (
-	RAT_SPEED    = 400
-	SCROLL_SPEED = 250
-	MENU_MUSIC   = "embed/music/menu.ogg"
+	RAT_SPEED     = 400
+	SCROLL_SPEED  = 250
+	MENU_MUSIC    = "embed/music/menu.ogg"
+	RAT_FRAME     = "rat_run_%02d"
+	INITIAL_FRAME = 1
+	END_FRAME     = 8
+	RAT_SCALE     = 4
+	RAT_Y_POS     = 640
 )
 
 func (m *menu) Init() {
@@ -107,10 +112,14 @@ func (m *menu) Update(elapsedTime int) {
 	m.secondScroll = m.firstScroll + w
 
 	if m.currentFrame.Update(elapsedTime) {
-		frame := fmt.Sprintf("rat_run_%02d", int(m.currentFrame.GetValue()))
-		m.rat = m.rats.Sprite(frame)
-		m.rat.SetScale(4)
+		m.updateRatFrame()
 	}
+}
+
+func (m *menu) updateRatFrame() {
+	frame := fmt.Sprintf(RAT_FRAME, int(m.currentFrame.GetValue()))
+	m.rat = m.rats.Sprite(frame)
+	m.rat.SetScale(RAT_SCALE)
 }
 
 func (m *menu) Draw(screen *ebiten.Image) {
@@ -133,7 +142,7 @@ func (m *menu) OnLayoutChange(width, height float64) {
 	cx := float64(m.width / 2)
 	ratW, _ := m.rat.Size()
 	m.ratX = cx - (ratW / 2)
-	m.ratY = 640
+	m.ratY = RAT_Y_POS
 }
 
 func (m *menu) onButtonClick(id button.Id) {
@@ -162,10 +171,9 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.
 		settings:     settings,
 		sewerMap:     sewerMap,
 		rats:         rats,
-		currentFrame: step.NewLoopValue(1, 8, RAT_SPEED),
+		currentFrame: step.NewLoopValue(INITIAL_FRAME, END_FRAME, RAT_SPEED),
 		audioPlayer:  audioPlayer,
 	}
-	m.rat = m.rats.Sprite("rat_run_01")
-	m.rat.SetScale(4)
+	m.updateRatFrame()
 	return &m
 }

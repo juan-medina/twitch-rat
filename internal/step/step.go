@@ -115,6 +115,7 @@ func newStep() stepImpl {
 
 func NewPingPongValue(initial, end float32, timeToChange int, middleTime int) Value {
 	value := newStep()
+	value.currentValue = initial
 	value.AddStep(initial, end, timeToChange, Next)
 	value.AddStep(end, end, middleTime, Next)
 	value.AddStep(end, initial, timeToChange, Loop)
@@ -123,6 +124,7 @@ func NewPingPongValue(initial, end float32, timeToChange int, middleTime int) Va
 
 func NewLoopValue(initial, end float32, timeToChange int) Value {
 	value := newStep()
+	value.currentValue = initial
 	value.AddStep(initial, end, timeToChange, Loop)
 	return &value
 }
