@@ -28,6 +28,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/step"
@@ -61,12 +62,15 @@ type input struct {
 	editing         bool
 	savedText       string
 	face            *text.GoTextFace
+	audioPlayer     audio.Player
 }
 
 const (
 	INPUT_BORDER_SIZE = 5
 	INPUT_LEFT_GAP    = 10
 	INPUT_TOP_GAP     = 10
+	MOUSE_CLICK_SOUND = "embed/sounds/mouse.ogg"
+	KEY_PRESS_SOUND   = "embed/sounds/key.ogg"
 )
 
 var (
@@ -99,6 +103,7 @@ func (i input) Draw(screen *ebiten.Image) {
 }
 
 func (i *input) edit() {
+	i.audioPlayer.PlaySound(MOUSE_CLICK_SOUND)
 	i.editing = true
 	i.savedText = i.textLabel.GetText()
 	i.updateCaretPosition()
@@ -154,37 +159,54 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 	if !i.isEditing() {
 		return
 	}
+	playSound := false
 	if key := keys.LastRepeatedKey(); key != ebiten.KeyMax {
 		if key >= ebiten.Key0 && key <= ebiten.Key9 {
+			playSound = true
 			i.addLetter(rune(key - ebiten.Key0 + '0'))
 		} else if key >= ebiten.KeyNumpad0 && key <= ebiten.KeyNumpad9 {
+			playSound = true
 			i.addLetter(rune(key - ebiten.KeyNumpad0 + '0'))
 		} else if key >= ebiten.KeyA && key <= ebiten.KeyZ {
+			playSound = true
 			i.addLetter(rune(key - ebiten.KeyA + 'a'))
 		} else if key == ebiten.KeyMinus {
 			if keys.IsKeyDown(ebiten.KeyShift) {
+				playSound = true
 				i.addLetter('_')
 			} else {
+				playSound = true
 				i.addLetter('-')
 			}
 		} else if key == ebiten.KeyNumpadSubtract {
+			playSound = true
 			i.addLetter('-')
 		} else if key == ebiten.KeyShift {
 			if keys.IsKeyDown(ebiten.KeyMinus) {
+				playSound = true
 				i.addLetter('_')
 			}
 		} else if key == ebiten.KeyBackspace {
+			playSound = true
 			i.removeLetter()
 		}
 	}
 
 	if keys.IsKeyDown(ebiten.KeyEnter) || keys.IsKeyDown(ebiten.KeyNumpadEnter) {
+		playSound = true
 		i.saveEdit()
 	}
 
 	if keys.IsKeyDown(ebiten.KeyEscape) {
+		playSound = true
 		i.cancelEdit()
 	}
+
+	if playSound {
+		i.audioPlayer.PlaySound(KEY_PRESS_SOUND)
+	}
+	i.updateCaretPosition()
+	i.caretAlpha.Update(elapsedTime)
 
 	if i.caretAlpha.Update(elapsedTime) {
 		i.caretLabel.SetColor(caretColor)
@@ -241,7 +263,9 @@ func (i *input) Move(x, y float64) {
 	i.textPlaceHolder.Move(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
 }
 
-func New(id Id, w, h float64, maxLength int, initialText string, placeholder string, face *text.GoTextFace) Input {
+func New(id Id, w, h float64, maxLength int, initialText string, placeholder string, face *text.GoTextFace, audioPlayer audio.Player) Input {
+	audioPlayer.LoadSound(MOUSE_CLICK_SOUND)
+	audioPlayer.LoadSound(KEY_PRESS_SOUND)
 	return &input{
 		id:              id,
 		w:               w,
@@ -255,5 +279,6 @@ func New(id Id, w, h float64, maxLength int, initialText string, placeholder str
 		caretLabel:      label.New(0, "|", face, caretColor),
 		caretAlpha:      step.NewPingPongValue(0, 1, 200, 100),
 		face:            face,
+		audioPlayer:     audioPlayer,
 	}
 }
