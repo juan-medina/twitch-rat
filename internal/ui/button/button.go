@@ -36,7 +36,7 @@ import (
 var (
 	enabledColor  = colors.DarkPurple
 	hoverColor    = colors.Purple
-	pressedColor  = colors.LightPurple
+	pressedColor  = colors.Violet
 	disabledColor = colors.DarkGray
 
 	buttonEnabledTextColor  = colors.Yellow

@@ -71,6 +71,7 @@ type uiImpl struct {
 	screenHeight float64
 	fileSystem   embed.FS
 	faceSource   *text.GoTextFaceSource
+	smallFace    *text.GoTextFace
 	normalFace   *text.GoTextFace
 	bigFace      *text.GoTextFace
 	buttons      []button.Button
@@ -81,21 +82,26 @@ type uiImpl struct {
 }
 
 const (
-	MAX_BUTTONS       = 10
-	MENU_START        = 250.0
-	BUTTON_WIDTH      = 170.0
-	BUTTON_HEIGHT     = 50.0
-	BUTTON_GAP        = 20.0
-	BACK_BUTTON_WIDTH = 50.0
-	MAX_INPUTS        = 1
-	INPUT_WIDTH       = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
-	INPUT_HEIGHT      = 50
-	MAX_LABELS        = 10
+	MAX_BUTTONS         = 10
+	MENU_START          = 250.0
+	BUTTON_WIDTH        = 180.0
+	BUTTON_HEIGHT       = 50.0
+	SMALL_BUTTON_WIDTH  = 85.0
+	SMALL_BUTTON_HEIGHT = 25.0
+	BUTTON_GAP          = 20.0
+	BACK_BUTTON_WIDTH   = 35.0
+	BACK_BUTTON_HEIGHT  = 35.0
+	MAX_INPUTS          = 1
+	INPUT_WIDTH         = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
+	INPUT_HEIGHT        = 50
+	MAX_LABELS          = 10
 )
 
 const (
 	PLAY_BUTTON button.Id = iota
 	BACK_BUTTON
+	OPTIONS_BUTTON
+	ABOUT_BUTTON
 )
 
 const (
@@ -124,6 +130,11 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 
 	u.faceSource = s
 
+	u.smallFace = &text.GoTextFace{
+		Source: u.faceSource,
+		Size:   12,
+	}
+
 	u.normalFace = &text.GoTextFace{
 		Source: u.faceSource,
 		Size:   24,
@@ -141,14 +152,16 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
 		versionStr = "v" + string(data)
 	}
-	u.AddLabel(LABEL_VERSION, versionStr, u.normalFace, normalLabelColor)
+	u.AddLabel(LABEL_VERSION, versionStr, u.smallFace, normalLabelColor)
 
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel")
-	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, "Play!", button.Enabled)
-	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BUTTON_HEIGHT, "X", button.Enabled)
+	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.normalFace, "Play!", button.Enabled)
+	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, u.smallFace, "X", button.Enabled)
+	u.addButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Options", button.Enabled)
+	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "About", button.Enabled)
 
 	u.SetLabelVisible(LABEL_LAST_MESSAGE, true)
 	u.SetLabelVisible(LABEL_VERSION, true)
@@ -183,6 +196,45 @@ func (u *uiImpl) SetStatusMessage(message string, color color.Color) {
 	u.SetLabelText(LABEL_LAST_MESSAGE, message)
 }
 
+func (u *uiImpl) layoutMainElements(cx, cy float64) {
+	titleLabel := u.getLabel(LABEL_TITLE)
+	ix, _ := titleLabel.Measure()
+	px := cx - (ix / 2)
+	py := cy
+	titleLabel.Move(px, py)
+
+	px = u.screenWidth - BACK_BUTTON_WIDTH
+	py = 0
+	u.moveButton(BACK_BUTTON, px, py)
+
+	gapX := u.normalFace.Size * 0.5
+	gapY := u.normalFace.Size * 1.5
+	u.getLabel(LABEL_LAST_MESSAGE).Move(gapX, u.screenHeight-gapY)
+
+	gapX = u.smallFace.Size * 0.5
+	gapY = u.smallFace.Size * 1.5
+	versionLabel := u.getLabel(LABEL_VERSION)
+	cx, _ = versionLabel.Measure()
+	versionLabel.Move(u.screenWidth-cx-gapX, u.screenHeight-gapY)
+}
+
+func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
+	px := cx - (INPUT_WIDTH / 2)
+	py := cy + (INPUT_HEIGHT / 2) + BUTTON_GAP
+	u.moveInput(INPUT_CHANNEL, px, py)
+
+	px = cx - (BUTTON_WIDTH / 2)
+	py = py + INPUT_HEIGHT + BUTTON_GAP
+	u.moveButton(PLAY_BUTTON, px, py)
+
+	py = py + BUTTON_HEIGHT + BUTTON_GAP
+	u.moveButton(OPTIONS_BUTTON, px, py)
+
+	//py = py + BUTTON_HEIGHT + BUTTON_GAP
+	px = px + (BUTTON_WIDTH - SMALL_BUTTON_WIDTH)
+	u.moveButton(ABOUT_BUTTON, px, py)
+}
+
 func (u *uiImpl) OnLayoutChange(width, height float64) {
 	u.screenWidth = width
 	u.screenHeight = height
@@ -190,31 +242,9 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	cx := u.screenWidth / 2
 	cy := MENU_START
 
-	titleLabel := u.getLabel(LABEL_TITLE)
-	ix, iy := titleLabel.Measure()
-	px := cx - (ix / 2)
-	py := cy
-	titleLabel.Move(px, py)
+	u.layoutMainElements(cx, cy)
 
-	px = cx - (INPUT_WIDTH / 2)
-	py = cy + (INPUT_HEIGHT / 2) + iy + BUTTON_GAP
-	u.moveInput(INPUT_CHANNEL, px, py)
-
-	px = cx - (BUTTON_WIDTH / 2)
-	py = py + INPUT_HEIGHT + BUTTON_GAP
-	u.moveButton(PLAY_BUTTON, px, py)
-
-	px = u.screenWidth - BACK_BUTTON_WIDTH
-	py = 0
-	u.moveButton(BACK_BUTTON, px, py)
-
-	gapX := u.normalFace.Size
-	gapY := u.normalFace.Size * 1.5
-	u.getLabel(LABEL_LAST_MESSAGE).Move(gapX, u.screenHeight-gapY)
-
-	versionLabel := u.getLabel(LABEL_VERSION)
-	cx, cy = versionLabel.Measure()
-	versionLabel.Move(u.screenWidth-cx, u.screenHeight-cy)
+	u.layoutMainMenuElements(cx, cy+50)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
@@ -246,8 +276,8 @@ func (u *uiImpl) moveButton(id button.Id, x, y float64) {
 	}
 }
 
-func (u *uiImpl) addButton(id button.Id, w, h float64, label string, state button.State) {
-	u.buttons = append(u.buttons, button.New(id, w, h, label, u.normalFace, u.audioPlayer, state))
+func (u *uiImpl) addButton(id button.Id, w, h float64, face *text.GoTextFace, label string, state button.State) {
+	u.buttons = append(u.buttons, button.New(id, w, h, label, face, u.audioPlayer, state))
 }
 
 func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {

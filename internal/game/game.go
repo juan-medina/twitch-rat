@@ -145,6 +145,9 @@ func (g *game) Update() error {
 			g.valueToChange.Update(elapsedTime)
 			if g.valueToChange.IsAtEnd() {
 				if g.state == FADING_OUT {
+					if g.nextStage == stage.EXIT {
+						return ebiten.Termination
+					}
 					g.changeStage(g.nextStage)
 					g.stages[g.currentStage].Update(0)
 					g.state = FADING_IN

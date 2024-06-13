@@ -24,6 +24,7 @@ package menu
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/audio"
@@ -51,6 +52,11 @@ func (m *menu) Init() {
 	m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, true)
+	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, true)
+	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, true)
+	if runtime.GOOS != "js" {
+		m.ui.SetButtonVisible(ui.BACK_BUTTON, true)
+	}
 
 	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
 	m.firstScroll = 0
@@ -62,6 +68,12 @@ func (m *menu) End() {
 	m.ui.SetButtonVisible(ui.PLAY_BUTTON, false)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, false)
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, false)
+	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, false)
+	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, false)
+
+	if runtime.GOOS != "js" {
+		m.ui.SetButtonVisible(ui.BACK_BUTTON, false)
+	}
 
 	m.settings.Save()
 	m.audioPlayer.Stop()
@@ -137,6 +149,8 @@ func (m *menu) onButtonClick(id button.Id) {
 
 		m.ui.OnButtonClick(nil)
 		m.changer.ChangeStage(stage.PLAYING)
+	case ui.BACK_BUTTON:
+		m.changer.ChangeStage(stage.EXIT)
 	}
 }
 

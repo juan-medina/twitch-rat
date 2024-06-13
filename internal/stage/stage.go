@@ -37,6 +37,7 @@ const (
 	NONE Id = iota
 	MENU
 	PLAYING
+	EXIT
 )
 
 type Changer interface {

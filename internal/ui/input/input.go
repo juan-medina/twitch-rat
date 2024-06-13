@@ -74,6 +74,7 @@ var (
 	inputColor            = colors.White
 	inputTextColor        = colors.Black
 	inputPlaceHolderColor = colors.Gray
+	caretColor            = colors.Violet
 )
 
 func (i input) GetId() Id {
@@ -186,7 +187,7 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 	}
 
 	if i.caretAlpha.Update(elapsedTime) {
-		i.caretLabel.SetColor(inputTextColor)
+		i.caretLabel.SetColor(caretColor)
 		i.caretLabel.SetAlpha(i.caretAlpha.GetValue())
 	}
 }
@@ -251,7 +252,7 @@ func New(id Id, w, h float64, maxLength int, initialText string, placeholder str
 		visible:         false,
 		textLabel:       label.New(0, initialText, face, inputTextColor),
 		textPlaceHolder: label.New(0, placeholder, face, inputPlaceHolderColor),
-		caretLabel:      label.New(0, "|", face, colors.LightPurple),
+		caretLabel:      label.New(0, "|", face, caretColor),
 		caretAlpha:      step.NewPingPongValue(0, 1, 200, 100),
 		face:            face,
 	}
