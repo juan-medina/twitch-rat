@@ -24,6 +24,7 @@ package menu
 
 import (
 	"fmt"
+	"regexp"
 	"runtime"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -38,14 +39,15 @@ import (
 )
 
 const (
-	RAT_SPEED     = 400
-	SCROLL_SPEED  = 250
-	MENU_MUSIC    = "embed/music/menu.ogg"
-	RAT_FRAME     = "rat_run_%02d"
-	INITIAL_FRAME = 1
-	END_FRAME     = 8
-	RAT_SCALE     = 4
-	RAT_Y_POS     = 640
+	RAT_SPEED      = 400
+	SCROLL_SPEED   = 250
+	MENU_MUSIC     = "embed/music/menu.ogg"
+	RAT_FRAME      = "rat_run_%02d"
+	INITIAL_FRAME  = 1
+	END_FRAME      = 8
+	RAT_SCALE      = 4
+	RAT_Y_POS      = 640
+	CHANNEL_REGEXP = `^[a-zA-Z][a-zA-Z0-9\-_]*$`
 )
 
 func (m *menu) Init() {
@@ -99,6 +101,7 @@ type menu struct {
 	ratX         float64
 	ratY         float64
 	audioPlayer  audio.Player
+	channelRegex *regexp.Regexp
 }
 
 func (m *menu) Update(elapsedTime int) {
@@ -152,6 +155,11 @@ func (m *menu) onButtonClick(id button.Id) {
 		if channel == "" {
 			m.ui.SetStatusMessage("Please enter a channel name!", colors.Red)
 			return
+		} else {
+			if !m.channelRegex.MatchString(channel) {
+				m.ui.SetStatusMessage("Channel name is invalid!", colors.Red)
+				return
+			}
 		}
 		m.settings.SetValue("channel", channel)
 		m.settings.Save()
@@ -173,6 +181,7 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.
 		rats:         rats,
 		currentFrame: step.NewLoopValue(INITIAL_FRAME, END_FRAME, RAT_SPEED),
 		audioPlayer:  audioPlayer,
+		channelRegex: regexp.MustCompile(CHANNEL_REGEXP),
 	}
 	m.updateRatFrame()
 	return &m

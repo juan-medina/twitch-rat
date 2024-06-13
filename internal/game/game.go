@@ -137,7 +137,7 @@ func (g *game) Update() error {
 
 	g.audioPlayer.Update()
 
-	g.keys.Update(elapsedTime)
+	g.keys.Update()
 
 	if g.currentStage != stage.NONE {
 		if g.state == RUNNING {

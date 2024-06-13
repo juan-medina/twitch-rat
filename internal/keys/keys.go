@@ -26,78 +26,73 @@ import "github.com/hajimehoshi/ebiten/v2"
 
 type Keys interface {
 	Init()
-	Update(elapsed int)
-	IsKeyDown(key ebiten.Key) bool
-	IsKeyRepeat(key ebiten.Key) bool
-	LastRepeatedKey() ebiten.Key
+	Update()
+	IsDown(key ebiten.Key) bool
+	IsDownNoRepeat(key ebiten.Key) bool
+	LastInputChar() rune
 }
 
-type keyStatus struct {
-	isDown           bool
-	repeatDown       bool
-	timeToNextRepeat int
-}
+var (
+	emptyRune = []rune{}
+)
 
 const (
 	REPEAT_DELAY = 200
 )
 
+type keyStatus struct {
+	wasDown         bool
+	isDown          bool
+	isDownNotRepeat bool
+}
+
 type keyManagerImpl struct {
-	status          map[ebiten.Key]keyStatus
-	lastRepeatedKey ebiten.Key
+	lastInputChar rune
+	status        []keyStatus
 }
 
 func (k *keyManagerImpl) Init() {
-	for i := ebiten.Key(0); i < ebiten.KeyMax; i++ {
-		k.status[i] = keyStatus{
-			isDown:     false,
-			repeatDown: false,
-		}
-	}
+	k.lastInputChar = 0
 }
 
-func (k *keyManagerImpl) Update(elapsed int) {
-	k.lastRepeatedKey = ebiten.KeyMax
-	for id := range k.status {
-		currentStatus := k.status[id]
-		currentlyEbitenDown := ebiten.IsKeyPressed(id)
-		currentStatus.isDown = currentlyEbitenDown
-		if currentlyEbitenDown {
-			if currentStatus.timeToNextRepeat <= 0 {
-				currentStatus.timeToNextRepeat = REPEAT_DELAY
-				currentStatus.repeatDown = true
+func (k *keyManagerImpl) Update() {
+	k.lastInputChar = 0
+	rune := ebiten.AppendInputChars(emptyRune)
+	if len(rune) == 1 {
+		k.lastInputChar = rune[0]
+	}
+
+	for i := 0; i < int(ebiten.KeyMax); i++ {
+		k.status[i].isDown = ebiten.IsKeyPressed(ebiten.Key(i))
+		if k.status[i].isDown {
+			if k.status[i].wasDown {
+				k.status[i].isDownNotRepeat = false
 			} else {
-				currentStatus.timeToNextRepeat -= elapsed
-				currentStatus.repeatDown = false
+				k.status[i].isDownNotRepeat = true
+				k.status[i].wasDown = true
 			}
 		} else {
-			currentStatus.timeToNextRepeat = 0
-			currentStatus.repeatDown = false
+			k.status[i].isDownNotRepeat = false
+			k.status[i].wasDown = false
 		}
-
-		if currentStatus.repeatDown {
-			k.lastRepeatedKey = id
-		}
-
-		k.status[id] = currentStatus
 	}
 }
 
-func (k *keyManagerImpl) IsKeyDown(key ebiten.Key) bool {
+func (k keyManagerImpl) IsDown(key ebiten.Key) bool {
 	return k.status[key].isDown
 }
 
-func (k *keyManagerImpl) IsKeyRepeat(key ebiten.Key) bool {
-	return k.status[key].repeatDown
+func (k keyManagerImpl) IsDownNoRepeat(key ebiten.Key) bool {
+	return k.status[key].isDownNotRepeat
 }
 
-func (k keyManagerImpl) LastRepeatedKey() ebiten.Key {
-	return k.lastRepeatedKey
+func (k keyManagerImpl) LastInputChar() rune {
+	return k.lastInputChar
 }
 
 func New() Keys {
 	return &keyManagerImpl{
-		status:          make(map[ebiten.Key]keyStatus, ebiten.KeyMax),
-		lastRepeatedKey: ebiten.KeyMax,
+		lastInputChar: 0,
+		status:        make([]keyStatus, ebiten.KeyMax),
 	}
 }

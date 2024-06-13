@@ -23,6 +23,7 @@
 package input
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -159,45 +160,36 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 	if !i.isEditing() {
 		return
 	}
-	playSound := false
-	if key := keys.LastRepeatedKey(); key != ebiten.KeyMax {
-		if key >= ebiten.Key0 && key <= ebiten.Key9 {
-			playSound = true
-			i.addLetter(rune(key - ebiten.Key0 + '0'))
-		} else if key >= ebiten.KeyNumpad0 && key <= ebiten.KeyNumpad9 {
-			playSound = true
-			i.addLetter(rune(key - ebiten.KeyNumpad0 + '0'))
-		} else if key >= ebiten.KeyA && key <= ebiten.KeyZ {
-			playSound = true
-			i.addLetter(rune(key - ebiten.KeyA + 'a'))
-		} else if key == ebiten.KeyMinus {
-			if keys.IsKeyDown(ebiten.KeyShift) {
-				playSound = true
-				i.addLetter('_')
-			} else {
-				playSound = true
-				i.addLetter('-')
-			}
-		} else if key == ebiten.KeyNumpadSubtract {
-			playSound = true
-			i.addLetter('-')
-		} else if key == ebiten.KeyShift {
-			if keys.IsKeyDown(ebiten.KeyMinus) {
-				playSound = true
-				i.addLetter('_')
-			}
-		} else if key == ebiten.KeyBackspace {
-			playSound = true
-			i.removeLetter()
+
+	runes := []rune{}
+	runes = ebiten.AppendInputChars(runes)
+
+	if len(runes) > 0 {
+		fmt.Println("pressed..")
+		for _, r := range runes {
+			fmt.Printf("   %v = %v\n", string(r), r)
 		}
+		fmt.Println("end pressed")
 	}
 
-	if keys.IsKeyDown(ebiten.KeyEnter) || keys.IsKeyDown(ebiten.KeyNumpadEnter) {
+	playSound := false
+	inputChar := keys.LastInputChar()
+	if inputChar != 0 {
+		playSound = true
+		i.addLetter(inputChar)
+	}
+
+	if keys.IsDownNoRepeat(ebiten.KeyBackspace) {
+		playSound = true
+		i.removeLetter()
+	}
+
+	if keys.IsDownNoRepeat(ebiten.KeyEnter) || keys.IsDownNoRepeat(ebiten.KeyNumpadEnter) {
 		playSound = true
 		i.saveEdit()
 	}
 
-	if keys.IsKeyDown(ebiten.KeyEscape) {
+	if keys.IsDownNoRepeat(ebiten.KeyEscape) {
 		playSound = true
 		i.cancelEdit()
 	}
@@ -223,10 +215,10 @@ func (i *input) addLetter(letter rune) {
 }
 
 func (i *input) removeLetter() {
-	text := i.textLabel.GetText()
-	if len(text) > 0 {
-		text = text[:len(text)-1]
-		i.SetText(text)
+	runes := []rune(i.textLabel.GetText())
+	if len(runes) > 0 {
+		runes = runes[:len(runes)-1]
+		i.SetText(string(runes))
 	}
 }
 
