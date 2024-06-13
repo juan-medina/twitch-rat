@@ -48,7 +48,7 @@ type Button interface {
 	GetId() Id
 	Draw(screen *ebiten.Image)
 	Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int)
-	OnButtonClick(onButtonClick func(id Id))
+	OnButtonClickCallback(onButtonClick func(id Id))
 	SetVisible(visible bool)
 	ChangeState(state State)
 	Move(x, y float64)
@@ -162,7 +162,7 @@ func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime in
 	}
 }
 
-func (b *button) OnButtonClick(onButtonClick func(id Id)) {
+func (b *button) OnButtonClickCallback(onButtonClick func(id Id)) {
 	if onButtonClick != nil {
 		b.buttonClickCallback = onButtonClick
 	} else {

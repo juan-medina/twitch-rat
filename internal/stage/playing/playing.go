@@ -41,7 +41,7 @@ const (
 )
 
 func (p *playing) Init() {
-	p.ui.OnButtonClick(p.onButtonClick)
+	p.ui.SetButtonClickCallback(p.onButtonClick)
 
 	p.ui.SetButtonVisible(ui.BACK_BUTTON, true)
 
@@ -106,7 +106,7 @@ func (p *playing) OnLayoutChange(width, height float64) {
 func (p *playing) onButtonClick(id button.Id) {
 	switch id {
 	case ui.BACK_BUTTON:
-		p.ui.OnButtonClick(nil)
+		p.ui.SetButtonClickCallback(nil)
 		p.changer.ChangeStage(stage.MENU)
 	}
 }

@@ -52,7 +52,7 @@ func (m *menu) Init() {
 	channel := m.settings.GetValue("channel", "")
 	m.ui.SetInputText(ui.INPUT_CHANNEL, channel)
 
-	m.ui.OnButtonClick(m.onButtonClick)
+	m.ui.SetButtonClickCallback(m.onButtonClick)
 
 	m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
 	m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
@@ -156,7 +156,7 @@ func (m *menu) onButtonClick(id button.Id) {
 		m.settings.SetValue("channel", channel)
 		m.settings.Save()
 
-		m.ui.OnButtonClick(nil)
+		m.ui.SetButtonClickCallback(nil)
 		m.changer.ChangeStage(stage.PLAYING)
 	case ui.BACK_BUTTON:
 		m.changer.ChangeStage(stage.EXIT)

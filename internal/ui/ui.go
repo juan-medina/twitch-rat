@@ -49,7 +49,7 @@ type UI interface {
 	EnableButton(id button.Id)
 	DisableButton(id button.Id)
 	SetButtonVisible(id button.Id, visible bool)
-	OnButtonClick(callback func(id button.Id))
+	SetButtonClickCallback(callback func(id button.Id))
 
 	GetInputText(id input.Id) string
 	SetInputText(id input.Id, text string)
@@ -286,9 +286,9 @@ func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {
 	}
 }
 
-func (u *uiImpl) OnButtonClick(callback func(id button.Id)) {
+func (u *uiImpl) SetButtonClickCallback(callback func(id button.Id)) {
 	for i := range u.buttons {
-		u.buttons[i].OnButtonClick(callback)
+		u.buttons[i].OnButtonClickCallback(callback)
 	}
 }
 
