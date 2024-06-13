@@ -23,7 +23,6 @@
 package input
 
 import (
-	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -159,17 +158,6 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 
 	if !i.isEditing() {
 		return
-	}
-
-	runes := []rune{}
-	runes = ebiten.AppendInputChars(runes)
-
-	if len(runes) > 0 {
-		fmt.Println("pressed..")
-		for _, r := range runes {
-			fmt.Printf("   %v = %v\n", string(r), r)
-		}
-		fmt.Println("end pressed")
 	}
 
 	playSound := false
