@@ -25,6 +25,7 @@ package game
 import (
 	"embed"
 	"image/color"
+	"runtime"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -146,6 +147,7 @@ func (g *game) Update() error {
 			if g.valueToChange.IsAtEnd() {
 				if g.state == FADING_OUT {
 					if g.nextStage == stage.EXIT {
+						g.audioPlayer.Stop()
 						return ebiten.Termination
 					}
 					g.changeStage(g.nextStage)
@@ -175,9 +177,12 @@ func (g *game) Draw(screen *ebiten.Image) {
 func (g *game) Run() error {
 	ebiten.SetWindowSize(WIDTH, HEIGHT)
 	ebiten.SetWindowTitle(TITLE)
-	ebiten.SetTPS(60)
-	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetFullscreen(false)
+	ebiten.SetTPS(ebiten.SyncWithFPS)
+	if runtime.GOOS != "js" {
+		ebiten.SetFullscreen(true)
+	} else {
+		ebiten.SetFullscreen(false)
+	}
 
 	return ebiten.RunGame(g)
 }
