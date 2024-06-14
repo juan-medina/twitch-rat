@@ -22,12 +22,17 @@
 
 package settings
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strconv"
+)
 
 type Settings interface {
 	Init()
 	SetValue(key string, value string)
 	GetValue(key string, defaultValue string) string
+	GetFloatValue(key string, defaultValue float64) float64
+	SetFloatValue(key string, value float64)
 	Save()
 }
 
@@ -95,8 +100,20 @@ func (s *settingsImpl) GetValue(key string, defaultValue string) string {
 	}
 }
 
+func (s *settingsImpl) GetFloatValue(key string, defaultValue float64) float64 {
+	strDefaultValue := strconv.FormatFloat(defaultValue, 'f', -1, 64)
+	valueStr := s.GetValue(key, strDefaultValue)
+	value, _ := strconv.ParseFloat(valueStr, 64)
+	return value
+
+}
+
 func (s *settingsImpl) SetValue(key string, value string) {
 	s.settings[key] = value
+}
+
+func (s *settingsImpl) SetFloatValue(key string, value float64) {
+	s.SetValue(key, strconv.FormatFloat(value, 'f', -1, 64))
 }
 
 func registerImpl(impl func(application string) Storage) {

@@ -105,6 +105,11 @@ func (g *game) init() {
 	g.ui.Init(g.fileSystem, g.keys)
 	g.ui.OnLayoutChange(g.currentWidth, g.currentHeight)
 
+	song := g.settings.GetFloatValue("song_volume", 0.5)
+	sound := g.settings.GetFloatValue("sound_volume", 0.5)
+	g.audioPlayer.ChangeSongVolume(song)
+	g.audioPlayer.ChangeSoundVolume(sound)
+
 	g.lastUpdateTime = time.Now()
 
 	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
@@ -208,7 +213,7 @@ func (g *game) changeStage(id stage.Id) {
 }
 
 func New(er embed.FS) *game {
-	audioPlayer := audio.NewPlayer(er)
+	audioPlayer := audio.NewPlayer(er, 1, 1)
 	g := game{
 		fileSystem:    er,
 		state:         LOADING,

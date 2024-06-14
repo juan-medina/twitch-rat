@@ -37,6 +37,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
+	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
 const (
@@ -66,10 +67,11 @@ func (m *menu) Init() {
 	m.ui.SetInputText(ui.INPUT_CHANNEL, channel)
 
 	m.ui.SetButtonClickCallback(m.onButtonClick)
+	m.ui.SetSliderChangeCallback(m.onSliderChange)
 
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, true)
 
-	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
+	m.ui.SetStatusMessage("Ready to Play!", colors.LightYellow)
 	m.firstScroll = 0
 	m.sewerMap.SetLevel(1)
 	m.audioPlayer.PlaySong(MENU_MUSIC)
@@ -193,6 +195,7 @@ func (m *menu) onButtonClick(id button.Id) {
 		m.settings.Save()
 
 		m.ui.SetButtonClickCallback(nil)
+		m.ui.SetSliderChangeCallback(nil)
 		m.changer.ChangeStage(stage.PLAYING)
 	case ui.BACK_BUTTON:
 		m.changer.ChangeStage(stage.EXIT)
@@ -217,6 +220,10 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 	m.ui.SetLabelVisible(ui.LABEL_ABOUT_MESSAGE, false)
 	m.ui.SetButtonVisible(ui.SUBMENU_ABOUT_BACK_BUTTON, false)
 	m.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, false)
+	m.ui.SetSliderVisible(ui.MUSIC_VOLUME_SLIDER, false)
+	m.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, false)
+	m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, false)
+	m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, false)
 
 	switch m.currentSubMenu {
 	case MAIN_MENU:
@@ -232,6 +239,27 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 		m.ui.SetButtonVisible(ui.SUBMENU_ABOUT_BACK_BUTTON, true)
 	case OPTIONS_MENU:
 		m.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, true)
+		m.ui.SetSliderVisible(ui.MUSIC_VOLUME_SLIDER, true)
+		m.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, true)
+		m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, true)
+		m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, true)
+		song := m.settings.GetFloatValue("song_volume", 0.2)
+		m.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
+		sound := m.settings.GetFloatValue("sound_volume", 0.5)
+		m.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
+	}
+}
+
+func (m *menu) onSliderChange(id slider.Id, value float64) {
+	switch id {
+	case ui.MUSIC_VOLUME_SLIDER:
+		m.settings.SetFloatValue("song_volume", value)
+		m.settings.Save()
+		m.audioPlayer.ChangeSongVolume(value)
+	case ui.AUDIO_VOLUME_SLIDER:
+		m.settings.SetFloatValue("sound_volume", value)
+		m.settings.Save()
+		m.audioPlayer.ChangeSoundVolume(value)
 	}
 }
 

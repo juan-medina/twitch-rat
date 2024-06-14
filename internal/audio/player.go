@@ -34,10 +34,12 @@ type Player interface {
 	LoadSong(song string)
 	PlaySong(song string)
 	StopCurrentSong()
+	ChangeSongVolume(volume float64)
 
 	LoadSound(sound string)
 	PlaySound(sound string)
 	StopAllSounds()
+	ChangeSoundVolume(volume float64)
 
 	Stop()
 
@@ -50,6 +52,8 @@ type playerImpl struct {
 	fileSystem   embed.FS
 	songs        map[string]*vorbis.Stream
 	sounds       map[string]*ebitenAudio.Player
+	songVolume   float64
+	soundVolume  float64
 }
 
 func (p *playerImpl) LoadSong(song string) {
@@ -79,7 +83,7 @@ func (p *playerImpl) PlaySong(song string) {
 			panic(err)
 		} else {
 			p.musicPlayer.SetPosition(0)
-			p.musicPlayer.SetVolume(0.20)
+			p.musicPlayer.SetVolume(p.songVolume)
 			p.musicPlayer.Play()
 		}
 	}
@@ -128,6 +132,7 @@ func (p *playerImpl) PlaySound(sound string) {
 			player.Pause()
 		}
 		player.SetPosition(0)
+		player.SetVolume(p.soundVolume)
 		player.Play()
 	}
 }
@@ -148,11 +153,27 @@ func (p *playerImpl) Stop() {
 	p.StopAllSounds()
 }
 
-func NewPlayer(fileSystem embed.FS) Player {
+func (p *playerImpl) ChangeSongVolume(volume float64) {
+	p.songVolume = volume
+	if p.musicPlayer != nil {
+		p.musicPlayer.SetVolume(volume)
+	}
+}
+
+func (p *playerImpl) ChangeSoundVolume(volume float64) {
+	p.soundVolume = volume
+	for _, player := range p.sounds {
+		player.SetVolume(volume)
+	}
+}
+
+func NewPlayer(fileSystem embed.FS, songVolume float64, soundVolume float64) Player {
 	return &playerImpl{
 		audioContext: ebitenAudio.NewContext(44100),
 		fileSystem:   fileSystem,
 		songs:        make(map[string]*vorbis.Stream),
 		sounds:       make(map[string]*ebitenAudio.Player),
+		songVolume:   songVolume,
+		soundVolume:  soundVolume,
 	}
 }

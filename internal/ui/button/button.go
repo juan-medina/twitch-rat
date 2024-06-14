@@ -39,7 +39,7 @@ var (
 	pressedColor  = colors.Violet
 	disabledColor = colors.DarkGray
 
-	buttonEnabledTextColor  = colors.Yellow
+	buttonEnabledTextColor  = colors.LightYellow
 	buttonDisabledTextColor = colors.Gray
 )
 

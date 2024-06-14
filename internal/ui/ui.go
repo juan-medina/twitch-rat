@@ -30,6 +30,7 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
@@ -37,6 +38,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
+	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
 type UI interface {
@@ -62,6 +64,10 @@ type UI interface {
 	SetLabelText(id label.Id, text string)
 	SetLabelColor(id label.Id, color color.Color)
 	SetLabelVisible(id label.Id, visible bool)
+
+	SetSliderVisible(id slider.Id, visible bool)
+	SetSliderValue(id slider.Id, value float64)
+	SetSliderChangeCallback(callback func(id slider.Id, value float64))
 }
 
 var (
@@ -79,6 +85,7 @@ type uiImpl struct {
 	buttons      []button.Button
 	inputs       []input.Input
 	labels       []label.Label
+	sliders      []slider.Slider
 	keys         keys.Keys
 	audioPlayer  audio.Player
 	licenseText  string
@@ -100,6 +107,8 @@ const (
 	INPUT_WIDTH                  = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
 	INPUT_HEIGHT                 = 50
 	MAX_LABELS                   = 10
+	SLIDER_WITH                  = 300
+	SLIDER_HEIGHT                = 30
 )
 
 const (
@@ -122,6 +131,13 @@ const (
 	LABEL_TITLE
 	LABEL_LICENSE
 	LABEL_ABOUT_MESSAGE
+	LABEL_OPTIONS_MUSIC_VOLUME
+	LABEL_OPTIONS_AUDIO_VOLUME
+)
+
+const (
+	MUSIC_VOLUME_SLIDER slider.Id = iota
+	AUDIO_VOLUME_SLIDER
 )
 
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
@@ -162,14 +178,14 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 		Size:   40,
 	}
 
-	u.AddLabel(LABEL_LAST_MESSAGE, "", u.normalFace, u.normalFace.Size, normalLabelColor)
-	u.AddLabel(LABEL_TITLE, "Twitch Rat", u.bigFace, u.bigFace.Size, normalLabelColor)
+	u.addLabel(LABEL_LAST_MESSAGE, "", u.normalFace, u.normalFace.Size, normalLabelColor)
+	u.addLabel(LABEL_TITLE, "Twitch Rat", u.bigFace, u.bigFace.Size, normalLabelColor)
 
 	versionStr := "v0.0.0"
 	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
 		versionStr = "v" + string(data)
 	}
-	u.AddLabel(LABEL_VERSION, versionStr, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addLabel(LABEL_VERSION, versionStr, u.smallFace, u.smallFace.Size, normalLabelColor)
 
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
@@ -180,12 +196,18 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.addButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Options", button.Enabled)
 	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "About", button.Enabled)
 
-	u.AddLabel(LABEL_ABOUT_MESSAGE, u.aboutText, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addLabel(LABEL_ABOUT_MESSAGE, u.aboutText, u.smallFace, u.smallFace.Size, normalLabelColor)
 	u.addButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Back", button.Enabled)
 	u.addButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Back", button.Enabled)
 
-	u.AddLabel(LABEL_LICENSE, u.licenseText, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addLabel(LABEL_LICENSE, u.licenseText, u.smallFace, u.smallFace.Size, normalLabelColor)
 	u.addButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Accept", button.Enabled)
+
+	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.normalFace, u.normalFace.Size, normalLabelColor)
+	u.addSlider(MUSIC_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.smallFace, u.smallFace.Size, normalLabelColor)
+
+	u.addLabel(LABEL_OPTIONS_AUDIO_VOLUME, "Audio Volume", u.normalFace, u.normalFace.Size, normalLabelColor)
+	u.addSlider(AUDIO_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.smallFace, u.smallFace.Size, normalLabelColor)
 
 	u.SetLabelVisible(LABEL_LAST_MESSAGE, true)
 	u.SetLabelVisible(LABEL_VERSION, true)
@@ -204,15 +226,22 @@ func (u *uiImpl) Draw(screen *ebiten.Image) {
 	for _, i := range u.inputs {
 		i.Draw(screen)
 	}
+
+	for _, s := range u.sliders {
+		s.Draw(screen)
+	}
 }
 
 func (u *uiImpl) Update(elapsedTime int) {
 	xe, ye := ebiten.CursorPosition()
 	x, y := float64(xe), float64(ye)
+
+	justPressed := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 
-	u.updateButtons(x, y, pressed, elapsedTime)
-	u.updateInputs(x, y, pressed, elapsedTime)
+	u.updateButtons(x, y, justPressed, elapsedTime)
+	u.updateInputs(x, y, justPressed, elapsedTime)
+	u.updateSliders(x, y, justPressed, pressed, elapsedTime)
 }
 
 func (u *uiImpl) SetStatusMessage(message string, color color.Color) {
@@ -279,8 +308,22 @@ func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutOptionsSubMenuElements(cx, cy float64) {
-	px := cx - (SMALL_BUTTON_WIDTH / 2)
-	py := cy
+	px := cx - SLIDER_WITH/2
+	py := cy + BUTTON_GAP
+
+	u.moveLabel(LABEL_OPTIONS_MUSIC_VOLUME, px, py)
+
+	py = py + BUTTON_GAP*2
+	u.moveSlider(MUSIC_VOLUME_SLIDER, px, py)
+
+	py = py + BUTTON_GAP*2
+	u.moveLabel(LABEL_OPTIONS_AUDIO_VOLUME, px, py)
+
+	py = py + BUTTON_GAP*2
+	u.moveSlider(AUDIO_VOLUME_SLIDER, px, py)
+
+	px = cx - (SMALL_BUTTON_WIDTH / 2)
+	py = py + SLIDER_HEIGHT + BUTTON_GAP
 	u.moveButton(SUBMENU_OPTION_BACK_BUTTON, px, py)
 }
 
@@ -409,7 +452,7 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 	}
 }
 
-func (u *uiImpl) AddLabel(id label.Id, text string, face *text.GoTextFace, lineHeight float64, color color.Color) {
+func (u *uiImpl) addLabel(id label.Id, text string, face *text.GoTextFace, lineHeight float64, color color.Color) {
 	u.labels = append(u.labels, label.New(id, text, face, lineHeight, color))
 }
 
@@ -442,6 +485,48 @@ func (u *uiImpl) SetLabelColor(id label.Id, color color.Color) {
 func (ui *uiImpl) SetLabelVisible(id label.Id, visible bool) {
 	if l := ui.getLabel(id); l != nil {
 		l.SetVisible(visible)
+	}
+}
+
+func (ui *uiImpl) getSlider(id slider.Id) slider.Slider {
+	for i := range ui.sliders {
+		if ui.sliders[i].GetId() == id {
+			return ui.sliders[i]
+		}
+	}
+	return nil
+}
+
+func (ui *uiImpl) moveSlider(id slider.Id, x, y float64) {
+	if s := ui.getSlider(id); s != nil {
+		s.Move(x, y)
+	}
+}
+
+func (ui *uiImpl) SetSliderVisible(id slider.Id, visible bool) {
+	if s := ui.getSlider(id); s != nil {
+		s.SetVisible(visible)
+	}
+}
+func (ui *uiImpl) SetSliderValue(id slider.Id, value float64) {
+	if s := ui.getSlider(id); s != nil {
+		s.SetValue(value)
+	}
+}
+
+func (ui *uiImpl) addSlider(id slider.Id, w, h float64, face *text.GoTextFace, lineHeight float64, labelColor color.Color) {
+	ui.sliders = append(ui.sliders, slider.New(id, w, h, face, lineHeight, labelColor))
+}
+
+func (u *uiImpl) updateSliders(mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, elapsedTime int) {
+	for i := range u.sliders {
+		u.sliders[i].Update(mouseX, mouseY, leftJustPressed, leftPressed, elapsedTime)
+	}
+}
+
+func (u *uiImpl) SetSliderChangeCallback(callback func(id slider.Id, value float64)) {
+	for i := range u.sliders {
+		u.sliders[i].OnValueChangeCallback(callback)
 	}
 }
 
