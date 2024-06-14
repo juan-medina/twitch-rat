@@ -86,10 +86,12 @@ func (p *playerImpl) PlaySong(song string) {
 }
 
 func (p *playerImpl) StopCurrentSong() {
-	p.musicPlayer.SetPosition(0)
-	p.musicPlayer.Pause()
-	p.musicPlayer.Close()
-	p.musicPlayer = nil
+	if p.musicPlayer != nil {
+		p.musicPlayer.SetPosition(0)
+		p.musicPlayer.Pause()
+		p.musicPlayer.Close()
+		p.musicPlayer = nil
+	}
 }
 
 func (p *playerImpl) Update() {
@@ -132,9 +134,11 @@ func (p *playerImpl) PlaySound(sound string) {
 
 func (p *playerImpl) StopAllSounds() {
 	for _, player := range p.sounds {
-		if player.IsPlaying() {
-			player.Pause()
-			player.SetPosition(0)
+		if player != nil {
+			if player.IsPlaying() {
+				player.Pause()
+				player.SetPosition(0)
+			}
 		}
 	}
 }

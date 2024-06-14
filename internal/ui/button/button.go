@@ -181,7 +181,7 @@ func New(id Id, w, h float64, text string, face *text.GoTextFace, audioPlayer au
 		id:                  id,
 		w:                   w,
 		h:                   h,
-		label:               label.New(0, text, face, buttonEnabledTextColor),
+		label:               label.New(0, text, face, 0, buttonEnabledTextColor),
 		visible:             false,
 		buttonClickCallback: dummyButtonCallback,
 		audioPlayer:         audioPlayer,

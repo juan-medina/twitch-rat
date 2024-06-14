@@ -35,6 +35,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
+	"github.com/juan-medina/twitch-rat/internal/stage/license"
 	"github.com/juan-medina/twitch-rat/internal/stage/menu"
 	"github.com/juan-medina/twitch-rat/internal/stage/playing"
 	"github.com/juan-medina/twitch-rat/internal/step"
@@ -109,9 +110,10 @@ func (g *game) init() {
 	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
 	rats := draw.NewSheet(g.fileSystem, "embed/sprites/rats/rats.json")
 
+	g.addStage(stage.LICENSE, license.New(g, g.ui))
 	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.audioPlayer))
 	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, g.audioPlayer))
-	g.changeStage(stage.MENU)
+	g.changeStage(stage.LICENSE)
 
 	g.state = RUNNING
 
@@ -147,8 +149,10 @@ func (g *game) Update() error {
 			if g.valueToChange.IsAtEnd() {
 				if g.state == FADING_OUT {
 					if g.nextStage == stage.EXIT {
-						g.audioPlayer.Stop()
-						return ebiten.Termination
+						if g.audioPlayer != nil {
+							g.audioPlayer.Stop()
+						}
+						return g.exit()
 					}
 					g.changeStage(g.nextStage)
 					g.stages[g.currentStage].Update(0, g.keys)
@@ -180,6 +184,7 @@ func (g *game) Run() error {
 	ebiten.SetTPS(ebiten.SyncWithFPS)
 	if runtime.GOOS != "js" {
 		ebiten.SetFullscreen(true)
+		//ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	} else {
 		ebiten.SetFullscreen(false)
 	}

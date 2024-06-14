@@ -1,3 +1,5 @@
+//go:build wasm
+
 /*
  * Copyright (c) 2023 Juan Antonio Medina Iglesias
  *
@@ -20,30 +22,13 @@
  *  THE SOFTWARE.
  */
 
-package stage
+package game
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/juan-medina/twitch-rat/internal/keys"
+	"syscall/js"
 )
 
-type Stage interface {
-	Init()
-	Draw(screen *ebiten.Image)
-	Update(elapsedTime int, keys keys.Keys)
-	OnLayoutChange(width, height float64)
-	End()
-}
-type Id int
-
-const (
-	NONE Id = iota
-	LICENSE
-	MENU
-	PLAYING
-	EXIT
-)
-
-type Changer interface {
-	ChangeStage(id Id)
+func (g *game) exit() error {
+	js.Global().Get("navigateTo").Invoke("about:blank")
+	return nil
 }

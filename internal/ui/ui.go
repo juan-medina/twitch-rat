@@ -81,22 +81,25 @@ type uiImpl struct {
 	labels       []label.Label
 	keys         keys.Keys
 	audioPlayer  audio.Player
+	licenseText  string
+	aboutText    string
 }
 
 const (
-	MAX_BUTTONS         = 10
-	MENU_START          = 250.0
-	BUTTON_WIDTH        = 180.0
-	BUTTON_HEIGHT       = 50.0
-	SMALL_BUTTON_WIDTH  = 85.0
-	SMALL_BUTTON_HEIGHT = 25.0
-	BUTTON_GAP          = 20.0
-	BACK_BUTTON_WIDTH   = 35.0
-	BACK_BUTTON_HEIGHT  = 35.0
-	MAX_INPUTS          = 1
-	INPUT_WIDTH         = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
-	INPUT_HEIGHT        = 50
-	MAX_LABELS          = 10
+	MAX_BUTTONS                  = 10
+	MENU_START                   = 250.0
+	BUTTON_WIDTH                 = 180.0
+	BUTTON_HEIGHT                = 50.0
+	SMALL_BUTTON_WIDTH           = 85.0
+	SMALL_BUTTON_HEIGHT          = 25.0
+	BUTTON_GAP                   = 20.0
+	BACK_BUTTON_WIDTH            = 35.0
+	BACK_BUTTON_HEIGHT           = 35.0
+	TITLE_TO_ELEMENTS_SEPARATION = 50.0
+	MAX_INPUTS                   = 1
+	INPUT_WIDTH                  = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
+	INPUT_HEIGHT                 = 50
+	MAX_LABELS                   = 10
 )
 
 const (
@@ -104,6 +107,9 @@ const (
 	BACK_BUTTON
 	OPTIONS_BUTTON
 	ABOUT_BUTTON
+	SUBMENU_ABOUT_BACK_BUTTON
+	SUBMENU_OPTION_BACK_BUTTON
+	ACCEPT_LICENSE_BUTTON
 )
 
 const (
@@ -114,11 +120,19 @@ const (
 	LABEL_LAST_MESSAGE label.Id = iota
 	LABEL_VERSION
 	LABEL_TITLE
+	LABEL_LICENSE
+	LABEL_ABOUT_MESSAGE
 )
 
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.fileSystem = fileSystem
 	u.keys = keys
+
+	data, _ := fileSystem.ReadFile("embed/text/license.txt")
+	u.licenseText = string(data)
+
+	data, _ = fileSystem.ReadFile("embed/text/about.txt")
+	u.aboutText = string(data)
 
 	fontBytes, err := fs.ReadFile(u.fileSystem, "embed/fonts/default.ttf")
 	if err != nil {
@@ -133,8 +147,9 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.faceSource = s
 
 	u.smallFace = &text.GoTextFace{
-		Source: u.faceSource,
-		Size:   12,
+		Source:    u.faceSource,
+		Direction: 0,
+		Size:      12,
 	}
 
 	u.normalFace = &text.GoTextFace{
@@ -147,14 +162,14 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 		Size:   40,
 	}
 
-	u.AddLabel(LABEL_LAST_MESSAGE, "", u.normalFace, normalLabelColor)
-	u.AddLabel(LABEL_TITLE, "Twitch Rat", u.bigFace, normalLabelColor)
+	u.AddLabel(LABEL_LAST_MESSAGE, "", u.normalFace, u.normalFace.Size, normalLabelColor)
+	u.AddLabel(LABEL_TITLE, "Twitch Rat", u.bigFace, u.bigFace.Size, normalLabelColor)
 
 	versionStr := "v0.0.0"
 	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
 		versionStr = "v" + string(data)
 	}
-	u.AddLabel(LABEL_VERSION, versionStr, u.smallFace, normalLabelColor)
+	u.AddLabel(LABEL_VERSION, versionStr, u.smallFace, u.smallFace.Size, normalLabelColor)
 
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
@@ -164,6 +179,13 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, u.smallFace, "X", button.Enabled)
 	u.addButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Options", button.Enabled)
 	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "About", button.Enabled)
+
+	u.AddLabel(LABEL_ABOUT_MESSAGE, u.aboutText, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Back", button.Enabled)
+	u.addButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Back", button.Enabled)
+
+	u.AddLabel(LABEL_LICENSE, u.licenseText, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Accept", button.Enabled)
 
 	u.SetLabelVisible(LABEL_LAST_MESSAGE, true)
 	u.SetLabelVisible(LABEL_VERSION, true)
@@ -232,9 +254,34 @@ func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
 	py = py + BUTTON_HEIGHT + BUTTON_GAP
 	u.moveButton(OPTIONS_BUTTON, px, py)
 
-	//py = py + BUTTON_HEIGHT + BUTTON_GAP
 	px = px + (BUTTON_WIDTH - SMALL_BUTTON_WIDTH)
 	u.moveButton(ABOUT_BUTTON, px, py)
+}
+
+func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
+	py := cy + BUTTON_GAP
+	w, h := u.getLabel(LABEL_LICENSE).Measure()
+	u.moveLabel(LABEL_LICENSE, cx-(w/2), py)
+
+	px := cx - (SMALL_BUTTON_WIDTH / 2)
+	py = py + h + BUTTON_GAP
+	u.moveButton(ACCEPT_LICENSE_BUTTON, px, py)
+}
+
+func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
+	py := cy + BUTTON_GAP
+	w, h := u.getLabel(LABEL_ABOUT_MESSAGE).Measure()
+	u.moveLabel(LABEL_ABOUT_MESSAGE, cx-(w/2), py)
+
+	px := cx - (SMALL_BUTTON_WIDTH / 2)
+	py = py + h + BUTTON_GAP
+	u.moveButton(SUBMENU_ABOUT_BACK_BUTTON, px, py)
+}
+
+func (u *uiImpl) layoutOptionsSubMenuElements(cx, cy float64) {
+	px := cx - (SMALL_BUTTON_WIDTH / 2)
+	py := cy
+	u.moveButton(SUBMENU_OPTION_BACK_BUTTON, px, py)
 }
 
 func (u *uiImpl) OnLayoutChange(width, height float64) {
@@ -245,8 +292,12 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	cy := MENU_START
 
 	u.layoutMainElements(cx, cy)
+	cy += TITLE_TO_ELEMENTS_SEPARATION
 
-	u.layoutMainMenuElements(cx, cy+50)
+	u.layoutMainMenuElements(cx, cy)
+	u.layoutAboutSubMenuElements(cx, cy)
+	u.layoutOptionsSubMenuElements(cx, cy)
+	u.layoutLicenseElements(cx, cy)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
@@ -358,8 +409,8 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 	}
 }
 
-func (u *uiImpl) AddLabel(id label.Id, text string, face *text.GoTextFace, color color.Color) {
-	u.labels = append(u.labels, label.New(id, text, face, color))
+func (u *uiImpl) AddLabel(id label.Id, text string, face *text.GoTextFace, lineHeight float64, color color.Color) {
+	u.labels = append(u.labels, label.New(id, text, face, lineHeight, color))
 }
 
 func (u *uiImpl) getLabel(id label.Id) label.Label {
@@ -369,6 +420,12 @@ func (u *uiImpl) getLabel(id label.Id) label.Label {
 		}
 	}
 	return nil
+}
+
+func (u *uiImpl) moveLabel(id label.Id, x, y float64) {
+	if l := u.getLabel(id); l != nil {
+		l.Move(x, y)
+	}
 }
 
 func (u *uiImpl) SetLabelText(id label.Id, text string) {

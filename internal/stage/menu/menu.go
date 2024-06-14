@@ -53,25 +53,27 @@ const (
 	CHANNEL_NOT_VALID = "Channel name is invalid!"
 )
 
+type subMenu int
+
+const (
+	MAIN_MENU subMenu = iota
+	OPTIONS_MENU
+	ABOUT_MENU
+)
+
 func (m *menu) Init() {
 	channel := m.settings.GetValue("channel", "")
 	m.ui.SetInputText(ui.INPUT_CHANNEL, channel)
 
 	m.ui.SetButtonClickCallback(m.onButtonClick)
 
-	m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
-	m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, true)
-	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, true)
-	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, true)
-	if runtime.GOOS != "js" {
-		m.ui.SetButtonVisible(ui.BACK_BUTTON, true)
-	}
 
 	m.ui.SetStatusMessage("Ready to Play!", colors.Yellow)
 	m.firstScroll = 0
 	m.sewerMap.SetLevel(1)
 	m.audioPlayer.PlaySong(MENU_MUSIC)
+	m.changeSubMenu(MAIN_MENU)
 }
 
 func (m *menu) End() {
@@ -90,21 +92,22 @@ func (m *menu) End() {
 }
 
 type menu struct {
-	changer      stage.Changer
-	ui           ui.UI
-	settings     settings.Settings
-	width        float32
-	height       float32
-	sewerMap     draw.Map
-	firstScroll  float64
-	secondScroll float64
-	rats         draw.Sheet
-	rat          draw.Sprite
-	currentFrame step.Value
-	ratX         float64
-	ratY         float64
-	audioPlayer  audio.Player
-	channelRegex *regexp.Regexp
+	changer        stage.Changer
+	ui             ui.UI
+	settings       settings.Settings
+	width          float32
+	height         float32
+	sewerMap       draw.Map
+	firstScroll    float64
+	secondScroll   float64
+	rats           draw.Sheet
+	rat            draw.Sprite
+	currentFrame   step.Value
+	ratX           float64
+	ratY           float64
+	audioPlayer    audio.Player
+	channelRegex   *regexp.Regexp
+	currentSubMenu subMenu
 }
 
 func (m *menu) Update(elapsedTime int, keys keys.Keys) {
@@ -121,13 +124,24 @@ func (m *menu) Update(elapsedTime int, keys keys.Keys) {
 		m.updateRatFrame()
 	}
 
-	if !m.ui.IsInputEditing(ui.INPUT_CHANNEL) {
-		if keys.IsDownNoRepeat(ebiten.KeyEnter) || keys.IsDownNoRepeat(ebiten.KeyNumpadEnter) {
-			m.ui.ClickButton(ui.PLAY_BUTTON)
+	if m.currentSubMenu == MAIN_MENU {
+		if !m.ui.IsInputEditing(ui.INPUT_CHANNEL) {
+			if keys.IsDownNoRepeat(ebiten.KeyEnter) || keys.IsDownNoRepeat(ebiten.KeyNumpadEnter) {
+				m.ui.ClickButton(ui.PLAY_BUTTON)
+			}
+			if runtime.GOOS != "js" {
+				if keys.IsDownNoRepeat(ebiten.KeyEscape) {
+					m.ui.ClickButton(ui.BACK_BUTTON)
+				}
+			}
 		}
-		if runtime.GOOS != "js" {
-			if keys.IsDownNoRepeat(ebiten.KeyEscape) {
-				m.ui.ClickButton(ui.BACK_BUTTON)
+	} else {
+		if keys.IsDownNoRepeat(ebiten.KeyEscape) {
+			switch m.currentSubMenu {
+			case OPTIONS_MENU:
+				m.ui.ClickButton(ui.SUBMENU_OPTION_BACK_BUTTON)
+			case ABOUT_MENU:
+				m.ui.ClickButton(ui.SUBMENU_ABOUT_BACK_BUTTON)
 			}
 		}
 	}
@@ -182,6 +196,42 @@ func (m *menu) onButtonClick(id button.Id) {
 		m.changer.ChangeStage(stage.PLAYING)
 	case ui.BACK_BUTTON:
 		m.changer.ChangeStage(stage.EXIT)
+	case ui.OPTIONS_BUTTON:
+		m.changeSubMenu(OPTIONS_MENU)
+	case ui.ABOUT_BUTTON:
+		m.changeSubMenu(ABOUT_MENU)
+	case ui.SUBMENU_ABOUT_BACK_BUTTON:
+		m.changeSubMenu(MAIN_MENU)
+	case ui.SUBMENU_OPTION_BACK_BUTTON:
+		m.changeSubMenu(MAIN_MENU)
+	}
+}
+
+func (m *menu) changeSubMenu(subMenu subMenu) {
+	m.currentSubMenu = subMenu
+
+	m.ui.SetInputVisible(ui.INPUT_CHANNEL, false)
+	m.ui.SetButtonVisible(ui.PLAY_BUTTON, false)
+	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, false)
+	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, false)
+	m.ui.SetLabelVisible(ui.LABEL_ABOUT_MESSAGE, false)
+	m.ui.SetButtonVisible(ui.SUBMENU_ABOUT_BACK_BUTTON, false)
+	m.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, false)
+
+	switch m.currentSubMenu {
+	case MAIN_MENU:
+		m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
+		m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
+		m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, true)
+		m.ui.SetButtonVisible(ui.ABOUT_BUTTON, true)
+		if runtime.GOOS != "js" {
+			m.ui.SetButtonVisible(ui.BACK_BUTTON, true)
+		}
+	case ABOUT_MENU:
+		m.ui.SetLabelVisible(ui.LABEL_ABOUT_MESSAGE, true)
+		m.ui.SetButtonVisible(ui.SUBMENU_ABOUT_BACK_BUTTON, true)
+	case OPTIONS_MENU:
+		m.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, true)
 	}
 }
 

@@ -48,6 +48,7 @@ type label struct {
 	textDrawOptions ebitenText.DrawOptions
 	face            ebitenText.Face
 	visible         bool
+	lineHeight      float64
 }
 
 func (l label) GetId() Id {
@@ -74,7 +75,7 @@ func (l label) GetText() string {
 }
 
 func (l label) Measure() (float64, float64) {
-	return ebitenText.Measure(l.text, l.face, l.face.Metrics().VLineGap)
+	return ebitenText.Measure(l.text, l.face, l.lineHeight)
 }
 
 func (l *label) SetColor(color color.Color) {
@@ -89,14 +90,16 @@ func (l *label) SetVisible(visible bool) {
 	l.visible = visible
 }
 
-func New(id Id, text string, face ebitenText.Face, color color.Color) Label {
+func New(id Id, text string, face ebitenText.Face, lineHeight float64, color color.Color) Label {
 	textDrawOptions := ebitenText.DrawOptions{}
 	textDrawOptions.ColorScale.ScaleWithColor(color)
 	textDrawOptions.Filter = ebiten.FilterNearest
+	textDrawOptions.LayoutOptions.LineSpacing = lineHeight
 	return &label{
 		id:              id,
 		text:            text,
 		textDrawOptions: textDrawOptions,
 		face:            face,
+		lineHeight:      lineHeight,
 	}
 }
