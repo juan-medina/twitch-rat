@@ -118,7 +118,12 @@ func (g *game) init() {
 	g.addStage(stage.LICENSE, license.New(g, g.ui))
 	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.audioPlayer))
 	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, g.audioPlayer))
-	g.changeStage(stage.LICENSE)
+
+	if debug := g.settings.GetBoolValue("debug", false); !debug {
+		g.changeStage(stage.LICENSE)
+	} else {
+		g.changeStage(stage.PLAYING)
+	}
 
 	g.state = RUNNING
 

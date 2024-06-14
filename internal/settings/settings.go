@@ -29,10 +29,16 @@ import (
 
 type Settings interface {
 	Init()
+
 	SetValue(key string, value string)
 	GetValue(key string, defaultValue string) string
+
 	GetFloatValue(key string, defaultValue float64) float64
 	SetFloatValue(key string, value float64)
+
+	GetBoolValue(key string, defaultValue bool) bool
+	SetBoolValue(key string, value bool)
+
 	Save()
 }
 
@@ -114,6 +120,17 @@ func (s *settingsImpl) SetValue(key string, value string) {
 
 func (s *settingsImpl) SetFloatValue(key string, value float64) {
 	s.SetValue(key, strconv.FormatFloat(value, 'f', -1, 64))
+}
+
+func (s settingsImpl) GetBoolValue(key string, defaultValue bool) bool {
+	strDefaultValue := strconv.FormatBool(defaultValue)
+	valueStr := s.GetValue(key, strDefaultValue)
+	value, _ := strconv.ParseBool(valueStr)
+	return value
+}
+
+func (s *settingsImpl) SetBoolValue(key string, value bool) {
+	s.SetValue(key, strconv.FormatBool(value))
 }
 
 func registerImpl(impl func(application string) Storage) {

@@ -119,10 +119,13 @@ const (
 	SUBMENU_ABOUT_BACK_BUTTON
 	SUBMENU_OPTION_BACK_BUTTON
 	ACCEPT_LICENSE_BUTTON
+	DEBUG_BUTTON
 )
 
 const (
 	INPUT_CHANNEL input.Id = iota
+	INPUT_DEBUG_USER
+	INPUT_DEBUG_MESSAGE
 )
 
 const (
@@ -209,6 +212,10 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.addLabel(LABEL_OPTIONS_AUDIO_VOLUME, "Audio Volume", u.normalFace, u.normalFace.Size, normalLabelColor)
 	u.addSlider(AUDIO_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.smallFace, u.smallFace.Size, normalLabelColor)
 
+	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User")
+	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message")
+	u.addButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.normalFace, "Debug", button.Enabled)
+
 	u.SetLabelVisible(LABEL_LAST_MESSAGE, true)
 	u.SetLabelVisible(LABEL_VERSION, true)
 }
@@ -269,6 +276,16 @@ func (u *uiImpl) layoutMainElements(cx, cy float64) {
 	versionLabel := u.getLabel(LABEL_VERSION)
 	cx, _ = versionLabel.Measure()
 	versionLabel.Move(u.screenWidth-cx-gapX, u.screenHeight-gapY)
+
+	px = 0
+	py = 0
+	u.getInput(INPUT_DEBUG_USER).Move(px, py)
+
+	px = px + INPUT_WIDTH + BUTTON_GAP
+	u.getInput(INPUT_DEBUG_MESSAGE).Move(px, py)
+
+	px = px + INPUT_WIDTH + BUTTON_GAP
+	u.getButton(DEBUG_BUTTON).Move(px, py)
 }
 
 func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {

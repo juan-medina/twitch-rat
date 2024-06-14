@@ -53,12 +53,24 @@ func (p *playing) Init() {
 	p.chat.Connect(p.channel)
 	p.sewerMap.SetLevel(0)
 	p.audioPlayer.PlaySong(GAME_MUSIC)
+
+	if debug := p.settings.GetBoolValue("debug", false); debug {
+		p.ui.SetInputVisible(ui.INPUT_DEBUG_USER, true)
+		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, true)
+		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, true)
+	}
 }
 
 func (p *playing) End() {
 	p.ui.SetButtonVisible(ui.BACK_BUTTON, false)
 	p.chat.Disconnect()
 	p.audioPlayer.Stop()
+
+	if debug := p.settings.GetBoolValue("debug", false); debug {
+		p.ui.SetInputVisible(ui.INPUT_DEBUG_USER, false)
+		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, false)
+		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, false)
+	}
 }
 
 type playing struct {
@@ -114,7 +126,15 @@ func (p *playing) onButtonClick(id button.Id) {
 	switch id {
 	case ui.BACK_BUTTON:
 		p.ui.SetButtonClickCallback(nil)
-		p.changer.ChangeStage(stage.MENU)
+		if debug := p.settings.GetBoolValue("debug", false); !debug {
+			p.changer.ChangeStage(stage.MENU)
+		} else {
+			p.changer.ChangeStage(stage.EXIT)
+		}
+	case ui.DEBUG_BUTTON:
+		user := p.ui.GetInputText(ui.INPUT_DEBUG_USER)
+		message := p.ui.GetInputText(ui.INPUT_DEBUG_MESSAGE)
+		p.onChatEvent(chat.Event{Type_: chat.Message, Sender: user, Message: message})
 	}
 }
 func (p *playing) onChatEvent(e chat.Event) {
@@ -123,12 +143,18 @@ func (p *playing) onChatEvent(e chat.Event) {
 
 func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, audioPlayer audio.Player) stage.Stage {
 	audioPlayer.LoadSong(GAME_MUSIC)
+	var chatInterface chat.Chat
+	if debug := settings.GetBoolValue("debug", false); !debug {
+		chatInterface = chat.New()
+	} else {
+		chatInterface = chat.NewDebug()
+	}
 	p := playing{
 		changer:     changer,
 		settings:    settings,
 		ui:          ui,
 		eventsChan:  make(chan chat.Event, 10),
-		chat:        chat.New(),
+		chat:        chatInterface,
 		sewerMap:    sewerMap,
 		audioPlayer: audioPlayer,
 	}
