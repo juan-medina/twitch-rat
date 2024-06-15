@@ -23,6 +23,8 @@
 package playing
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/chat"
@@ -128,6 +130,7 @@ func (p *playing) processCommand(command string, user string) {
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
 			p.herd = append(p.herd, rat)
+			p.ui.SetStatusMessage(fmt.Sprintf("%s spawned", user), colors.White)
 		}
 	}
 }
