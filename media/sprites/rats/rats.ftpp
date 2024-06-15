@@ -5,6 +5,96 @@
   "savePath": "D:\\Documents\\source\\twitch-rat\\internal\\app\\embed\\sprites\\rats",
   "images": [
     {
+      "name": "rat_normal_dead_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_01.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_02.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_03.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_04.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_05.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_06.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_06.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_07.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_07.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_08.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_08.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_dead_09.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_09.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_fight_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_fight_01.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_fight_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_fight_02.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_fight_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_fight_03.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_fight_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_fight_04.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_fight_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_fight_05.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_fight_06.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_fight_06.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_hurt_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_hurt_01.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_hurt_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_hurt_02.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_hurt_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_hurt_03.png",
+      "folder": ""
+    },
+    {
       "name": "rat_normal_idle_01.png",
       "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_idle_01.png",
       "folder": ""

@@ -191,7 +191,7 @@ func (g *game) Draw(screen *ebiten.Image) {
 func (g *game) Run() error {
 	ebiten.SetWindowSize(WIDTH, HEIGHT)
 	ebiten.SetWindowTitle(TITLE)
-	ebiten.SetTPS(ebiten.SyncWithFPS)
+	ebiten.SetTPS(60)
 	if runtime.GOOS != "js" {
 		ebiten.SetFullscreen(true)
 		//ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)

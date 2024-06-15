@@ -41,6 +41,7 @@ const (
 	ARENA_LEFT_X           = -750
 	ARENA_RIGHT_X          = 670
 	WALK_SPEED             = 0.05
+	RUN_SPEED              = 0.2
 	CLOSE_TO_OBJECTIVE     = 1.0
 	WAIT_TO_WALK_AGAIN_MIN = 3000
 	WAIT_TO_WALK_AGAIN_MAX = 4500
@@ -63,27 +64,14 @@ type animation struct {
 	startFrame    int
 	endFrame      int
 	frameDuration int
-}
-
-var animationMap = map[string]animation{
-	"idle": {
-		pattern:       "rat_normal_idle_%02d",
-		startFrame:    1,
-		endFrame:      6,
-		frameDuration: 100,
-	},
-	"walk": {
-		pattern:       "rat_normal_walk_%02d",
-		startFrame:    1,
-		endFrame:      8,
-		frameDuration: 100,
-	},
+	loop          bool
 }
 
 type animationStatus struct {
 	currentFrame int
 	currentTime  int
 	animation    *animation
+	end          bool
 }
 
 type direction int
@@ -170,17 +158,24 @@ func (r *ratImpl) Update(elapsedTime int) {
 			r.RandomWalk()
 		}
 	}
-
-	r.animationStatus.currentTime += elapsedTime
-	if r.animationStatus.currentTime >= r.animationStatus.animation.frameDuration {
-		r.animationStatus.currentTime = 0
-		r.animationStatus.currentFrame++
-		if r.animationStatus.currentFrame > r.animationStatus.animation.endFrame {
-			r.animationStatus.currentFrame = r.animationStatus.animation.startFrame
+	if !r.animationStatus.end {
+		r.animationStatus.currentTime += elapsedTime
+		if r.animationStatus.currentTime >= r.animationStatus.animation.frameDuration {
+			r.animationStatus.currentTime = 0
+			r.animationStatus.currentFrame++
+			if r.animationStatus.currentFrame > r.animationStatus.animation.endFrame {
+				if r.animationStatus.animation.loop {
+					r.animationStatus.currentFrame = r.animationStatus.animation.startFrame
+				} else {
+					r.animationStatus.end = true
+					r.animationStatus.currentFrame = r.animationStatus.animation.endFrame
+				}
+			}
+			r.sprite = r.sheet.Sprite(fmt.Sprintf(r.animationStatus.animation.pattern, r.animationStatus.currentFrame))
+			r.sprite.SetScale(RAT_SCALE)
 		}
-		r.sprite = r.sheet.Sprite(fmt.Sprintf(r.animationStatus.animation.pattern, r.animationStatus.currentFrame))
-		r.sprite.SetScale(RAT_SCALE)
 	}
+
 }
 
 func (r ratImpl) GetName() string {
@@ -195,6 +190,7 @@ func (r *ratImpl) SetAnimation(animation string) {
 			currentFrame: a.startFrame,
 			currentTime:  0,
 			animation:    &a,
+			end:          false,
 		}
 		r.sprite = r.sheet.Sprite(fmt.Sprintf(a.pattern, r.animationStatus.currentFrame))
 		r.sprite.SetScale(RAT_SCALE)
@@ -210,7 +206,7 @@ func (r *ratImpl) RandomWalk() {
 	} else {
 		r.facing = right
 	}
-	r.SetAnimation("walk")
+	r.SetAnimation(WALK_ANIM)
 	if r.facing == left {
 		r.vx = -r.vx
 	}
@@ -219,7 +215,7 @@ func (r *ratImpl) RandomWalk() {
 }
 func (r *ratImpl) idle() {
 	r.state = idle
-	r.SetAnimation("idle")
+	r.SetAnimation(IDLE_ANIM)
 	r.vx = 0
 	r.waitingTime = rand.Intn(WAIT_TO_WALK_AGAIN_MAX-WAIT_TO_WALK_AGAIN_MIN) + WAIT_TO_WALK_AGAIN_MIN
 }
