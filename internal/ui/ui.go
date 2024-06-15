@@ -68,6 +68,8 @@ type UI interface {
 	SetSliderVisible(id slider.Id, visible bool)
 	SetSliderValue(id slider.Id, value float64)
 	SetSliderChangeCallback(callback func(id slider.Id, value float64))
+
+	GetSmallFace() text.Face
 }
 
 var (
@@ -166,9 +168,8 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.faceSource = s
 
 	u.smallFace = &text.GoTextFace{
-		Source:    u.faceSource,
-		Direction: 0,
-		Size:      12,
+		Source: u.faceSource,
+		Size:   12,
 	}
 
 	u.normalFace = &text.GoTextFace{
@@ -545,6 +546,10 @@ func (u *uiImpl) SetSliderChangeCallback(callback func(id slider.Id, value float
 	for i := range u.sliders {
 		u.sliders[i].OnValueChangeCallback(callback)
 	}
+}
+
+func (u uiImpl) GetSmallFace() text.Face {
+	return u.smallFace
 }
 
 func New(audioPlayer audio.Player) UI {

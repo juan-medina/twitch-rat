@@ -1,7 +1,7 @@
 {
   "frames": [
     {
-      "filename": "rat_run_01",
+      "filename": "rat_normal_run_06",
       "frame": {
         "x": 8,
         "y": 8,
@@ -22,11 +22,11 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
       }
     },
     {
-      "filename": "rat_run_02",
+      "filename": "rat_normal_idle_01",
       "frame": {
         "x": 56,
         "y": 8,
@@ -47,11 +47,11 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
       }
     },
     {
-      "filename": "rat_run_03",
+      "filename": "rat_normal_idle_03",
       "frame": {
         "x": 8,
         "y": 56,
@@ -72,11 +72,11 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
       }
     },
     {
-      "filename": "rat_run_04",
+      "filename": "rat_normal_idle_04",
       "frame": {
         "x": 56,
         "y": 56,
@@ -97,11 +97,11 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
       }
     },
     {
-      "filename": "rat_run_05",
+      "filename": "rat_normal_idle_05",
       "frame": {
         "x": 104,
         "y": 8,
@@ -122,11 +122,11 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
       }
     },
     {
-      "filename": "rat_run_06",
+      "filename": "rat_normal_idle_06",
       "frame": {
         "x": 104,
         "y": 56,
@@ -147,11 +147,11 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
       }
     },
     {
-      "filename": "rat_run_07",
+      "filename": "rat_normal_run_01",
       "frame": {
         "x": 8,
         "y": 104,
@@ -172,11 +172,11 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
       }
     },
     {
-      "filename": "rat_run_08",
+      "filename": "rat_normal_run_02",
       "frame": {
         "x": 56,
         "y": 104,
@@ -197,7 +197,357 @@
       },
       "pivot": {
         "x": 0.5,
-        "y": 0.5
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_run_03",
+      "frame": {
+        "x": 104,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_run_04",
+      "frame": {
+        "x": 152,
+        "y": 8,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_run_05",
+      "frame": {
+        "x": 152,
+        "y": 56,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_idle_02",
+      "frame": {
+        "x": 152,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_run_07",
+      "frame": {
+        "x": 8,
+        "y": 152,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_run_08",
+      "frame": {
+        "x": 56,
+        "y": 152,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_01",
+      "frame": {
+        "x": 104,
+        "y": 152,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_02",
+      "frame": {
+        "x": 152,
+        "y": 152,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_03",
+      "frame": {
+        "x": 200,
+        "y": 8,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_04",
+      "frame": {
+        "x": 200,
+        "y": 56,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_05",
+      "frame": {
+        "x": 200,
+        "y": 104,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_06",
+      "frame": {
+        "x": 200,
+        "y": 152,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_07",
+      "frame": {
+        "x": 8,
+        "y": 200,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "filename": "rat_normal_walk_08",
+      "frame": {
+        "x": 56,
+        "y": 200,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
       }
     }
   ],
@@ -207,8 +557,8 @@
     "image": "rats.png",
     "format": "RGBA8888",
     "size": {
-      "w": 144,
-      "h": 144
+      "w": 240,
+      "h": 240
     },
     "scale": 1
   }

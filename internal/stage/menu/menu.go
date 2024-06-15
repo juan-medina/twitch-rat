@@ -44,11 +44,11 @@ const (
 	RAT_SPEED         = 400
 	SCROLL_SPEED      = 250
 	MENU_MUSIC        = "embed/music/menu.ogg"
-	RAT_FRAME         = "rat_run_%02d"
+	RAT_FRAME         = "rat_normal_run_%02d"
 	INITIAL_FRAME     = 1
 	END_FRAME         = 8
 	RAT_SCALE         = 4
-	RAT_Y_POS         = 640
+	RAT_Y_POS         = 768
 	CHANNEL_REGEXP    = `^[a-zA-Z][a-zA-Z0-9\-_]*$`
 	CHANNEL_NOT_EMPTY = "Please enter a channel name!"
 	CHANNEL_NOT_VALID = "Channel name is invalid!"
@@ -163,7 +163,7 @@ func (m *menu) Draw(screen *ebiten.Image) {
 		m.sewerMap.Draw(screen)
 	}
 
-	m.rat.Draw(screen, m.ratX, m.ratY)
+	m.rat.Draw(screen, m.ratX, m.ratY, false, false)
 
 	m.ui.Draw(screen)
 }
@@ -173,8 +173,7 @@ func (m *menu) OnLayoutChange(width, height float64) {
 	m.height = float32(height)
 
 	cx := float64(m.width / 2)
-	ratW, _ := m.rat.Size()
-	m.ratX = cx - (ratW / 2)
+	m.ratX = cx
 	m.ratY = RAT_Y_POS
 }
 

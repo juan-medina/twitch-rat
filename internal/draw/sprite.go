@@ -22,32 +22,58 @@
 
 package draw
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Sprite interface {
-	Draw(screen *ebiten.Image, x, y float64)
+	Draw(screen *ebiten.Image, x, y float64, flippedX, flippedY bool)
 	SetScale(scale float64)
 	Size() (float64, float64)
+	SetPivot(x, y float64)
 }
 
 type spriteImpl struct {
 	image       *ebiten.Image
 	drawOptions *ebiten.DrawImageOptions
 	scale       float64
+	pivotX      float64
+	pivotY      float64
 }
 
-func (s *spriteImpl) Draw(screen *ebiten.Image, x, y float64) {
+func (s *spriteImpl) Draw(screen *ebiten.Image, x, y float64, flippedX, flippedY bool) {
+	ebitenScaleX := s.scale
+	ebitenScaleY := s.scale
+	if flippedX {
+		ebitenScaleX = -ebitenScaleX
+	}
+	if flippedY {
+		ebitenScaleY = -ebitenScaleY
+	}
+
 	s.drawOptions.GeoM.Reset()
-	s.drawOptions.GeoM.Scale(s.scale, s.scale)
-	s.drawOptions.GeoM.Translate(x, y)
+	s.drawOptions.GeoM.Scale(ebitenScaleX, ebitenScaleY)
+	pivotX := s.pivotX * float64(s.image.Bounds().Dx()) * ebitenScaleX
+	pivotY := s.pivotY * float64(s.image.Bounds().Dy()) * ebitenScaleY
+	s.drawOptions.GeoM.Translate(x-pivotX, y-pivotY)
 	screen.DrawImage(s.image, s.drawOptions)
+
+	/*sx, sy := s.Size()
+	vector.StrokeLine(screen, float32(x), float32(y), float32(x), float32(y-sy), 1, colors.Red, false)
+	vector.StrokeRect(screen, float32((x - (sx / 2))), float32(y-(sy-2)), float32(sx), float32(sy), 1, colors.White, false)*/
 }
+
 func (s *spriteImpl) SetScale(scale float64) {
 	s.scale = scale
 }
 
 func (s spriteImpl) Size() (float64, float64) {
 	return float64(s.image.Bounds().Dx()) * s.scale, float64(s.image.Bounds().Dy()) * s.scale
+}
+
+func (s *spriteImpl) SetPivot(x, y float64) {
+	s.pivotX = x
+	s.pivotY = y
 }
 
 func NewSprite(image *ebiten.Image) Sprite {

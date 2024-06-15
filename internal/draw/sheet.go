@@ -26,6 +26,7 @@ import (
 	"bytes"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"image"
 	"strings"
 
@@ -107,7 +108,10 @@ func (s *sheetImpl) Load() {
 			}
 			for _, frame := range s.data.Frames {
 				spriteImage := s.texture.SubImage(image.Rect(frame.Frame.X, frame.Frame.Y, frame.Frame.X+frame.Frame.W, frame.Frame.Y+frame.Frame.H)).(*ebiten.Image)
-				s.sprites[frame.Filename] = NewSprite(spriteImage)
+				newSprite := NewSprite(spriteImage)
+				newSprite.SetPivot(frame.Pivot.X, frame.Pivot.Y)
+				fmt.Printf("pivot was %f, %f\n", frame.Pivot.X, frame.Pivot.Y)
+				s.sprites[frame.Filename] = newSprite
 			}
 		} else {
 			panic(err)

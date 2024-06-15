@@ -23,8 +23,6 @@
 package playing
 
 import (
-	"fmt"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/chat"
@@ -33,12 +31,15 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
+	"github.com/juan-medina/twitch-rat/internal/stage/playing/rat"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 )
 
 const (
-	GAME_MUSIC = "embed/music/game.ogg"
+	GAME_MUSIC      = "embed/music/game.ogg"
+	RAT_SPAWN_POINT = -64
+	MAX_RATS        = 20
 )
 
 func (p *playing) Init() {
@@ -84,6 +85,8 @@ type playing struct {
 	currentHeight float64
 	sewerMap      draw.Map
 	audioPlayer   audio.Player
+	rats          draw.Sheet
+	herd          []rat.Rat
 }
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {
@@ -95,7 +98,11 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 			p.ui.SetStatusMessage("Connected to "+p.channel, colors.White)
 		case chat.Disconnect:
 		case chat.Message:
-			p.ui.SetStatusMessage(fmt.Sprintf("%s: %s", event.Sender, event.Message), colors.White)
+			if event.Message != "" {
+				if event.Message[0] == '!' {
+					p.processCommand(event.Message[1:], event.Sender)
+				}
+			}
 		}
 	default:
 		/// no new event
@@ -106,10 +113,37 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 			p.ui.ClickButton(ui.BACK_BUTTON)
 		}
 	}
+	for i := range p.herd {
+		p.herd[i].Update(elapsedTime)
+	}
+}
+
+func (p *playing) processCommand(command string, user string) {
+
+	if command == "play" {
+		if !p.doesRatExist(user) && len(p.herd) < MAX_RATS {
+			rat := rat.New(p.rats, user, p.ui.GetSmallFace())
+			rat.SetAnimation("walk")
+			rat.SetX(RAT_SPAWN_POINT)
+			rat.SetCenter((p.currentWidth / 2))
+			p.herd = append(p.herd, rat)
+		}
+	}
+}
+func (p playing) doesRatExist(name string) bool {
+	for i := range p.herd {
+		if p.herd[i].GetName() == name {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *playing) Draw(screen *ebiten.Image) {
 	p.sewerMap.Draw(screen)
+	for i := range p.herd {
+		p.herd[i].Draw(screen)
+	}
 	p.ui.Draw(screen)
 }
 
@@ -120,6 +154,9 @@ func (p *playing) OnLayoutChange(width, height float64) {
 	w, _ := p.sewerMap.Size()
 	dx := (p.currentWidth - w) / 2
 	p.sewerMap.Move(dx, 0)
+	for i := range p.herd {
+		p.herd[i].SetCenter((p.currentWidth / 2))
+	}
 }
 
 func (p *playing) onButtonClick(id button.Id) {
@@ -141,7 +178,7 @@ func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, audioPlayer audio.Player) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player) stage.Stage {
 	audioPlayer.LoadSong(GAME_MUSIC)
 	var chatInterface chat.Chat
 	if debug := settings.GetBoolValue("debug", false); !debug {
@@ -157,6 +194,8 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 		chat:        chatInterface,
 		sewerMap:    sewerMap,
 		audioPlayer: audioPlayer,
+		rats:        rats,
+		herd:        make([]rat.Rat, 0, MAX_RATS),
 	}
 	return &p
 }

@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "version": "0.6.7"
+  },
+  "savePath": "D:\\Documents\\source\\twitch-rat\\internal\\app\\embed\\sprites\\rats",
+  "images": [
+    {
+      "name": "rat_normal_idle_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_idle_01.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_idle_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_idle_02.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_idle_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_idle_03.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_idle_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_idle_04.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_idle_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_idle_05.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_idle_06.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_idle_06.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_01.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_02.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_03.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_04.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_05.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_06.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_06.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_07.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_07.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_run_08.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_run_08.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_01.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_02.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_03.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_04.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_05.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_06.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_06.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_07.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_07.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_walk_08.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_08.png",
+      "folder": ""
+    }
+  ],
+  "folders": [],
+  "packOptions": {
+    "textureName": "rats",
+    "textureFormat": "png",
+    "removeFileExtension": true,
+    "prependFolderName": true,
+    "base64Export": false,
+    "tinify": false,
+    "tinifyKey": "",
+    "scale": 1,
+    "filter": "none",
+    "exporter": "JSON (array)",
+    "fileName": "pack-result",
+    "savePath": "D:\\Documents\\source\\twitch-rat\\internal\\app\\embed\\sprites\\rats",
+    "width": 2048,
+    "height": 2048,
+    "fixedSize": false,
+    "powerOfTwo": false,
+    "padding": 4,
+    "extrude": 4,
+    "allowRotation": false,
+    "allowTrim": false,
+    "trimMode": "trim",
+    "alphaThreshold": "0",
+    "detectIdentical": true,
+    "packer": "MaxRectsPacker",
+    "packerMethod": "Smart"
+  }
+}
