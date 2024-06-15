@@ -30,6 +30,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
@@ -39,9 +40,10 @@ import (
 
 const (
 	HIT_SOUND              = "embed/sounds/hit.ogg"
+	DEAD_SOUND             = "embed/sounds/dead.ogg"
 	RAT_SCALE              = 4
 	RAT_Y_POS              = 768
-	LABEL_GAP              = 20
+	LABEL_GAP              = 15
 	ARENA_LEFT_X           = -750
 	ARENA_RIGHT_X          = 670
 	WALK_SPEED             = 0.1
@@ -51,6 +53,11 @@ const (
 	WAIT_TO_WALK_AGAIN_MIN = 3000
 	WAIT_TO_WALK_AGAIN_MAX = 4500
 	WAIT_AFTER_HIT         = 1000
+	HEALTH_BAR_GAP         = 15
+	HEALTH_BAR_WIDTH       = 40
+	HEALTH_BAR_HEIGHT      = 10
+	HEALTH_MAX             = 100
+	RAT_DAMAGE             = 20
 )
 
 var (
@@ -92,7 +99,9 @@ type Rat interface {
 	CanAttack() bool
 	Attack(otherRat Rat)
 	GetX() float64
-	Hurt()
+	Hurt(hit int)
+	IsAlive() bool
+	ReSpawn()
 }
 
 type animation struct {
@@ -123,6 +132,7 @@ const (
 	idle state = iota
 	walking
 	running
+	dead
 )
 
 type ratImpl struct {
@@ -143,6 +153,9 @@ type ratImpl struct {
 	ui                  ui.UI
 	audioPlayer         audio.Player
 	color               color.RGBA
+	barX                float64
+	barY                float64
+	health              int
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -160,6 +173,15 @@ func (r *ratImpl) Draw(screen *ebiten.Image) {
 	r.sprite.SetColor(r.color)
 	r.sprite.Draw(screen, r.screenCenterX+r.x, r.y, r.facing == left, false)
 	r.nameLabel.Draw(screen)
+
+	greenWidth := float32(float64(HEALTH_BAR_WIDTH) * (float64(r.health) / 100.0))
+	redWidth := float32(HEALTH_BAR_WIDTH - greenWidth)
+	redStart := float32(float32(r.barX) + greenWidth)
+
+	vector.DrawFilledRect(screen, float32(r.barX), float32(r.barY), greenWidth, HEALTH_BAR_HEIGHT, colors.Green, false)
+	vector.DrawFilledRect(screen, redStart, float32(r.barY), redWidth, HEALTH_BAR_HEIGHT, colors.Red, false)
+
+	vector.StrokeRect(screen, float32(r.barX), float32(r.barY), HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 2, colors.Black, false)
 }
 
 func (r *ratImpl) SetCenter(screenCenterX float64) {
@@ -179,6 +201,9 @@ func (r *ratImpl) moveLabel() {
 	y := r.y - rh - LABEL_GAP
 	x := r.screenCenterX + r.x - (r.labelWidth / 2)
 	r.nameLabel.Move(x, y)
+
+	r.barX = r.screenCenterX + r.x - HEALTH_BAR_WIDTH/2
+	r.barY = y + HEALTH_BAR_GAP
 }
 
 func (r *ratImpl) Update(elapsedTime int) {
@@ -189,6 +214,11 @@ func (r *ratImpl) Update(elapsedTime int) {
 	r.SetX(r.x + r.vx*float64(elapsedTime))
 
 	switch r.state {
+	case dead:
+		if r.animationStatus.end {
+			r.audioPlayer.PlaySound(DEAD_SOUND)
+			r.SetVisible(false)
+		}
 	case walking:
 		diff := math.Abs(r.destination - r.x)
 		if diff < CLOSE_TO_OBJECTIVE {
@@ -196,16 +226,25 @@ func (r *ratImpl) Update(elapsedTime int) {
 		}
 	case running:
 		if r.target != nil {
-			r.updateDestinationToTarget()
-			diff := math.Abs(r.destination - r.x)
-			if diff < CLOSE_TO_OTHER_RAT {
+			if r.target.IsAlive() {
+				r.updateDestinationToTarget()
+				diff := math.Abs(r.destination - r.x)
+				if diff < CLOSE_TO_OTHER_RAT {
+					r.idle()
+					r.SetAnimation(FIGHT_ANIM)
+					r.waitingTime = WAIT_AFTER_HIT
+					r.target.Hurt(RAT_DAMAGE)
+					r.audioPlayer.PlaySound(HIT_SOUND)
+					if r.target.IsAlive() {
+						r.ui.SetStatusMessage(fmt.Sprintf("%s hit %s with %d damage", r.name, r.target.GetName(), RAT_DAMAGE), colors.Yellow)
+
+					} else {
+						r.ui.SetStatusMessage(fmt.Sprintf("%s hit %s with %d damage a kill it", r.name, r.target.GetName(), 20), colors.Red)
+					}
+					r.target = nil
+				}
+			} else {
 				r.idle()
-				r.SetAnimation(FIGHT_ANIM)
-				r.waitingTime = WAIT_AFTER_HIT
-				r.ui.SetStatusMessage(fmt.Sprintf("%s hit %s with %d damage", r.name, r.target.GetName(), 20), colors.Yellow)
-				r.target.Hurt()
-				r.target = nil
-				r.audioPlayer.PlaySound(HIT_SOUND)
 			}
 		}
 	case idle:
@@ -237,9 +276,6 @@ func (r *ratImpl) Update(elapsedTime int) {
 }
 
 func (r ratImpl) GetName() string {
-	if !r.visible {
-		return ""
-	}
 	return r.name
 }
 func (r *ratImpl) SetAnimation(animation string) {
@@ -271,11 +307,19 @@ func (r *ratImpl) RandomWalk() {
 	r.state = walking
 	r.waitingTime = 0
 }
-func (r *ratImpl) Hurt() {
-	r.SetAnimation(HURT_ANIM)
+func (r *ratImpl) Hurt(hit int) {
+	r.health -= hit
+	if r.health <= 0 {
+		r.health = 0
+		r.SetAnimation(DEAD_ANIM)
+		r.state = dead
+		r.waitingTime = 0
+	} else {
+		r.SetAnimation(HURT_ANIM)
+		r.state = idle
+		r.waitingTime = WAIT_AFTER_HIT
+	}
 	r.vx = 0
-	r.state = idle
-	r.waitingTime = WAIT_AFTER_HIT
 }
 
 func (r *ratImpl) idle() {
@@ -314,6 +358,17 @@ func (r ratImpl) GetX() float64 {
 	return r.x
 }
 
+func (r ratImpl) IsAlive() bool {
+	return r.health > 0
+}
+
+func (r *ratImpl) ReSpawn() {
+	r.health = HEALTH_MAX
+	r.x = 0
+	r.RandomWalk()
+	r.visible = true
+}
+
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, name string, face text.Face) Rat {
 	nc := labelColors[nextLabelColor]
 	label := label.New(0, name, face, 0, nc)
@@ -338,5 +393,6 @@ func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, name string, face
 		facing:      right,
 		ui:          ui,
 		color:       nc,
+		health:      HEALTH_MAX,
 	}
 }

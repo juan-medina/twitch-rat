@@ -41,9 +41,8 @@ import (
 
 const (
 	GAME_MUSIC      = "embed/music/game.ogg"
-	HIT_SOUND       = "embed/sounds/hit.ogg"
 	RAT_SPAWN_POINT = -64
-	MAX_RATS        = 20
+	MAX_RATS        = 40
 )
 
 func (p *playing) Init() {
@@ -151,6 +150,13 @@ func (p *playing) processCommand(message string, user string) {
 			rat.SetCenter((p.currentWidth / 2))
 			p.herd = append(p.herd, rat)
 			p.ui.SetStatusMessage(fmt.Sprintf("%s spawned", user), colors.White)
+		} else {
+			if !findRat.IsAlive() {
+				findRat.SetX(RAT_SPAWN_POINT)
+				findRat.ReSpawn()
+				findRat.SetCenter((p.currentWidth / 2))
+				p.ui.SetStatusMessage(fmt.Sprintf("%s re-spawned", user), colors.White)
+			}
 		}
 	} else if command == "attack" {
 		if userRat := p.getRat(user); userRat != nil {
@@ -175,7 +181,8 @@ func (p playing) getRat(name string) rat.Rat {
 		lower = lower[1:]
 	}
 	for i := range p.herd {
-		if strings.ToLower(p.herd[i].GetName()) == lower {
+		ratName := strings.ToLower(p.herd[i].GetName())
+		if ratName == lower {
 			return p.herd[i]
 		}
 	}
@@ -223,7 +230,8 @@ func (p *playing) onChatEvent(e chat.Event) {
 
 func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player) stage.Stage {
 	audioPlayer.LoadSong(GAME_MUSIC)
-	audioPlayer.LoadSound(HIT_SOUND)
+	audioPlayer.LoadSound(rat.HIT_SOUND)
+	audioPlayer.LoadSound(rat.DEAD_SOUND)
 	var chatInterface chat.Chat
 	if debug := settings.GetBoolValue("debug", false); !debug {
 		chatInterface = chat.New()
