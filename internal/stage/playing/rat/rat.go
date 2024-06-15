@@ -25,6 +25,7 @@ package rat
 import (
 	"fmt"
 	"image/color"
+	"math"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -34,12 +35,15 @@ import (
 )
 
 const (
-	RAT_SCALE     = 4
-	RAT_Y_POS     = 768
-	LABEL_GAP     = 20
-	ARENA_LEFT_X  = -750
-	ARENA_RIGHT_X = 670
-	WALK_SPEED    = 0.05
+	RAT_SCALE              = 4
+	RAT_Y_POS              = 768
+	LABEL_GAP              = 20
+	ARENA_LEFT_X           = -750
+	ARENA_RIGHT_X          = 670
+	WALK_SPEED             = 0.05
+	CLOSE_TO_OBJECTIVE     = 1.0
+	WAIT_TO_WALK_AGAIN_MIN = 3000
+	WAIT_TO_WALK_AGAIN_MAX = 4500
 )
 
 type Rat interface {
@@ -108,6 +112,8 @@ type ratImpl struct {
 	visible             bool
 	facing              direction
 	state               state
+	destination         float64
+	waitingTime         int
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -149,14 +155,22 @@ func (r *ratImpl) Update(elapsedTime int) {
 	if !r.visible {
 		return
 	}
+
 	r.SetX(r.x + r.vx*float64(elapsedTime))
-	if r.x > ARENA_RIGHT_X {
-		r.vx = -r.vx
-		r.facing = left
-	} else if r.x < ARENA_LEFT_X {
-		r.vx = -r.vx
-		r.facing = right
+
+	if r.state == walking {
+		diff := math.Abs(r.destination - r.x)
+		if diff < CLOSE_TO_OBJECTIVE {
+			r.idle()
+		}
+	} else if r.state == idle {
+		if r.waitingTime > 0 {
+			r.waitingTime -= elapsedTime
+		} else {
+			r.RandomWalk()
+		}
 	}
+
 	r.animationStatus.currentTime += elapsedTime
 	if r.animationStatus.currentTime >= r.animationStatus.animation.frameDuration {
 		r.animationStatus.currentTime = 0
@@ -190,12 +204,24 @@ func (r *ratImpl) SetAnimation(animation string) {
 }
 func (r *ratImpl) RandomWalk() {
 	r.vx = WALK_SPEED
-	r.facing = direction(rand.Intn(2))
+	r.destination = ARENA_LEFT_X + rand.Float64()*(ARENA_RIGHT_X-ARENA_LEFT_X)
+	if r.destination < r.x {
+		r.facing = left
+	} else {
+		r.facing = right
+	}
 	r.SetAnimation("walk")
 	if r.facing == left {
 		r.vx = -r.vx
 	}
 	r.state = walking
+	r.waitingTime = 0
+}
+func (r *ratImpl) idle() {
+	r.state = idle
+	r.SetAnimation("idle")
+	r.vx = 0
+	r.waitingTime = rand.Intn(WAIT_TO_WALK_AGAIN_MAX-WAIT_TO_WALK_AGAIN_MIN) + WAIT_TO_WALK_AGAIN_MIN
 }
 
 func New(sheet draw.Sheet, name string, face text.Face) Rat {
