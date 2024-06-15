@@ -30,21 +30,27 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
+	"github.com/juan-medina/twitch-rat/internal/audio"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
+	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
 const (
+	HIT_SOUND              = "embed/sounds/hit.ogg"
 	RAT_SCALE              = 4
 	RAT_Y_POS              = 768
 	LABEL_GAP              = 20
 	ARENA_LEFT_X           = -750
 	ARENA_RIGHT_X          = 670
-	WALK_SPEED             = 0.05
+	WALK_SPEED             = 0.1
 	RUN_SPEED              = 0.2
-	CLOSE_TO_OBJECTIVE     = 1.0
+	CLOSE_TO_OBJECTIVE     = 8.0 * 4
+	CLOSE_TO_OTHER_RAT     = 20.0 * 4
 	WAIT_TO_WALK_AGAIN_MIN = 3000
 	WAIT_TO_WALK_AGAIN_MAX = 4500
+	WAIT_AFTER_HIT         = 1000
 )
 
 type Rat interface {
@@ -57,6 +63,10 @@ type Rat interface {
 	SetVisible(visible bool)
 	IsVisible() bool
 	RandomWalk()
+	CanAttack() bool
+	Attack(otherRat Rat)
+	GetX() float64
+	Hurt()
 }
 
 type animation struct {
@@ -86,6 +96,7 @@ type state int
 const (
 	idle state = iota
 	walking
+	running
 )
 
 type ratImpl struct {
@@ -102,6 +113,9 @@ type ratImpl struct {
 	state               state
 	destination         float64
 	waitingTime         int
+	target              Rat
+	ui                  ui.UI
+	audioPlayer         audio.Player
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -146,18 +160,34 @@ func (r *ratImpl) Update(elapsedTime int) {
 
 	r.SetX(r.x + r.vx*float64(elapsedTime))
 
-	if r.state == walking {
+	switch r.state {
+	case walking:
 		diff := math.Abs(r.destination - r.x)
 		if diff < CLOSE_TO_OBJECTIVE {
 			r.idle()
 		}
-	} else if r.state == idle {
+	case running:
+		if r.target != nil {
+			r.updateDestinationToTarget()
+			diff := math.Abs(r.destination - r.x)
+			if diff < CLOSE_TO_OTHER_RAT {
+				r.idle()
+				r.SetAnimation(FIGHT_ANIM)
+				r.waitingTime = WAIT_AFTER_HIT
+				r.ui.SetStatusMessage(fmt.Sprintf("%s hit %s with %d damage", r.name, r.target.GetName(), 20), colors.Yellow)
+				r.target.Hurt()
+				r.target = nil
+				r.audioPlayer.PlaySound(HIT_SOUND)
+			}
+		}
+	case idle:
 		if r.waitingTime > 0 {
 			r.waitingTime -= elapsedTime
 		} else {
 			r.RandomWalk()
 		}
 	}
+
 	if !r.animationStatus.end {
 		r.animationStatus.currentTime += elapsedTime
 		if r.animationStatus.currentTime >= r.animationStatus.animation.frameDuration {
@@ -213,6 +243,13 @@ func (r *ratImpl) RandomWalk() {
 	r.state = walking
 	r.waitingTime = 0
 }
+func (r *ratImpl) Hurt() {
+	r.SetAnimation(HURT_ANIM)
+	r.vx = 0
+	r.state = idle
+	r.waitingTime = WAIT_AFTER_HIT
+}
+
 func (r *ratImpl) idle() {
 	r.state = idle
 	r.SetAnimation(IDLE_ANIM)
@@ -220,19 +257,50 @@ func (r *ratImpl) idle() {
 	r.waitingTime = rand.Intn(WAIT_TO_WALK_AGAIN_MAX-WAIT_TO_WALK_AGAIN_MIN) + WAIT_TO_WALK_AGAIN_MIN
 }
 
-func New(sheet draw.Sheet, name string, face text.Face) Rat {
+func (r ratImpl) CanAttack() bool {
+	return r.state == idle || r.state == walking
+}
+
+func (r *ratImpl) Attack(otherRat Rat) {
+	r.state = running
+	r.SetAnimation(RUN_ANIM)
+	r.target = otherRat
+	r.waitingTime = 0
+	r.updateDestinationToTarget()
+	r.ui.SetStatusMessage(fmt.Sprintf("%s is attacking %s", r.name, r.target.GetName()), colors.White)
+}
+func (r *ratImpl) updateDestinationToTarget() {
+	r.vx = RUN_SPEED
+	r.destination = r.target.GetX()
+	if r.destination < r.x {
+		r.facing = left
+	} else {
+		r.facing = right
+	}
+	if r.facing == left {
+		r.vx = -r.vx
+	}
+}
+
+func (r ratImpl) GetX() float64 {
+	return r.x
+}
+
+func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, name string, face text.Face) Rat {
 	label := label.New(0, name, face, 0, color.White)
 	labelWidth, _ := label.Measure()
 	label.SetVisible(true)
 	return &ratImpl{
-		name:       name,
-		x:          0,
-		y:          0,
-		vx:         0,
-		sheet:      sheet,
-		nameLabel:  label,
-		labelWidth: labelWidth,
-		visible:    true,
-		facing:     right,
+		audioPlayer: audioPlayer,
+		name:        name,
+		x:           0,
+		y:           0,
+		vx:          0,
+		sheet:       sheet,
+		nameLabel:   label,
+		labelWidth:  labelWidth,
+		visible:     true,
+		facing:      right,
+		ui:          ui,
 	}
 }

@@ -24,6 +24,7 @@ package playing
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/audio"
@@ -40,6 +41,7 @@ import (
 
 const (
 	GAME_MUSIC      = "embed/music/game.ogg"
+	HIT_SOUND       = "embed/sounds/hit.ogg"
 	RAT_SPAWN_POINT = -64
 	MAX_RATS        = 20
 )
@@ -104,7 +106,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 		case chat.Message:
 			if event.Message != "" {
 				if event.Message[0] == '!' {
-					p.processCommand(event.Message[1:], event.Sender)
+					p.processCommand(event.Message, event.Sender)
 				}
 			}
 		}
@@ -122,25 +124,61 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 	}
 }
 
-func (p *playing) processCommand(command string, user string) {
+func (p *playing) processCommand(message string, user string) {
+	lenStr := len(message)
+
+	firstSpace := strings.Index(message, " ")
+	var endCommand int
+	if firstSpace == -1 {
+		endCommand = lenStr
+	} else {
+		endCommand = firstSpace
+	}
+	command := strings.ToLower(message[1:endCommand])
+
+	args := ""
+	if firstSpace != -1 && lenStr > firstSpace+1 {
+		args = message[firstSpace+1:]
+	}
+
 	if command == "play" {
-		if !p.doesRatExist(user) && len(p.herd) < MAX_RATS {
-			rat := rat.New(p.rats, user, p.ui.GetSmallFace())
+		findRat := p.getRat(user)
+		if findRat == nil && len(p.herd) < MAX_RATS {
+			rat := rat.New(p.audioPlayer, p.rats, p.ui, user, p.ui.GetSmallFace())
 			rat.RandomWalk()
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
 			p.herd = append(p.herd, rat)
 			p.ui.SetStatusMessage(fmt.Sprintf("%s spawned", user), colors.White)
 		}
-	}
-}
-func (p playing) doesRatExist(name string) bool {
-	for i := range p.herd {
-		if p.herd[i].GetName() == name {
-			return true
+	} else if command == "attack" {
+		if userRat := p.getRat(user); userRat != nil {
+			if userRat.CanAttack() {
+				if targetRat := p.getRat(args); targetRat != nil {
+					targetName := targetRat.GetName()
+					userName := userRat.GetName()
+					if targetName != userName {
+						userRat.Attack(targetRat)
+					}
+				}
+			}
 		}
 	}
-	return false
+}
+func (p playing) getRat(name string) rat.Rat {
+	if name == "" {
+		return nil
+	}
+	lower := strings.ToLower(name)
+	if lower[0] == '@' {
+		lower = lower[1:]
+	}
+	for i := range p.herd {
+		if strings.ToLower(p.herd[i].GetName()) == lower {
+			return p.herd[i]
+		}
+	}
+	return nil
 }
 
 func (p *playing) Draw(screen *ebiten.Image) {
@@ -184,6 +222,7 @@ func (p *playing) onChatEvent(e chat.Event) {
 
 func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player) stage.Stage {
 	audioPlayer.LoadSong(GAME_MUSIC)
+	audioPlayer.LoadSound(HIT_SOUND)
 	var chatInterface chat.Chat
 	if debug := settings.GetBoolValue("debug", false); !debug {
 		chatInterface = chat.New()
