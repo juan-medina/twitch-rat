@@ -25,6 +25,7 @@ package rat
 import (
 	"fmt"
 	"image/color"
+	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -33,9 +34,12 @@ import (
 )
 
 const (
-	RAT_SCALE = 4
-	RAT_Y_POS = 768
-	LABEL_GAP = 20
+	RAT_SCALE     = 4
+	RAT_Y_POS     = 768
+	LABEL_GAP     = 20
+	ARENA_LEFT_X  = -750
+	ARENA_RIGHT_X = 670
+	WALK_SPEED    = 0.05
 )
 
 type Rat interface {
@@ -47,6 +51,7 @@ type Rat interface {
 	GetName() string
 	SetVisible(visible bool)
 	IsVisible() bool
+	RandomWalk()
 }
 
 type animation struct {
@@ -84,6 +89,13 @@ const (
 	right
 )
 
+type state int
+
+const (
+	idle state = iota
+	walking
+)
+
 type ratImpl struct {
 	x, y, screenCenterX float64
 	vx                  float64
@@ -95,6 +107,7 @@ type ratImpl struct {
 	labelWidth          float64
 	visible             bool
 	facing              direction
+	state               state
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -137,9 +150,12 @@ func (r *ratImpl) Update(elapsedTime int) {
 		return
 	}
 	r.SetX(r.x + r.vx*float64(elapsedTime))
-	if r.x > 200 {
+	if r.x > ARENA_RIGHT_X {
 		r.vx = -r.vx
 		r.facing = left
+	} else if r.x < ARENA_LEFT_X {
+		r.vx = -r.vx
+		r.facing = right
 	}
 	r.animationStatus.currentTime += elapsedTime
 	if r.animationStatus.currentTime >= r.animationStatus.animation.frameDuration {
@@ -172,6 +188,15 @@ func (r *ratImpl) SetAnimation(animation string) {
 		panic("animation not found in set animation: " + animation)
 	}
 }
+func (r *ratImpl) RandomWalk() {
+	r.vx = WALK_SPEED
+	r.facing = direction(rand.Intn(2))
+	r.SetAnimation("walk")
+	if r.facing == left {
+		r.vx = -r.vx
+	}
+	r.state = walking
+}
 
 func New(sheet draw.Sheet, name string, face text.Face) Rat {
 	label := label.New(0, name, face, 0, color.White)
@@ -181,7 +206,7 @@ func New(sheet draw.Sheet, name string, face text.Face) Rat {
 		name:       name,
 		x:          0,
 		y:          0,
-		vx:         0.05,
+		vx:         0,
 		sheet:      sheet,
 		nameLabel:  label,
 		labelWidth: labelWidth,

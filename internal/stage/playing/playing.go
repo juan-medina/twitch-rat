@@ -119,11 +119,10 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 }
 
 func (p *playing) processCommand(command string, user string) {
-
 	if command == "play" {
 		if !p.doesRatExist(user) && len(p.herd) < MAX_RATS {
 			rat := rat.New(p.rats, user, p.ui.GetSmallFace())
-			rat.SetAnimation("walk")
+			rat.RandomWalk()
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
 			p.herd = append(p.herd, rat)
