@@ -64,6 +64,7 @@ func (p *playing) Init() {
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, true)
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, true)
 	}
+	p.herd = make([]rat.Rat, 0, MAX_RATS)
 }
 
 func (p *playing) End() {

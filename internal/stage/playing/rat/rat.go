@@ -53,6 +53,32 @@ const (
 	WAIT_AFTER_HIT         = 1000
 )
 
+var (
+	labelColors []color.RGBA = []color.RGBA{
+		{0xFF, 0x00, 0x00, 0xFF}, // Red
+		{0x00, 0xFF, 0x00, 0xFF}, // Green
+		{0xFF, 0xFF, 0x00, 0xFF}, // Yellow
+		{0xFF, 0x00, 0xFF, 0xFF}, // Magenta
+		{0x00, 0xFF, 0xFF, 0xFF}, // Cyan
+		{0xFF, 0x7F, 0x00, 0xFF}, // Gold
+		{0x7F, 0x00, 0xFF, 0xFF}, // Purple
+		{0xFF, 0x00, 0x7F, 0xFF}, // Orange
+		{0x00, 0x80, 0x00, 0xFF}, // Dark Green
+		{0x80, 0x00, 0x80, 0xFF}, // Maroon
+		{0x00, 0x80, 0x80, 0xFF}, // Dark Red
+		{0x00, 0xFF, 0x80, 0xFF}, // Dark Yellow
+		{0xFF, 0x00, 0x80, 0xFF}, // Dark Magenta
+		{0x00, 0x80, 0xFF, 0xFF}, // Dark Cyan
+		{0x80, 0x00, 0xFF, 0xFF}, // Dark Blue
+		{0x80, 0x80, 0x00, 0xFF}, // Dark Brown
+		{0x80, 0x80, 0x80, 0xFF}, // Dark Gray
+		{0x80, 0xC0, 0x80, 0xFF}, // Dark Olive
+		{0x00, 0x00, 0x80, 0xFF}, // Dark Navy
+		{0x00, 0x00, 0xFF, 0xFF}, // Black
+	}
+	nextLabelColor = 0
+)
+
 type Rat interface {
 	Draw(screen *ebiten.Image)
 	Update(elapsedTime int)
@@ -116,6 +142,7 @@ type ratImpl struct {
 	target              Rat
 	ui                  ui.UI
 	audioPlayer         audio.Player
+	color               color.RGBA
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -130,6 +157,7 @@ func (r *ratImpl) Draw(screen *ebiten.Image) {
 	if !r.visible {
 		return
 	}
+	r.sprite.SetColor(r.color)
 	r.sprite.Draw(screen, r.screenCenterX+r.x, r.y, r.facing == left, false)
 	r.nameLabel.Draw(screen)
 }
@@ -287,9 +315,16 @@ func (r ratImpl) GetX() float64 {
 }
 
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, name string, face text.Face) Rat {
-	label := label.New(0, name, face, 0, color.White)
+	nc := labelColors[nextLabelColor]
+	label := label.New(0, name, face, 0, nc)
 	labelWidth, _ := label.Measure()
 	label.SetVisible(true)
+
+	nextLabelColor = (nextLabelColor + 1)
+	if nextLabelColor >= len(labelColors) {
+		nextLabelColor = 0
+	}
+
 	return &ratImpl{
 		audioPlayer: audioPlayer,
 		name:        name,
@@ -302,5 +337,6 @@ func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, name string, face
 		visible:     true,
 		facing:      right,
 		ui:          ui,
+		color:       nc,
 	}
 }

@@ -23,6 +23,8 @@
 package draw
 
 import (
+	"image/color"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -31,6 +33,7 @@ type Sprite interface {
 	SetScale(scale float64)
 	Size() (float64, float64)
 	SetPivot(x, y float64)
+	SetColor(color color.Color)
 }
 
 type spriteImpl struct {
@@ -57,10 +60,6 @@ func (s *spriteImpl) Draw(screen *ebiten.Image, x, y float64, flippedX, flippedY
 	pivotY := s.pivotY * float64(s.image.Bounds().Dy()) * ebitenScaleY
 	s.drawOptions.GeoM.Translate(x-pivotX, y-pivotY)
 	screen.DrawImage(s.image, s.drawOptions)
-
-	/*sx, sy := s.Size()
-	vector.StrokeLine(screen, float32(x), float32(y), float32(x), float32(y-sy), 1, colors.Red, false)
-	vector.StrokeRect(screen, float32((x - (sx / 2))), float32(y-(sy-2)), float32(sx), float32(sy), 1, colors.White, false)*/
 }
 
 func (s *spriteImpl) SetScale(scale float64) {
@@ -74,6 +73,10 @@ func (s spriteImpl) Size() (float64, float64) {
 func (s *spriteImpl) SetPivot(x, y float64) {
 	s.pivotX = x
 	s.pivotY = y
+}
+func (s *spriteImpl) SetColor(color color.Color) {
+	s.drawOptions.ColorScale.Reset()
+	s.drawOptions.ColorScale.ScaleWithColor(color)
 }
 
 func NewSprite(image *ebiten.Image) Sprite {
