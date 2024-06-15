@@ -65,6 +65,7 @@ func (p *playing) Init() {
 func (p *playing) End() {
 	p.ui.SetButtonVisible(ui.BACK_BUTTON, false)
 	p.chat.Disconnect()
+	p.ui.SetStatusMessage("Disconnected", colors.White)
 	p.audioPlayer.Stop()
 
 	if debug := p.settings.GetBoolValue("debug", false); debug {
@@ -97,6 +98,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 		case chat.Connect:
 			p.ui.SetStatusMessage("Connected to "+p.channel, colors.White)
 		case chat.Disconnect:
+			p.ui.SetStatusMessage("Disconnected", colors.White)
 		case chat.Message:
 			if event.Message != "" {
 				if event.Message[0] == '!' {

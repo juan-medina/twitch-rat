@@ -40,7 +40,7 @@ func (l *license) Init() {
 	l.ui.SetLabelVisible(ui.LABEL_LICENSE, true)
 	l.ui.SetButtonVisible(ui.BACK_BUTTON, true)
 
-	l.ui.SetStatusMessage("License..", colors.LightYellow)
+	l.ui.SetStatusMessage("Showing license..", colors.LightYellow)
 }
 
 func (l *license) End() {

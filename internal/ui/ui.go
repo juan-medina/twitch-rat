@@ -63,6 +63,7 @@ type UI interface {
 
 	SetLabelText(id label.Id, text string)
 	SetLabelColor(id label.Id, color color.Color)
+	GetLabelColor(id label.Id) color.Color
 	SetLabelVisible(id label.Id, visible bool)
 
 	SetSliderVisible(id slider.Id, visible bool)
@@ -111,6 +112,7 @@ const (
 	MAX_LABELS                   = 10
 	SLIDER_WITH                  = 300
 	SLIDER_HEIGHT                = 30
+	TOTAL_LAST_MESSAGES          = 10
 )
 
 const (
@@ -131,13 +133,14 @@ const (
 )
 
 const (
-	LABEL_LAST_MESSAGE label.Id = iota
-	LABEL_VERSION
+	LABEL_VERSION label.Id = iota
 	LABEL_TITLE
 	LABEL_LICENSE
 	LABEL_ABOUT_MESSAGE
 	LABEL_OPTIONS_MUSIC_VOLUME
 	LABEL_OPTIONS_AUDIO_VOLUME
+	LABEL_LAST_MESSAGE
+	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
 )
 
 const (
@@ -182,7 +185,11 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 		Size:   40,
 	}
 
-	u.addLabel(LABEL_LAST_MESSAGE, "", u.normalFace, u.normalFace.Size, normalLabelColor)
+	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
+		id := LABEL_LAST_MESSAGE + label.Id(i)
+		u.addLabel(id, "", u.normalFace, u.normalFace.Size, normalLabelColor)
+	}
+
 	u.addLabel(LABEL_TITLE, "Twitch Rat", u.bigFace, u.bigFace.Size, normalLabelColor)
 
 	versionStr := "v0.0.0"
@@ -217,7 +224,10 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message")
 	u.addButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.normalFace, "Debug", button.Enabled)
 
-	u.SetLabelVisible(LABEL_LAST_MESSAGE, true)
+	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
+		u.SetLabelVisible(LABEL_LAST_MESSAGE+label.Id(i), true)
+	}
+
 	u.SetLabelVisible(LABEL_VERSION, true)
 }
 
@@ -252,9 +262,20 @@ func (u *uiImpl) Update(elapsedTime int) {
 	u.updateSliders(x, y, justPressed, pressed, elapsedTime)
 }
 
-func (u *uiImpl) SetStatusMessage(message string, color color.Color) {
-	u.SetLabelColor(LABEL_LAST_MESSAGE, color)
+func (u *uiImpl) SetStatusMessage(message string, textColor color.Color) {
+	for i := TOTAL_LAST_MESSAGES - 1; i > 0; i-- {
+		prevLabelId := LABEL_LAST_MESSAGE + label.Id(i-1)
+		currentLabelId := LABEL_LAST_MESSAGE + label.Id(i)
+
+		u.SetLabelText(currentLabelId, u.GetLabelText(prevLabelId))
+		prevColor := u.GetLabelColor(prevLabelId)
+		r, g, b, _ := prevColor.RGBA()
+		newAlpha := uint32(255 - (i * (255 - 64) / (TOTAL_LAST_MESSAGES - 1)))
+		u.SetLabelColor(currentLabelId, color.RGBA{uint8(r), uint8(g), uint8(b), uint8(newAlpha)})
+	}
+
 	u.SetLabelText(LABEL_LAST_MESSAGE, message)
+	u.SetLabelColor(LABEL_LAST_MESSAGE, textColor)
 }
 
 func (u *uiImpl) layoutMainElements(cx, cy float64) {
@@ -269,8 +290,15 @@ func (u *uiImpl) layoutMainElements(cx, cy float64) {
 	u.moveButton(BACK_BUTTON, px, py)
 
 	gapX := u.normalFace.Size * 0.5
-	gapY := u.normalFace.Size * 1.5
-	u.getLabel(LABEL_LAST_MESSAGE).Move(gapX, u.screenHeight-gapY)
+	gapY := u.normalFace.Size * 1.0
+
+	py = u.screenHeight - gapY*2
+
+	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
+		labelId := LABEL_LAST_MESSAGE + label.Id(i)
+		u.getLabel(labelId).Move(gapX, py)
+		py -= u.normalFace.Size * 1.5
+	}
 
 	gapX = u.smallFace.Size * 0.5
 	gapY = u.smallFace.Size * 1.5
@@ -494,10 +522,25 @@ func (u *uiImpl) SetLabelText(id label.Id, text string) {
 		l.SetText(text)
 	}
 }
+
+func (u *uiImpl) GetLabelText(id label.Id) string {
+	if l := u.getLabel(id); l != nil {
+		return l.GetText()
+	}
+	return ""
+}
+
 func (u *uiImpl) SetLabelColor(id label.Id, color color.Color) {
 	if l := u.getLabel(id); l != nil {
 		l.SetColor(color)
 	}
+}
+
+func (u uiImpl) GetLabelColor(id label.Id) color.Color {
+	if l := u.getLabel(id); l != nil {
+		return l.GetColor()
+	}
+	return colors.White
 }
 
 func (ui *uiImpl) SetLabelVisible(id label.Id, visible bool) {

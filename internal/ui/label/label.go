@@ -38,6 +38,7 @@ type Label interface {
 	Move(x, y float64)
 	Measure() (float64, float64)
 	SetColor(color color.Color)
+	GetColor() color.Color
 	SetAlpha(alpha float32)
 	SetVisible(visible bool)
 }
@@ -81,7 +82,17 @@ func (l label) Measure() (float64, float64) {
 func (l *label) SetColor(color color.Color) {
 	l.textDrawOptions.ColorScale.Reset()
 	l.textDrawOptions.ColorScale.ScaleWithColor(color)
+	_, _, _, a := color.RGBA()
+	l.textDrawOptions.ColorScale.ScaleAlpha(float32(a) / 65536)
 }
+func (l label) GetColor() color.Color {
+	r := uint8(l.textDrawOptions.ColorScale.R() * 255)
+	g := uint8(l.textDrawOptions.ColorScale.G() * 255)
+	b := uint8(l.textDrawOptions.ColorScale.B() * 255)
+	a := uint8(l.textDrawOptions.ColorScale.A() * 255)
+	return color.RGBA{r, g, b, a}
+}
+
 func (l *label) SetAlpha(alpha float32) {
 	l.textDrawOptions.ColorScale.ScaleAlpha(alpha)
 }
