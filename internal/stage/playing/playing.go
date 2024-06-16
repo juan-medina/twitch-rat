@@ -24,6 +24,7 @@ package playing
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -107,7 +108,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 		case chat.Message:
 			if event.Message != "" {
 				if event.Message[0] == '!' {
-					p.processCommand(event.Message, event.Sender)
+					p.processCommand(event.Message, event.Sender, event.UserColor)
 				}
 			}
 		}
@@ -125,7 +126,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 	}
 }
 
-func (p *playing) processCommand(message string, user string) {
+func (p *playing) processCommand(message string, user string, userColor color.Color) {
 	lenStr := len(message)
 
 	firstSpace := strings.Index(message, " ")
@@ -145,7 +146,7 @@ func (p *playing) processCommand(message string, user string) {
 	if command == "play" {
 		findRat := p.getRat(user)
 		if findRat == nil && len(p.herd) < MAX_RATS {
-			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.font, user)
+			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.font, user, userColor)
 			rat.RandomWalk()
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
@@ -154,7 +155,7 @@ func (p *playing) processCommand(message string, user string) {
 		} else {
 			if !findRat.IsAlive() {
 				findRat.SetX(RAT_SPAWN_POINT)
-				findRat.ReSpawn()
+				findRat.ReSpawn(userColor)
 				findRat.SetCenter((p.currentWidth / 2))
 				p.ui.SetStatusMessage(fmt.Sprintf("%s re-spawned", user), colors.White)
 			}

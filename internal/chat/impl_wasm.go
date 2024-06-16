@@ -25,6 +25,8 @@
 package chat
 
 import (
+	"fmt"
+	"image/color"
 	"syscall/js"
 )
 
@@ -43,8 +45,15 @@ func (c *chatWasmImpl) Connect(channel string) {
 func (c *chatWasmImpl) chatMessage(this js.Value, p []js.Value) interface{} {
 	user := p[0].String()
 	message := p[1].String()
+	colorStr := p[2].String()
 
-	c.eventCallback(Event{Type_: Message, Message: message, Sender: user})
+	var userColor color.Color = color.RGBA{0, 0, 0, 255}
+	if colorStr != "" {
+		userColor = paseHtmlColor(colorStr)
+	}
+
+	fmt.Printf("color: %s object: %v\n", colorStr, userColor)
+	c.eventCallback(Event{Type_: Message, Message: message, Sender: user, UserColor: userColor})
 	return nil
 }
 

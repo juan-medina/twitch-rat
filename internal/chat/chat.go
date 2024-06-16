@@ -22,6 +22,11 @@
 
 package chat
 
+import (
+	"image/color"
+	"strconv"
+)
+
 type EventType int
 
 const (
@@ -31,9 +36,10 @@ const (
 )
 
 type Event struct {
-	Type_   EventType
-	Message string
-	Sender  string
+	Type_     EventType
+	Message   string
+	Sender    string
+	UserColor color.Color
 }
 
 type Chat interface {
@@ -48,6 +54,26 @@ var registeredImpl func() Chat = func() Chat {
 
 func registerImpl(impl func() Chat) {
 	registeredImpl = impl
+}
+
+func paseHtmlColor(colorStr string) color.Color {
+	result := color.RGBA{0, 0, 0, 255}
+
+	if len(colorStr) > 0 && colorStr[0] == '#' {
+		colorStr = colorStr[1:]
+	}
+
+	if len(colorStr) == 6 {
+		if r, err := strconv.ParseUint(colorStr[0:2], 16, 8); err == nil {
+			if g, err := strconv.ParseUint(colorStr[2:4], 16, 8); err == nil {
+				if b, err := strconv.ParseUint(colorStr[4:6], 16, 8); err == nil {
+					result = color.RGBA{uint8(r), uint8(g), uint8(b), 255}
+				}
+			}
+		}
+	}
+
+	return result
 }
 
 func New() Chat {

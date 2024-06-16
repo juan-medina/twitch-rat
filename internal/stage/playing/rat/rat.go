@@ -59,6 +59,7 @@ const (
 	RAT_DAMAGE             = 20
 )
 
+/*
 var (
 	labelColors []color.RGBA = []color.RGBA{
 		{0xFF, 0x00, 0x00, 0xFF}, // Red
@@ -83,7 +84,7 @@ var (
 		{0x00, 0x00, 0xFF, 0xFF}, // Black
 	}
 	nextLabelColor = 0
-)
+)*/
 
 type Rat interface {
 	Draw(screen *ebiten.Image)
@@ -100,7 +101,7 @@ type Rat interface {
 	GetX() float64
 	Hurt(hit int)
 	IsAlive() bool
-	ReSpawn()
+	ReSpawn(color color.Color)
 }
 
 type animation struct {
@@ -151,7 +152,7 @@ type ratImpl struct {
 	target              Rat
 	ui                  ui.UI
 	audioPlayer         audio.Player
-	color               color.RGBA
+	color               color.Color
 	barX                float64
 	barY                float64
 	health              int
@@ -361,23 +362,18 @@ func (r ratImpl) IsAlive() bool {
 	return r.health > 0
 }
 
-func (r *ratImpl) ReSpawn() {
+func (r *ratImpl) ReSpawn(color color.Color) {
+	r.color = color
 	r.health = HEALTH_MAX
 	r.x = 0
 	r.RandomWalk()
 	r.visible = true
 }
 
-func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string) Rat {
-	nc := labelColors[nextLabelColor]
-	label := label.NewLabel(0, name, font, font.DefaultSize(), nc)
+func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor color.Color) Rat {
+	label := label.NewLabel(0, name, font, font.DefaultSize(), ratColor)
 	labelWidth, _ := label.Measure()
 	label.SetVisible(true)
-
-	nextLabelColor = (nextLabelColor + 1)
-	if nextLabelColor >= len(labelColors) {
-		nextLabelColor = 0
-	}
 
 	return &ratImpl{
 		audioPlayer: audioPlayer,
@@ -391,7 +387,7 @@ func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, n
 		visible:     true,
 		facing:      right,
 		ui:          ui,
-		color:       nc,
+		color:       ratColor,
 		health:      HEALTH_MAX,
 	}
 }

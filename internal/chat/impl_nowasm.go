@@ -25,6 +25,8 @@
 package chat
 
 import (
+	"image/color"
+
 	"github.com/gempir/go-twitch-irc/v4"
 )
 
@@ -57,7 +59,11 @@ func (c *chatGoTwitchIrcImpl) Connect(channel string) {
 }
 
 func (c *chatGoTwitchIrcImpl) onMessage(message twitch.PrivateMessage) {
-	c.eventCallback(Event{Type_: Message, Message: message.Message, Sender: message.User.DisplayName})
+	var userColor color.Color = color.RGBA{0, 0, 0, 255}
+	if colorStr, ok := message.Tags["color"]; ok {
+		userColor = paseHtmlColor(colorStr)
+	}
+	c.eventCallback(Event{Type_: Message, Message: message.Message, Sender: message.User.DisplayName, UserColor: userColor})
 }
 
 func (c *chatGoTwitchIrcImpl) onSelfJoinMessage(twitch.UserJoinMessage) {
