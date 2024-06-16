@@ -194,9 +194,6 @@ func (g *game) Draw(screen *ebiten.Image) {
 	} else if g.state == FADING_IN {
 		vector.DrawFilledRect(screen, 0, 0, float32(g.currentWidth), float32(g.currentHeight), color.RGBA{0, 0, 0, 255 - uint8(g.valueToChange.GetValue())}, true)
 	}
-
-	// TODO: remove
-	// g.font.Draw(screen, "v0.0.1.1349", 10, 10, 20, color.RGBA{255, 255, 255, 255})
 }
 
 func (g *game) Run() error {
