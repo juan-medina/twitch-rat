@@ -25,6 +25,7 @@ package playing
 import (
 	"fmt"
 	"image/color"
+	"math/rand"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -211,6 +212,32 @@ func (p *playing) OnLayoutChange(width, height float64) {
 	}
 }
 
+var (
+	labelColors []color.RGBA = []color.RGBA{
+		{0xFF, 0x00, 0x00, 0xFF}, // Red
+		{0x00, 0xFF, 0x00, 0xFF}, // Green
+		{0xFF, 0xFF, 0x00, 0xFF}, // Yellow
+		{0xFF, 0x00, 0xFF, 0xFF}, // Magenta
+		{0x00, 0xFF, 0xFF, 0xFF}, // Cyan
+		{0xFF, 0x7F, 0x00, 0xFF}, // Gold
+		{0x7F, 0x00, 0xFF, 0xFF}, // Purple
+		{0xFF, 0x00, 0x7F, 0xFF}, // Orange
+		{0x00, 0x80, 0x00, 0xFF}, // Dark Green
+		{0x80, 0x00, 0x80, 0xFF}, // Maroon
+		{0x00, 0x80, 0x80, 0xFF}, // Dark Red
+		{0x00, 0xFF, 0x80, 0xFF}, // Dark Yellow
+		{0xFF, 0x00, 0x80, 0xFF}, // Dark Magenta
+		{0x00, 0x80, 0xFF, 0xFF}, // Dark Cyan
+		{0x80, 0x00, 0xFF, 0xFF}, // Dark Blue
+		{0x80, 0x80, 0x00, 0xFF}, // Dark Brown
+		{0x80, 0x80, 0x80, 0xFF}, // Dark Gray
+		{0x80, 0xC0, 0x80, 0xFF}, // Dark Olive
+		{0x00, 0x00, 0x80, 0xFF}, // Dark Navy
+		{0x00, 0x00, 0xFF, 0xFF}, // Black
+	}
+	nextLabelColor = rand.Intn(len(labelColors))
+)
+
 func (p *playing) onButtonClick(id button.Id) {
 	switch id {
 	case ui.BACK_BUTTON:
@@ -223,7 +250,9 @@ func (p *playing) onButtonClick(id button.Id) {
 	case ui.DEBUG_BUTTON:
 		user := p.ui.GetInputText(ui.INPUT_DEBUG_USER)
 		message := p.ui.GetInputText(ui.INPUT_DEBUG_MESSAGE)
-		p.onChatEvent(chat.Event{Type_: chat.Message, Sender: user, Message: message})
+		userColor := labelColors[nextLabelColor]
+		nextLabelColor = (nextLabelColor + 1) % len(labelColors)
+		p.onChatEvent(chat.Event{Type_: chat.Message, Sender: user, Message: message, UserColor: userColor})
 	}
 }
 func (p *playing) onChatEvent(e chat.Event) {
