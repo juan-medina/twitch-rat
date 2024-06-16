@@ -23,17 +23,14 @@
 package ui
 
 import (
-	"bytes"
 	"embed"
 	"image/color"
-	"io/fs"
-	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
+	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
@@ -69,8 +66,6 @@ type UI interface {
 	SetSliderVisible(id slider.Id, visible bool)
 	SetSliderValue(id slider.Id, value float64)
 	SetSliderChangeCallback(callback func(id slider.Id, value float64))
-
-	GetSmallFace() text.Face
 }
 
 var (
@@ -81,10 +76,6 @@ type uiImpl struct {
 	screenWidth  float64
 	screenHeight float64
 	fileSystem   embed.FS
-	faceSource   *text.GoTextFaceSource
-	smallFace    *text.GoTextFace
-	normalFace   *text.GoTextFace
-	bigFace      *text.GoTextFace
 	buttons      []button.Button
 	inputs       []input.Input
 	labels       []label.Label
@@ -93,6 +84,9 @@ type uiImpl struct {
 	audioPlayer  audio.Player
 	licenseText  string
 	aboutText    string
+	fontSmall    draw.Font
+	fontNormal   draw.Font
+	fontBig      draw.Font
 }
 
 const (
@@ -158,71 +152,44 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 	data, _ = fileSystem.ReadFile("embed/text/about.txt")
 	u.aboutText = string(data)
 
-	fontBytes, err := fs.ReadFile(u.fileSystem, "embed/fonts/default.ttf")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(fontBytes))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	u.faceSource = s
-
-	u.smallFace = &text.GoTextFace{
-		Source: u.faceSource,
-		Size:   12,
-	}
-
-	u.normalFace = &text.GoTextFace{
-		Source: u.faceSource,
-		Size:   24,
-	}
-
-	u.bigFace = &text.GoTextFace{
-		Source: u.faceSource,
-		Size:   40,
-	}
-
 	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
 		id := LABEL_LAST_MESSAGE + label.Id(i)
-		u.addLabel(id, "", u.normalFace, u.normalFace.Size, normalLabelColor)
+		u.addLabel(id, "", u.fontSmall, normalLabelColor)
 	}
 
-	u.addLabel(LABEL_TITLE, "Twitch Rat", u.bigFace, u.bigFace.Size, normalLabelColor)
+	u.addLabel(LABEL_TITLE, "Twitch Rat", u.fontBig, normalLabelColor)
 
 	versionStr := "v0.0.0"
 	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
 		versionStr = "v" + string(data)
 	}
-	u.addLabel(LABEL_VERSION, versionStr, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addLabel(LABEL_VERSION, versionStr, u.fontSmall, normalLabelColor)
 
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 
-	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel")
-	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.normalFace, "Play!", button.Enabled)
-	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, u.smallFace, "X", button.Enabled)
-	u.addButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Options", button.Enabled)
-	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "About", button.Enabled)
+	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
+	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
+	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, u.fontSmall, "X", button.Enabled)
+	u.addButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Options", button.Enabled)
+	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
 
-	u.addLabel(LABEL_ABOUT_MESSAGE, u.aboutText, u.smallFace, u.smallFace.Size, normalLabelColor)
-	u.addButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Back", button.Enabled)
-	u.addButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Back", button.Enabled)
+	u.addLabel(LABEL_ABOUT_MESSAGE, u.aboutText, u.fontSmall, normalLabelColor)
+	u.addButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
+	u.addButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 
-	u.addLabel(LABEL_LICENSE, u.licenseText, u.smallFace, u.smallFace.Size, normalLabelColor)
-	u.addButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.smallFace, "Accept", button.Enabled)
+	u.addLabel(LABEL_LICENSE, u.licenseText, u.fontSmall, normalLabelColor)
+	u.addButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Accept", button.Enabled)
 
-	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.normalFace, u.normalFace.Size, normalLabelColor)
-	u.addSlider(MUSIC_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.fontNormal, normalLabelColor)
+	u.addSlider(MUSIC_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
 
-	u.addLabel(LABEL_OPTIONS_AUDIO_VOLUME, "Audio Volume", u.normalFace, u.normalFace.Size, normalLabelColor)
-	u.addSlider(AUDIO_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.smallFace, u.smallFace.Size, normalLabelColor)
+	u.addLabel(LABEL_OPTIONS_AUDIO_VOLUME, "Audio Volume", u.fontNormal, normalLabelColor)
+	u.addSlider(AUDIO_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
 
-	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User")
-	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message")
-	u.addButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.normalFace, "Debug", button.Enabled)
+	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User", u.fontNormal)
+	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message", u.fontNormal)
+	u.addButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Debug", button.Enabled)
 
 	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
 		u.SetLabelVisible(LABEL_LAST_MESSAGE+label.Id(i), true)
@@ -289,19 +256,19 @@ func (u *uiImpl) layoutMainElements(cx, cy float64) {
 	py = 0
 	u.moveButton(BACK_BUTTON, px, py)
 
-	gapX := u.normalFace.Size * 0.5
-	gapY := u.normalFace.Size * 1.0
+	gapX := float64(u.fontSmall.DefaultSize()) * 0.5
+	gapY := float64(u.fontSmall.DefaultSize()) * 1.5
 
-	py = u.screenHeight - gapY*2
+	py = u.screenHeight - gapY
 
 	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
 		labelId := LABEL_LAST_MESSAGE + label.Id(i)
 		u.getLabel(labelId).Move(gapX, py)
-		py -= u.normalFace.Size * 1.5
+		py -= u.fontSmall.DefaultSize()
 	}
 
-	gapX = u.smallFace.Size * 0.5
-	gapY = u.smallFace.Size * 1.5
+	gapX = u.fontSmall.DefaultSize() * 0.5
+	gapY = u.fontSmall.DefaultSize() * 1.5
 	versionLabel := u.getLabel(LABEL_VERSION)
 	cx, _ = versionLabel.Measure()
 	versionLabel.Move(u.screenWidth-cx-gapX, u.screenHeight-gapY)
@@ -334,7 +301,7 @@ func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
-	py := cy + BUTTON_GAP
+	py := cy + BUTTON_GAP*2
 	w, h := u.getLabel(LABEL_LICENSE).Measure()
 	u.moveLabel(LABEL_LICENSE, cx-(w/2), py)
 
@@ -344,7 +311,7 @@ func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
-	py := cy + BUTTON_GAP
+	py := cy + BUTTON_GAP*2
 	w, h := u.getLabel(LABEL_ABOUT_MESSAGE).Measure()
 	u.moveLabel(LABEL_ABOUT_MESSAGE, cx-(w/2), py)
 
@@ -355,7 +322,7 @@ func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
 
 func (u *uiImpl) layoutOptionsSubMenuElements(cx, cy float64) {
 	px := cx - SLIDER_WITH/2
-	py := cy + BUTTON_GAP
+	py := cy + BUTTON_GAP*2
 
 	u.moveLabel(LABEL_OPTIONS_MUSIC_VOLUME, px, py)
 
@@ -418,8 +385,8 @@ func (u *uiImpl) moveButton(id button.Id, x, y float64) {
 	}
 }
 
-func (u *uiImpl) addButton(id button.Id, w, h float64, face *text.GoTextFace, label string, state button.State) {
-	u.buttons = append(u.buttons, button.New(id, w, h, label, face, u.audioPlayer, state))
+func (u *uiImpl) addButton(id button.Id, w, h float64, font draw.Font, label string, state button.State) {
+	u.buttons = append(u.buttons, button.New(id, w, h, label, font, font.DefaultSize(), u.audioPlayer, state))
 }
 
 func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {
@@ -487,8 +454,8 @@ func (ui uiImpl) IsInputEditing(id input.Id) bool {
 	return false
 }
 
-func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText string, placeHolder string) {
-	u.inputs = append(u.inputs, input.New(id, w, h, maxLength, initialText, placeHolder, u.normalFace, u.audioPlayer))
+func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText string, placeHolder string, font draw.Font) {
+	u.inputs = append(u.inputs, input.New(id, w, h, maxLength, initialText, placeHolder, font, font.DefaultSize(), u.audioPlayer))
 }
 
 func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
@@ -498,8 +465,8 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 	}
 }
 
-func (u *uiImpl) addLabel(id label.Id, text string, face *text.GoTextFace, lineHeight float64, color color.Color) {
-	u.labels = append(u.labels, label.New(id, text, face, lineHeight, color))
+func (u *uiImpl) addLabel(id label.Id, text string, font draw.Font, color color.Color) {
+	u.labels = append(u.labels, label.NewLabel(id, text, font, font.DefaultSize(), color))
 }
 
 func (u *uiImpl) getLabel(id label.Id) label.Label {
@@ -575,8 +542,8 @@ func (ui *uiImpl) SetSliderValue(id slider.Id, value float64) {
 	}
 }
 
-func (ui *uiImpl) addSlider(id slider.Id, w, h float64, face *text.GoTextFace, lineHeight float64, labelColor color.Color) {
-	ui.sliders = append(ui.sliders, slider.New(id, w, h, face, lineHeight, labelColor))
+func (ui *uiImpl) addSlider(id slider.Id, w, h float64, font draw.Font, labelColor color.Color) {
+	ui.sliders = append(ui.sliders, slider.New(id, w, h, font, font.DefaultSize(), labelColor))
 }
 
 func (u *uiImpl) updateSliders(mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, elapsedTime int) {
@@ -591,12 +558,11 @@ func (u *uiImpl) SetSliderChangeCallback(callback func(id slider.Id, value float
 	}
 }
 
-func (u uiImpl) GetSmallFace() text.Face {
-	return u.smallFace
-}
-
-func New(audioPlayer audio.Player) UI {
+func New(audioPlayer audio.Player, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {
 	return &uiImpl{
 		audioPlayer: audioPlayer,
+		fontSmall:   fontSmall,
+		fontNormal:  fontNormal,
+		fontBig:     fontBig,
 	}
 }

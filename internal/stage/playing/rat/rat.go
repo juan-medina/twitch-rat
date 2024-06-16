@@ -29,7 +29,6 @@ import (
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
@@ -43,7 +42,7 @@ const (
 	DEAD_SOUND             = "embed/sounds/dead.ogg"
 	RAT_SCALE              = 4
 	RAT_Y_POS              = 768
-	LABEL_GAP              = 15
+	LABEL_GAP              = 25
 	ARENA_LEFT_X           = -750
 	ARENA_RIGHT_X          = 670
 	WALK_SPEED             = 0.1
@@ -53,7 +52,7 @@ const (
 	WAIT_TO_WALK_AGAIN_MIN = 3000
 	WAIT_TO_WALK_AGAIN_MAX = 4500
 	WAIT_AFTER_HIT         = 1000
-	HEALTH_BAR_GAP         = 15
+	HEALTH_BAR_GAP         = 25
 	HEALTH_BAR_WIDTH       = 40
 	HEALTH_BAR_HEIGHT      = 10
 	HEALTH_MAX             = 100
@@ -369,9 +368,9 @@ func (r *ratImpl) ReSpawn() {
 	r.visible = true
 }
 
-func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, name string, face text.Face) Rat {
+func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string) Rat {
 	nc := labelColors[nextLabelColor]
-	label := label.New(0, name, face, 0, nc)
+	label := label.NewLabel(0, name, font, font.DefaultSize(), nc)
 	labelWidth, _ := label.Measure()
 	label.SetVisible(true)
 

@@ -34,6 +34,7 @@ type Sprite interface {
 	Size() (float64, float64)
 	SetPivot(x, y float64)
 	SetColor(color color.Color)
+	Filter(filter bool)
 }
 
 type spriteImpl struct {
@@ -42,6 +43,7 @@ type spriteImpl struct {
 	scale       float64
 	pivotX      float64
 	pivotY      float64
+	filter      bool
 }
 
 func (s *spriteImpl) Draw(screen *ebiten.Image, x, y float64, flippedX, flippedY bool) {
@@ -52,6 +54,12 @@ func (s *spriteImpl) Draw(screen *ebiten.Image, x, y float64, flippedX, flippedY
 	}
 	if flippedY {
 		ebitenScaleY = -ebitenScaleY
+	}
+
+	if s.filter {
+		s.drawOptions.Filter = ebiten.FilterLinear
+	} else {
+		s.drawOptions.Filter = ebiten.FilterNearest
 	}
 
 	s.drawOptions.GeoM.Reset()
@@ -77,12 +85,19 @@ func (s *spriteImpl) SetPivot(x, y float64) {
 func (s *spriteImpl) SetColor(color color.Color) {
 	s.drawOptions.ColorScale.Reset()
 	s.drawOptions.ColorScale.ScaleWithColor(color)
+	_, _, _, a := color.RGBA()
+	s.drawOptions.ColorScale.ScaleAlpha(float32(a) / 65536)
 }
 
+func (s *spriteImpl) Filter(filter bool) {
+	s.filter = filter
+}
 func NewSprite(image *ebiten.Image) Sprite {
 	return &spriteImpl{
 		image:       image,
 		drawOptions: &ebiten.DrawImageOptions{},
 		scale:       1,
+		pivotX:      0.5,
+		pivotY:      0.5,
 	}
 }

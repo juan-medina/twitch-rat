@@ -10,16 +10,18 @@ Welcome
 
 Resources :
 
-- Background graphics are part of "Sewer Asset Pack"
+- The Background graphics are part of "Sewer Asset Pack"
    by MakBadGam https://palehand.itch.io/sewer-asset-pack
 
-- Rats graphics are part of "Rodents - Animated Pixel Characters"
+- The Rats graphics are part of "Rodents - Animated Pixel Characters"
    by Pixelmia https://pixelmia.itch.io/
 
-- Music is part of "16-Bit Starter Pack" 
+- The Music is part of "16-Bit Starter Pack" 
    composed by Bert Cole https://bitbybitsound.com
 
 - Other graphics and sounds are part of "Kenney Game Assets All-in-1"
    by Kenney https://www.kenney.nl/
+
+- The font used is Pixeloid by GGBot https://ggbot.net/fonts
 
 - This game is powered by Ebitengine https://ebitengine.org/   

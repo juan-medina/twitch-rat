@@ -92,6 +92,7 @@ type playing struct {
 	audioPlayer   audio.Player
 	rats          draw.Sheet
 	herd          []rat.Rat
+	font          draw.Font
 }
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {
@@ -144,7 +145,7 @@ func (p *playing) processCommand(message string, user string) {
 	if command == "play" {
 		findRat := p.getRat(user)
 		if findRat == nil && len(p.herd) < MAX_RATS {
-			rat := rat.New(p.audioPlayer, p.rats, p.ui, user, p.ui.GetSmallFace())
+			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.font, user)
 			rat.RandomWalk()
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
@@ -228,7 +229,7 @@ func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player, font draw.Font) stage.Stage {
 	audioPlayer.LoadSong(GAME_MUSIC)
 	audioPlayer.LoadSound(rat.HIT_SOUND)
 	audioPlayer.LoadSound(rat.DEAD_SOUND)
@@ -248,6 +249,7 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 		audioPlayer: audioPlayer,
 		rats:        rats,
 		herd:        make([]rat.Rat, 0, MAX_RATS),
+		font:        font,
 	}
 	return &p
 }

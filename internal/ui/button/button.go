@@ -26,10 +26,10 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
+	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
@@ -175,13 +175,13 @@ func (b *button) Click() {
 	}
 }
 
-func New(id Id, w, h float64, text string, face *text.GoTextFace, audioPlayer audio.Player, state State) Button {
+func New(id Id, w, h float64, text string, font draw.Font, lineHeight float64, audioPlayer audio.Player, state State) Button {
 	audioPlayer.LoadSound(CLICK_SOUND)
 	b := button{
 		id:                  id,
 		w:                   w,
 		h:                   h,
-		label:               label.New(0, text, face, 0, buttonEnabledTextColor),
+		label:               label.NewLabel(0, text, font, lineHeight, buttonEnabledTextColor),
 		visible:             false,
 		buttonClickCallback: dummyButtonCallback,
 		audioPlayer:         audioPlayer,

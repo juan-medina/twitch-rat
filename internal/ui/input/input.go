@@ -26,10 +26,10 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
+	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
@@ -62,7 +62,6 @@ type input struct {
 	caretAlpha      step.Value
 	editing         bool
 	savedText       string
-	face            *text.GoTextFace
 	audioPlayer     audio.Player
 }
 
@@ -77,7 +76,7 @@ const (
 var (
 	inputBorderColor      = colors.DarkPurple
 	inputColor            = colors.White
-	inputTextColor        = colors.Black
+	inputTextColor        = colors.Purple
 	inputPlaceHolderColor = colors.Gray
 	caretColor            = colors.Violet
 )
@@ -247,7 +246,7 @@ func (i *input) Move(x, y float64) {
 	i.textPlaceHolder.Move(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
 }
 
-func New(id Id, w, h float64, maxLength int, initialText string, placeholder string, face *text.GoTextFace, audioPlayer audio.Player) Input {
+func New(id Id, w, h float64, maxLength int, initialText string, placeholder string, font draw.Font, lineHeight float64, audioPlayer audio.Player) Input {
 	audioPlayer.LoadSound(MOUSE_CLICK_SOUND)
 	audioPlayer.LoadSound(KEY_PRESS_SOUND)
 	return &input{
@@ -258,11 +257,10 @@ func New(id Id, w, h float64, maxLength int, initialText string, placeholder str
 		borderColor:     inputBorderColor,
 		color:           inputColor,
 		visible:         false,
-		textLabel:       label.New(0, initialText, face, 0, inputTextColor),
-		textPlaceHolder: label.New(0, placeholder, face, 0, inputPlaceHolderColor),
-		caretLabel:      label.New(0, "|", face, 0, caretColor),
+		textLabel:       label.NewLabel(0, initialText, font, lineHeight, inputTextColor),
+		textPlaceHolder: label.NewLabel(0, placeholder, font, lineHeight, inputPlaceHolderColor),
+		caretLabel:      label.NewLabel(0, "|", font, lineHeight, caretColor),
 		caretAlpha:      step.NewPingPongValue(0, 1, 200, 100),
-		face:            face,
 		audioPlayer:     audioPlayer,
 	}
 }

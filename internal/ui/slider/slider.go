@@ -27,9 +27,9 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/colors"
+	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
@@ -189,7 +189,7 @@ func (s *sliderImpl) OnValueChangeCallback(onValueChange func(id Id, value float
 
 }
 
-func New(id Id, w, h float64, face *text.GoTextFace, lineHeight float64, labelColor color.Color) Slider {
+func New(id Id, w, h float64, font draw.Font, lineHeight float64, labelColor color.Color) Slider {
 	markerWidth := w * 0.05
 	markerHeight := h + (h * 0.40)
 
@@ -198,7 +198,7 @@ func New(id Id, w, h float64, face *text.GoTextFace, lineHeight float64, labelCo
 		w:                   w,
 		h:                   h,
 		color:               sliderColor,
-		valueLabel:          label.New(0, " 100%", face, lineHeight, labelColor),
+		valueLabel:          label.NewLabel(0, " 100%", font, lineHeight, labelColor),
 		markerWidth:         markerWidth,
 		markerHeight:        markerHeight,
 		markerColor:         markerNormalColor,
