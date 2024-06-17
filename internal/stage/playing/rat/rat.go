@@ -56,7 +56,7 @@ const (
 	HEALTH_BAR_GAP         = 22
 	HEALTH_BAR_WIDTH       = 80
 	HEALTH_BAR_HEIGHT      = 15
-	HEALTH_MAX             = 200
+	HEALTH_MAX             = 100
 	RAT_DAMAGE             = 20
 	RAT_HEAL               = 20
 	CRIT_CHANGE            = 0.25
