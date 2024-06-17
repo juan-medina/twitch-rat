@@ -56,9 +56,11 @@ const (
 	HEALTH_BAR_GAP         = 22
 	HEALTH_BAR_WIDTH       = 80
 	HEALTH_BAR_HEIGHT      = 15
-	HEALTH_MAX             = 100
+	HEALTH_MAX             = 200
 	RAT_DAMAGE             = 20
 	RAT_HEAL               = 20
+	CRIT_CHANGE            = 0.25
+	MOD_VALUE              = 0.25
 )
 
 type Rat interface {
@@ -74,12 +76,13 @@ type Rat interface {
 	CanDoAction() bool
 	Attack(otherRat Rat)
 	GetX() float64
-	Hurt(hit int) (amount int, over int)
+	Hurt(hit int) (amount int, over int, crit bool)
 	IsAlive() bool
 	ReSpawn(color colors.CustomColor)
 	GetColor() colors.CustomColor
 	Heal(otherRat Rat)
-	Cure(amount int) (total int, over int)
+	Cure(heal int) (amount int, over int, crit bool)
+	Modify(points int) (value int, crit bool)
 }
 
 type animation struct {
@@ -153,7 +156,7 @@ func (r *ratImpl) Draw(screen *ebiten.Image) {
 	r.sprite.Draw(screen, r.screenCenterX+r.x, r.y, r.facing == left, false)
 	r.nameLabel.Draw(screen)
 
-	greenWidth := float32(float64(HEALTH_BAR_WIDTH) * (float64(r.health) / 100.0))
+	greenWidth := float32(float64(HEALTH_BAR_WIDTH) * (float64(r.health) / HEALTH_MAX))
 	redWidth := float32(HEALTH_BAR_WIDTH - greenWidth)
 	redStart := float32(float32(r.barX) + greenWidth)
 
@@ -215,8 +218,8 @@ func (r *ratImpl) Update(elapsedTime int) {
 					r.idle()
 					r.SetAnimation(FIGHT_ANIM)
 					r.waitingTime = WAIT_AFTER_HIT
-					damage, over := r.target.Hurt(RAT_DAMAGE)
-					r.logDamage(damage, over)
+					damage, over, crit := r.target.Hurt(RAT_DAMAGE)
+					r.logDamage(damage, over, crit)
 					r.audioPlayer.PlaySound(HIT_SOUND)
 					r.target = nil
 				}
@@ -238,8 +241,8 @@ func (r *ratImpl) Update(elapsedTime int) {
 		r.updateDestinationToTarget()
 		r.vx = 0
 		if r.animationStatus.end {
-			heal, over := r.target.Cure(RAT_HEAL)
-			r.logHeal(heal, over)
+			heal, over, crit := r.target.Cure(RAT_HEAL)
+			r.logHeal(heal, over, crit)
 			r.target = nil
 			r.idle()
 			r.audioPlayer.PlaySound(HEAL_SOUND)
@@ -298,10 +301,10 @@ func (r *ratImpl) RandomWalk() {
 	r.state = walking
 	r.waitingTime = 0
 }
-func (r *ratImpl) Hurt(hit int) (amount int, over int) {
-	amount = hit
+func (r *ratImpl) Hurt(hit int) (amount int, over int, crit bool) {
+	amount, crit = r.Modify(hit)
 	original := r.health
-	r.health -= hit
+	r.health -= amount
 	if r.health <= 0 {
 		r.health = 0
 		r.SetAnimation(DEAD_ANIM)
@@ -396,18 +399,18 @@ func (r ratImpl) GetColor() colors.CustomColor {
 	return r.color
 }
 
-func (r *ratImpl) Cure(amount int) (total int, over int) {
-	total = amount
+func (r *ratImpl) Cure(heal int) (amount int, over int, crit bool) {
+	amount, crit = r.Modify(heal)
 	original := r.health
 	r.health += amount
 	if r.health >= HEALTH_MAX {
 		r.health = HEALTH_MAX
 	}
-	over = amount - (r.health - original)
+	over = heal - (r.health - original)
 	return
 }
 
-func (r ratImpl) logHeal(amount, over int) {
+func (r ratImpl) logHeal(amount, over int, crit bool) {
 	targetColor := r.target.GetColor()
 	var healStr = ""
 	if r.name == r.target.GetName() {
@@ -419,8 +422,17 @@ func (r ratImpl) logHeal(amount, over int) {
 			targetColor.Tag() + r.target.GetName()
 	}
 
-	healStr += colors.Yellow.Tag() + " by " +
-		colors.Green.Tag() + strconv.Itoa(amount)
+	healStr += colors.Yellow.Tag() + " by " + colors.Green.Tag()
+
+	if crit {
+		healStr += "*"
+	}
+
+	healStr += strconv.Itoa(amount)
+
+	if crit {
+		healStr += "* CRITICAL"
+	}
 
 	if over > 0 {
 		healStr += colors.Yellow.Tag() + " (" +
@@ -431,7 +443,7 @@ func (r ratImpl) logHeal(amount, over int) {
 	r.ui.SetStatusMessage(healStr, colors.Yellow)
 }
 
-func (r ratImpl) logDamage(amount, over int) {
+func (r ratImpl) logDamage(amount, over int, crit bool) {
 	targetColor := r.target.GetColor()
 	var damageStr = ""
 
@@ -439,8 +451,17 @@ func (r ratImpl) logDamage(amount, over int) {
 		colors.Yellow.Tag() + " hurt " +
 		targetColor.Tag() + r.target.GetName()
 
-	damageStr += colors.Yellow.Tag() + " by " +
-		colors.Red.Tag() + strconv.Itoa(amount)
+	damageStr += colors.Yellow.Tag() + " by " + colors.Red.Tag()
+
+	if crit {
+		damageStr += "*"
+	}
+
+	damageStr += strconv.Itoa(amount)
+
+	if crit {
+		damageStr += "* CRITICAL"
+	}
 
 	if over > 0 {
 		damageStr += colors.Yellow.Tag() + " (" +
@@ -454,6 +475,18 @@ func (r ratImpl) logDamage(amount, over int) {
 	}
 
 	r.ui.SetStatusMessage(damageStr, colors.Yellow)
+}
+
+func (r ratImpl) Modify(points int) (value int, crit bool) {
+	value = points
+	randomAmount := rand.Float64() * MOD_VALUE
+	value += int(randomAmount * float64(points))
+
+	if rand.Float64() < CRIT_CHANGE {
+		value *= 2
+		crit = true
+	}
+	return
 }
 
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor colors.CustomColor) Rat {
