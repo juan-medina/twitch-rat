@@ -196,6 +196,7 @@ func (f *fontImpl) Draw(screen *ebiten.Image, text string, x, y float64, size fl
 	currentPosX := x
 	currentPosY := y
 	scale := size / float64(f.fontDef.Common.LineHeight)
+	var currentChar runeDef
 	for _, r := range text {
 		if r == '\n' {
 			currentPosX = x
@@ -204,14 +205,18 @@ func (f *fontImpl) Draw(screen *ebiten.Image, text string, x, y float64, size fl
 			continue
 		}
 		if char, ok := f.runes[r]; ok {
-			char.sprite.SetScale(scale)
-			char.sprite.SetColor(color)
-			destX := currentPosX + (float64(char.xOffset) * scale)
-			destY := currentPosY + (float64(char.yOffset) * scale)
-			char.sprite.Draw(screen, destX, destY, false, false)
-			currentPosX += float64(char.xAdvance) * scale
-			currentPosX += f.spacingX * scale
+			currentChar = char
+		} else {
+			currentChar = f.runes[-1]
 		}
+		currentChar.sprite.SetScale(scale)
+		currentChar.sprite.SetColor(color)
+		destX := currentPosX + (float64(currentChar.xOffset) * scale)
+		destY := currentPosY + (float64(currentChar.yOffset) * scale)
+		currentChar.sprite.Draw(screen, destX, destY, false, false)
+		currentPosX += float64(currentChar.xAdvance) * scale
+		currentPosX += f.spacingX * scale
+
 	}
 }
 func (f fontImpl) Measure(text string, size float64) (float64, float64) {
@@ -222,6 +227,7 @@ func (f fontImpl) Measure(text string, size float64) (float64, float64) {
 	currentPosX := x
 	currentPosY := y
 	scale := size / float64(f.fontDef.Common.LineHeight)
+	var currentChar runeDef
 	for _, r := range text {
 		if r == '\n' {
 			currentPosX = x
@@ -230,9 +236,13 @@ func (f fontImpl) Measure(text string, size float64) (float64, float64) {
 			continue
 		}
 		if char, ok := f.runes[r]; ok {
-			currentPosX += float64(char.xAdvance) * scale
-			currentPosX += f.spacingX * scale
+			currentChar = char
+		} else {
+			currentChar = f.runes[-1]
 		}
+		currentPosX += float64(currentChar.xAdvance) * scale
+		currentPosX += f.spacingX * scale
+
 		if currentPosX > maxX {
 			maxX = currentPosX
 		}
