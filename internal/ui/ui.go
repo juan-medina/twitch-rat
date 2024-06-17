@@ -286,7 +286,7 @@ func (u *uiImpl) layoutMainElements(cx, cy float64) {
 
 func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
 	px := cx - (INPUT_WIDTH / 2)
-	py := cy + (INPUT_HEIGHT / 2) + BUTTON_GAP
+	py := cy + (INPUT_HEIGHT / 2) + BUTTON_GAP*2
 	u.moveInput(INPUT_CHANNEL, px, py)
 
 	px = cx - (BUTTON_WIDTH / 2)
@@ -301,7 +301,7 @@ func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
-	py := cy + BUTTON_GAP*2
+	py := cy + BUTTON_GAP*3
 	w, h := u.getLabel(LABEL_LICENSE).Measure()
 	u.moveLabel(LABEL_LICENSE, cx-(w/2), py)
 
@@ -311,7 +311,7 @@ func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
-	py := cy + BUTTON_GAP*2
+	py := cy + BUTTON_GAP*3
 	w, h := u.getLabel(LABEL_ABOUT_MESSAGE).Measure()
 	u.moveLabel(LABEL_ABOUT_MESSAGE, cx-(w/2), py)
 
@@ -322,7 +322,7 @@ func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
 
 func (u *uiImpl) layoutOptionsSubMenuElements(cx, cy float64) {
 	px := cx - SLIDER_WITH/2
-	py := cy + BUTTON_GAP*2
+	py := cy + BUTTON_GAP*3
 
 	u.moveLabel(LABEL_OPTIONS_MUSIC_VOLUME, px, py)
 

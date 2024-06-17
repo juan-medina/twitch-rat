@@ -1,27 +1,27 @@
-Welcome 
+ͼCFCF00FFWelcomeͼFFFFFFFF
 
   Twitch Rat is a small game that was developed
-   to be used as a AFK/intro screen for any streamer. 
+   to be used as a AFK/intro screen for any streamer.
 
   I hope you enjoy it and feel free to share with your
     friends & community.
 
-  Juan Medina
+  ͼC87AFFFFJuan MedinaͼFFFFFFFF
 
-Resources :
+ͼCFCF00FFResources :ͼFFFFFFFF
 
 - The Background graphics are part of "Sewer Asset Pack"
-   by MakBadGam https://palehand.itch.io/sewer-asset-pack
+   by ͼC87AFFFFMakBadGam ͼ00FFFFFFhttps://www.patreon.com/MakbadgamͼFFFFFFFF
 
 - The Rats graphics are part of "Rodents - Animated Pixel Characters"
-   by Pixelmia https://pixelmia.itch.io/
+   by ͼC87AFFFFPixelmia ͼ00FFFFFFhttps://pixelmia.itch.io/ͼFFFFFFFF
 
-- The Music is part of "16-Bit Starter Pack" 
-   composed by Bert Cole https://bitbybitsound.com
+- The Music is part of "16-Bit Starter Pack"
+   composed by ͼC87AFFFFBert Cole ͼ00FFFFFFhttps://bitbybitsound.comͼFFFFFFFF
 
 - Other graphics and sounds are part of "Kenney Game Assets All-in-1"
-   by Kenney https://www.kenney.nl/
+   by ͼC87AFFFFKenney ͼ00FFFFFFhttps://www.kenney.nl/ͼFFFFFFFF
 
-- The font used is Pixeloid by GGBot https://ggbot.net/fonts
+- The font used is Pixeloid by ͼC87AFFFFGGBot ͼ00FFFFFFhttps://ggbot.net/fontsͼFFFFFFFF
 
-- This game is powered by Ebitengine https://ebitengine.org/   
+- This game is powered by ͼC87AFFFFEbitengine ͼ00FFFFFFhttps://ebitengine.org/ͼFFFFFFFF
