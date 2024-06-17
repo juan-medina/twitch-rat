@@ -129,9 +129,17 @@ func NewLoopValue(initial, end float32, timeToChange int) Value {
 	return &value
 }
 
-func NewFromToPauseValue(initial, end float32, timeToChange int, endTime int) Value {
+func NewFromToPauseValue(initial, end float32, timeToChange int, timeAtEnd int) Value {
 	value := newStep()
 	value.AddStep(initial, end, timeToChange, Next)
-	value.AddStep(end, end, endTime, End)
+	value.AddStep(end, end, timeAtEnd, End)
+	return &value
+}
+
+func NewFromMiddleToPauseValue(initial, middle float32, end float32, timeToMiddle int, timeToEnd int, timeAtEnd int) Value {
+	value := newStep()
+	value.AddStep(initial, middle, timeToMiddle, Next)
+	value.AddStep(middle, end, timeToEnd, Next)
+	value.AddStep(end, end, timeAtEnd, End)
 	return &value
 }

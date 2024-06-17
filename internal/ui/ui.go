@@ -32,6 +32,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/keys"
+	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
@@ -66,11 +67,21 @@ type UI interface {
 	SetSliderVisible(id slider.Id, visible bool)
 	SetSliderValue(id slider.Id, value float64)
 	SetSliderChangeCallback(callback func(id slider.Id, value float64))
+	AddFlyingText(text string, color colors.CustomColor, x, y float64)
 }
 
 var (
 	normalLabelColor = colors.White
 )
+
+type flyingText struct {
+	text    string
+	color   colors.CustomColor
+	alpha   step.Value
+	x, y    float64
+	vy      float64
+	visible bool
+}
 
 type uiImpl struct {
 	screenWidth  float64
@@ -87,6 +98,7 @@ type uiImpl struct {
 	fontSmall    draw.Font
 	fontNormal   draw.Font
 	fontBig      draw.Font
+	flyingTexts  []flyingText
 }
 
 const (
@@ -107,6 +119,11 @@ const (
 	SLIDER_WITH                  = 300
 	SLIDER_HEIGHT                = 30
 	TOTAL_LAST_MESSAGES          = 10
+	MAX_FLYING_TEXTS             = 20
+	FLYING_TEXT_VY               = 0.10
+	FLYING_TIME_FULL             = 1000
+	FLYING_TIME_TO_VANISH        = 500
+	FLYING_TIME_TO_FREE          = 1
 )
 
 const (
@@ -215,6 +232,17 @@ func (u *uiImpl) Draw(screen *ebiten.Image) {
 	for _, s := range u.sliders {
 		s.Draw(screen)
 	}
+
+	for _, f := range u.flyingTexts {
+		f.draw(screen, u.fontSmall)
+	}
+}
+
+func (f flyingText) draw(screen *ebiten.Image, font draw.Font) {
+	if !f.visible {
+		return
+	}
+	font.Draw(screen, f.text, f.x, f.y, font.DefaultSize(), f.color)
 }
 
 func (u *uiImpl) Update(elapsedTime int) {
@@ -227,6 +255,22 @@ func (u *uiImpl) Update(elapsedTime int) {
 	u.updateButtons(x, y, justPressed, elapsedTime)
 	u.updateInputs(x, y, justPressed, elapsedTime)
 	u.updateSliders(x, y, justPressed, pressed, elapsedTime)
+	u.updateFlyingTexts(elapsedTime)
+}
+
+func (u *uiImpl) updateFlyingTexts(elapsedTime int) {
+	for i := range u.flyingTexts {
+		if u.flyingTexts[i].visible {
+			u.flyingTexts[i].y -= (u.flyingTexts[i].vy * float64(elapsedTime))
+			if u.flyingTexts[i].alpha.Update(elapsedTime) {
+				newAlpha := uint8(u.flyingTexts[i].alpha.GetValue())
+				u.flyingTexts[i].color = u.flyingTexts[i].color.NewWithAlpha(newAlpha)
+				if u.flyingTexts[i].alpha.IsAtEnd() {
+					u.flyingTexts[i].visible = false
+				}
+			}
+		}
+	}
 }
 
 func (u *uiImpl) SetStatusMessage(message string, textColor color.Color) {
@@ -558,11 +602,38 @@ func (u *uiImpl) SetSliderChangeCallback(callback func(id slider.Id, value float
 	}
 }
 
+func (u *uiImpl) AddFlyingText(text string, color colors.CustomColor, x, y float64) {
+	dx, _ := u.fontSmall.Measure(text, u.fontSmall.DefaultSize())
+	px := x - (dx / 2)
+	for i := range u.flyingTexts {
+		if !u.flyingTexts[i].visible {
+			u.flyingTexts[i].visible = true
+			u.flyingTexts[i].text = text
+			u.flyingTexts[i].color = color
+			u.flyingTexts[i].x = px
+			u.flyingTexts[i].y = y
+			u.flyingTexts[i].vy = FLYING_TEXT_VY
+			u.flyingTexts[i].alpha.Reset()
+			return
+		}
+	}
+	u.flyingTexts = append(u.flyingTexts, flyingText{
+		visible: true,
+		text:    text,
+		color:   color,
+		x:       px,
+		y:       y,
+		vy:      FLYING_TEXT_VY,
+		alpha:   step.NewFromMiddleToPauseValue(255, 255, 0, FLYING_TIME_FULL, FLYING_TIME_TO_VANISH, FLYING_TIME_TO_FREE),
+	})
+}
+
 func New(audioPlayer audio.Player, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {
 	return &uiImpl{
 		audioPlayer: audioPlayer,
 		fontSmall:   fontSmall,
 		fontNormal:  fontNormal,
 		fontBig:     fontBig,
+		flyingTexts: make([]flyingText, 0, MAX_FLYING_TEXTS),
 	}
 }

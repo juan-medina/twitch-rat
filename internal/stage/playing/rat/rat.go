@@ -83,6 +83,7 @@ type Rat interface {
 	Heal(otherRat Rat)
 	Cure(heal int) (amount int, over int, crit bool)
 	Modify(points int) (value int, crit bool)
+	AddFlyingText(text string, color colors.CustomColor)
 }
 
 type animation struct {
@@ -138,6 +139,7 @@ type ratImpl struct {
 	barX                float64
 	barY                float64
 	health              int
+	flyingTextY         float64
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -186,6 +188,8 @@ func (r *ratImpl) moveLabel() {
 
 	r.barX = r.screenCenterX + r.x - HEALTH_BAR_WIDTH/2
 	r.barY = y + HEALTH_BAR_GAP
+
+	r.flyingTextY = r.y - (rh / 2)
 }
 
 func (r *ratImpl) Update(elapsedTime int) {
@@ -441,6 +445,12 @@ func (r ratImpl) logHeal(amount, over int, crit bool) {
 	}
 
 	r.ui.SetStatusMessage(healStr, colors.Yellow)
+
+	healStr = strconv.Itoa(amount)
+	if crit {
+		healStr = "*" + healStr + "*"
+	}
+	r.target.AddFlyingText(healStr, colors.Green)
 }
 
 func (r ratImpl) logDamage(amount, over int, crit bool) {
@@ -475,6 +485,12 @@ func (r ratImpl) logDamage(amount, over int, crit bool) {
 	}
 
 	r.ui.SetStatusMessage(damageStr, colors.Yellow)
+
+	damageStr = strconv.Itoa(amount)
+	if crit {
+		damageStr = "*" + damageStr + "*"
+	}
+	r.target.AddFlyingText(damageStr, colors.Red)
 }
 
 func (r ratImpl) Modify(points int) (value int, crit bool) {
@@ -487,6 +503,10 @@ func (r ratImpl) Modify(points int) (value int, crit bool) {
 		crit = true
 	}
 	return
+}
+
+func (r ratImpl) AddFlyingText(text string, color colors.CustomColor) {
+	r.ui.AddFlyingText(text, color, r.screenCenterX+r.x, r.flyingTextY)
 }
 
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor colors.CustomColor) Rat {

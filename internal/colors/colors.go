@@ -34,6 +34,7 @@ const (
 type CustomColor interface {
 	RGBA() (r, g, b, a uint32)
 	Tag() string
+	NewWithAlpha(a uint8) CustomColor
 }
 
 type customColorImpl struct {
@@ -81,6 +82,10 @@ func (c customColorImpl) RGBA() (r, g, b, a uint32) {
 	a = uint32(c.a)
 	a |= a << 8
 	return
+}
+
+func (c *customColorImpl) NewWithAlpha(a uint8) CustomColor {
+	return New(c.r, c.g, c.b, a)
 }
 func (c customColorImpl) Tag() string {
 	return c.tagged(TEXT_TAG)
