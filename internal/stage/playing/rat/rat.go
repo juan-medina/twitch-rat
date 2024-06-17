@@ -52,9 +52,9 @@ const (
 	WAIT_TO_WALK_AGAIN_MIN = 3000
 	WAIT_TO_WALK_AGAIN_MAX = 4500
 	WAIT_AFTER_HIT         = 1000
-	HEALTH_BAR_GAP         = 25
-	HEALTH_BAR_WIDTH       = 40
-	HEALTH_BAR_HEIGHT      = 10
+	HEALTH_BAR_GAP         = 22
+	HEALTH_BAR_WIDTH       = 80
+	HEALTH_BAR_HEIGHT      = 15
 	HEALTH_MAX             = 100
 	RAT_DAMAGE             = 20
 )
