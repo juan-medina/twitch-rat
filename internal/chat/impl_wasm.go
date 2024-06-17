@@ -25,9 +25,9 @@
 package chat
 
 import (
-	"fmt"
-	"image/color"
 	"syscall/js"
+
+	"github.com/juan-medina/twitch-rat/internal/colors"
 )
 
 type chatWasmImpl struct {
@@ -47,12 +47,11 @@ func (c *chatWasmImpl) chatMessage(this js.Value, p []js.Value) interface{} {
 	message := p[1].String()
 	colorStr := p[2].String()
 
-	var userColor color.Color = color.RGBA{0, 0, 0, 255}
+	var userColor = colors.Black
 	if colorStr != "" {
-		userColor = paseHtmlColor(colorStr)
+		userColor = colors.FromHtml(colorStr)
 	}
 
-	fmt.Printf("color: %s object: %v\n", colorStr, userColor)
 	c.eventCallback(Event{Type_: Message, Message: message, Sender: user, UserColor: userColor})
 	return nil
 }

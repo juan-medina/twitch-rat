@@ -24,9 +24,9 @@ package rat
 
 import (
 	"fmt"
-	"image/color"
 	"math"
 	"math/rand"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -74,7 +74,8 @@ type Rat interface {
 	GetX() float64
 	Hurt(hit int)
 	IsAlive() bool
-	ReSpawn(color color.Color)
+	ReSpawn(color colors.CustomColor)
+	GetColor() colors.CustomColor
 }
 
 type animation struct {
@@ -125,7 +126,7 @@ type ratImpl struct {
 	target              Rat
 	ui                  ui.UI
 	audioPlayer         audio.Player
-	color               color.Color
+	color               colors.CustomColor
 	barX                float64
 	barY                float64
 	health              int
@@ -185,6 +186,9 @@ func (r *ratImpl) Update(elapsedTime int) {
 	}
 
 	r.SetX(r.x + r.vx*float64(elapsedTime))
+	if x := r.GetX(); x < ARENA_LEFT_X || x > ARENA_RIGHT_X {
+		r.RandomWalk()
+	}
 
 	switch r.state {
 	case dead:
@@ -208,11 +212,25 @@ func (r *ratImpl) Update(elapsedTime int) {
 					r.waitingTime = WAIT_AFTER_HIT
 					r.target.Hurt(RAT_DAMAGE)
 					r.audioPlayer.PlaySound(HIT_SOUND)
+					targetColor := r.target.GetColor()
 					if r.target.IsAlive() {
-						r.ui.SetStatusMessage(fmt.Sprintf("%s hit %s with %d damage", r.name, r.target.GetName(), RAT_DAMAGE), colors.Yellow)
+						damageStr := r.color.Tag() + r.name +
+							colors.Yellow.Tag() + " hit " +
+							targetColor.Tag() + r.target.GetName() +
+							colors.Yellow.Tag() + " with " +
+							colors.Red.Tag() + strconv.Itoa(RAT_DAMAGE) +
+							colors.Yellow.Tag() + " damage"
+						r.ui.SetStatusMessage(damageStr, colors.Yellow)
 
 					} else {
-						r.ui.SetStatusMessage(fmt.Sprintf("%s hit %s with %d damage a kill it", r.name, r.target.GetName(), 20), colors.Red)
+						damageStr := r.color.Tag() + r.name +
+							colors.Yellow.Tag() + " hit " +
+							targetColor.Tag() + r.target.GetName() +
+							colors.Yellow.Tag() + " with " +
+							colors.Red.Tag() + strconv.Itoa(RAT_DAMAGE) +
+							colors.Yellow.Tag() + " damage and" +
+							colors.Red.Tag() + " kill it"
+						r.ui.SetStatusMessage(damageStr, colors.Yellow)
 					}
 					r.target = nil
 				}
@@ -312,7 +330,11 @@ func (r *ratImpl) Attack(otherRat Rat) {
 	r.target = otherRat
 	r.waitingTime = 0
 	r.updateDestinationToTarget()
-	r.ui.SetStatusMessage(fmt.Sprintf("%s is attacking %s", r.name, r.target.GetName()), colors.White)
+	targetColor := otherRat.GetColor()
+	damageStr := r.color.Tag() + r.name +
+		colors.White.Tag() + " is attacking " +
+		targetColor.Tag() + r.target.GetName()
+	r.ui.SetStatusMessage(damageStr, colors.White)
 }
 func (r *ratImpl) updateDestinationToTarget() {
 	r.vx = RUN_SPEED
@@ -335,7 +357,7 @@ func (r ratImpl) IsAlive() bool {
 	return r.health > 0
 }
 
-func (r *ratImpl) ReSpawn(color color.Color) {
+func (r *ratImpl) ReSpawn(color colors.CustomColor) {
 	r.nameLabel.SetColor(color)
 	r.color = color
 	r.health = HEALTH_MAX
@@ -344,7 +366,11 @@ func (r *ratImpl) ReSpawn(color color.Color) {
 	r.visible = true
 }
 
-func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor color.Color) Rat {
+func (r ratImpl) GetColor() colors.CustomColor {
+	return r.color
+}
+
+func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor colors.CustomColor) Rat {
 	label := label.NewLabel(0, name, font, font.DefaultSize(), ratColor)
 	labelWidth, _ := label.Measure()
 	label.SetVisible(true)

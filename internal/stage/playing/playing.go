@@ -24,7 +24,6 @@ package playing
 
 import (
 	"fmt"
-	"image/color"
 	"math/rand"
 	"strings"
 
@@ -105,7 +104,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 	case event := <-p.eventsChan:
 		switch event.Type_ {
 		case chat.Connect:
-			p.ui.SetStatusMessage("Connected to "+p.channel, colors.White)
+			p.ui.SetStatusMessage("Connected to "+colors.Green.Tag()+p.channel, colors.White)
 		case chat.Disconnect:
 			p.ui.SetStatusMessage("Disconnected", colors.White)
 		case chat.Message:
@@ -129,7 +128,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 	}
 }
 
-func (p *playing) processCommand(message string, user string, userColor color.Color) {
+func (p *playing) processCommand(message string, user string, userColor colors.CustomColor) {
 	lenStr := len(message)
 
 	firstSpace := strings.Index(message, " ")
@@ -154,23 +153,25 @@ func (p *playing) processCommand(message string, user string, userColor color.Co
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
 			p.herd = append(p.herd, rat)
-			p.ui.SetStatusMessage(fmt.Sprintf("%s spawned", user), colors.White)
+			p.ui.SetStatusMessage(fmt.Sprintf("%s%s%s join the fight!", userColor.Tag(), user, colors.White.Tag()), colors.White)
 		} else {
 			if !findRat.IsAlive() {
 				findRat.SetX(RAT_SPAWN_POINT)
 				findRat.ReSpawn(userColor)
 				findRat.SetCenter((p.currentWidth / 2))
-				p.ui.SetStatusMessage(fmt.Sprintf("%s re-spawned", user), colors.White)
+				p.ui.SetStatusMessage(fmt.Sprintf("%s%s%s rejoin", userColor.Tag(), user, colors.White.Tag()), colors.White)
 			}
 		}
 	} else if command == ATTACK_COMMAND {
 		if userRat := p.getRat(user); userRat != nil {
 			if userRat.CanAttack() {
 				if targetRat := p.getRat(args); targetRat != nil {
-					targetName := targetRat.GetName()
-					userName := userRat.GetName()
-					if targetName != userName {
-						userRat.Attack(targetRat)
+					if targetRat.IsAlive() {
+						targetName := targetRat.GetName()
+						userName := userRat.GetName()
+						if targetName != userName {
+							userRat.Attack(targetRat)
+						}
 					}
 				}
 			}
@@ -215,27 +216,27 @@ func (p *playing) OnLayoutChange(width, height float64) {
 }
 
 var (
-	labelColors []color.RGBA = []color.RGBA{
-		{0xFF, 0x00, 0x00, 0xFF}, // Red
-		{0x00, 0xFF, 0x00, 0xFF}, // Green
-		{0xFF, 0xFF, 0x00, 0xFF}, // Yellow
-		{0xFF, 0x00, 0xFF, 0xFF}, // Magenta
-		{0x00, 0xFF, 0xFF, 0xFF}, // Cyan
-		{0xFF, 0x7F, 0x00, 0xFF}, // Gold
-		{0x7F, 0x00, 0xFF, 0xFF}, // Purple
-		{0xFF, 0x00, 0x7F, 0xFF}, // Orange
-		{0x00, 0x80, 0x00, 0xFF}, // Dark Green
-		{0x80, 0x00, 0x80, 0xFF}, // Maroon
-		{0x00, 0x80, 0x80, 0xFF}, // Dark Red
-		{0x00, 0xFF, 0x80, 0xFF}, // Dark Yellow
-		{0xFF, 0x00, 0x80, 0xFF}, // Dark Magenta
-		{0x00, 0x80, 0xFF, 0xFF}, // Dark Cyan
-		{0x80, 0x00, 0xFF, 0xFF}, // Dark Blue
-		{0x80, 0x80, 0x00, 0xFF}, // Dark Brown
-		{0x80, 0x80, 0x80, 0xFF}, // Dark Gray
-		{0x80, 0xC0, 0x80, 0xFF}, // Dark Olive
-		{0x00, 0x00, 0x80, 0xFF}, // Dark Navy
-		{0x00, 0x00, 0xFF, 0xFF}, // Black
+	labelColors []colors.CustomColor = []colors.CustomColor{
+		colors.New(0xFF, 0x00, 0x00, 0xFF), // Red
+		colors.New(0x00, 0xFF, 0x00, 0xFF), // Green
+		colors.New(0xFF, 0xFF, 0x00, 0xFF), // Yellow
+		colors.New(0xFF, 0x00, 0xFF, 0xFF), // Magenta
+		colors.New(0x00, 0xFF, 0xFF, 0xFF), // Cyan
+		colors.New(0xFF, 0x7F, 0x00, 0xFF), // Gold
+		colors.New(0x7F, 0x00, 0xFF, 0xFF), // Purple
+		colors.New(0xFF, 0x00, 0x7F, 0xFF), // Orange
+		colors.New(0x00, 0x80, 0x00, 0xFF), // Dark Green
+		colors.New(0x80, 0x00, 0x80, 0xFF), // Maroon
+		colors.New(0x00, 0x80, 0x80, 0xFF), // Dark Red
+		colors.New(0x00, 0xFF, 0x80, 0xFF), // Dark Yellow
+		colors.New(0xFF, 0x00, 0x80, 0xFF), // Dark Magenta
+		colors.New(0x00, 0x80, 0xFF, 0xFF), // Dark Cyan
+		colors.New(0x80, 0x00, 0xFF, 0xFF), // Dark Blue
+		colors.New(0x80, 0x80, 0x00, 0xFF), // Dark Brown
+		colors.New(0x80, 0x80, 0x80, 0xFF), // Dark Gray
+		colors.New(0x80, 0xC0, 0x80, 0xFF), // Dark Olive
+		colors.New(0x00, 0x00, 0x80, 0xFF), // Dark Navy
+		colors.New(0x00, 0x00, 0xFF, 0xFF), // Black
 	}
 	nextLabelColor = rand.Intn(len(labelColors))
 )
