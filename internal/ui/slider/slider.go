@@ -91,6 +91,9 @@ func (s *sliderImpl) Update(mouseX, mouseY float64, leftJustPressed bool, leftPr
 		return
 	}
 
+	if s.isHit(mouseX, mouseY) {
+		ebiten.SetCursorShape(ebiten.CursorShapePointer)
+	}
 	currentValue := s.value
 	hit := s.isMakerHit(mouseX, mouseY)
 

@@ -141,6 +141,7 @@ func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime in
 				if leftPressed {
 					b.Click()
 				} else {
+					ebiten.SetCursorShape(ebiten.CursorShapePointer)
 					b.ChangeState(Hover)
 				}
 			} else {

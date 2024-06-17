@@ -24,7 +24,9 @@ package ui
 
 import (
 	"embed"
+	"fmt"
 	"image/color"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -176,10 +178,17 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 
 	u.addLabel(LABEL_TITLE, "Twitch Rat", u.fontBig, normalLabelColor)
 
-	versionStr := "v0.0.0"
+	versionStr := "0.0.0.0"
 	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
-		versionStr = "v" + string(data)
+		versionStr = string(data)
 	}
+	parts := strings.Split(versionStr, ".")
+	versionStr = fmt.Sprintf("%sv%s%s%s.%s%s%s.%s%s%s.%s%s%s",
+		colors.Blue.Tag(),
+		colors.Green.Tag(), parts[0], colors.White.Tag(),
+		colors.Yellow.Tag(), parts[1], colors.White.Tag(),
+		colors.Orange.Tag(), parts[2], colors.White.Tag(),
+		colors.Red.Tag(), parts[3], colors.White.Tag())
 	u.addLabel(LABEL_VERSION, versionStr, u.fontSmall, normalLabelColor)
 
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
@@ -252,6 +261,7 @@ func (u *uiImpl) Update(elapsedTime int) {
 	justPressed := inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft)
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 
+	ebiten.SetCursorShape(ebiten.CursorShapeDefault)
 	u.updateButtons(x, y, justPressed, elapsedTime)
 	u.updateInputs(x, y, justPressed, elapsedTime)
 	u.updateSliders(x, y, justPressed, pressed, elapsedTime)
@@ -503,7 +513,6 @@ func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText 
 }
 
 func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
-	ebiten.SetCursorShape(ebiten.CursorShapeDefault)
 	for i := range u.inputs {
 		u.inputs[i].Update(mouseX, mouseY, leftPressed, u.keys, elapsedTime)
 	}
