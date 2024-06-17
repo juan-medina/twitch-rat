@@ -154,6 +154,7 @@ const (
 	LABEL_OPTIONS_AUDIO_VOLUME
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
+	LABEL_COUNTDOWN         = LABEL_LAST_MESSAGE_LAST + 1
 )
 
 const (
@@ -221,6 +222,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
 		u.SetLabelVisible(LABEL_LAST_MESSAGE+label.Id(i), true)
 	}
 
+	u.addLabel(LABEL_COUNTDOWN, "30", u.fontBig, normalLabelColor)
 	u.SetLabelVisible(LABEL_VERSION, true)
 }
 
@@ -299,7 +301,19 @@ func (u *uiImpl) SetStatusMessage(message string, textColor color.Color) {
 	u.SetLabelColor(LABEL_LAST_MESSAGE, textColor)
 }
 
+func (u *uiImpl) layoutCounter() {
+	cx := u.screenWidth / 2
+	cy := MENU_START
+
+	countdownLabel := u.getLabel(LABEL_COUNTDOWN)
+	ix, _ := countdownLabel.Measure()
+	px := cx - (ix / 2)
+	py := cy
+	countdownLabel.Move(px, py)
+}
+
 func (u *uiImpl) layoutMainElements(cx, cy float64) {
+
 	titleLabel := u.getLabel(LABEL_TITLE)
 	ix, _ := titleLabel.Measure()
 	px := cx - (ix / 2)
@@ -408,6 +422,7 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	u.layoutAboutSubMenuElements(cx, cy)
 	u.layoutOptionsSubMenuElements(cx, cy)
 	u.layoutLicenseElements(cx, cy)
+	u.layoutCounter()
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
@@ -540,6 +555,9 @@ func (u *uiImpl) moveLabel(id label.Id, x, y float64) {
 func (u *uiImpl) SetLabelText(id label.Id, text string) {
 	if l := u.getLabel(id); l != nil {
 		l.SetText(text)
+		if id == LABEL_COUNTDOWN {
+			u.layoutCounter()
+		}
 	}
 }
 

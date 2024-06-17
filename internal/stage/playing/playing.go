@@ -42,6 +42,10 @@ import (
 
 const (
 	GAME_MUSIC      = "embed/music/game.ogg"
+	COUNTDOWN_SOUND = "embed/sounds/%d.ogg"
+	GO_SOUND        = "embed/sounds/go.ogg"
+	TICK_SOUND      = "embed/sounds/tick.ogg"
+	START_SOUND     = "embed/sounds/start.ogg"
 	RAT_SPAWN_POINT = -64
 	MAX_RATS        = 2
 	SPAWN_COMMAND   = "rat"
@@ -61,13 +65,14 @@ func (p *playing) Init() {
 	p.chat.Connect(p.channel)
 	p.sewerMap.SetLevel(0)
 	p.audioPlayer.PlaySong(GAME_MUSIC)
-
 	if debug := p.settings.GetBoolValue("debug", false); debug {
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_USER, true)
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, true)
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, true)
 	}
 	p.herd = p.herd[:0]
+	p.countdown = 30000
+	p.status = connecting
 }
 
 func (p *playing) End() {
@@ -81,7 +86,16 @@ func (p *playing) End() {
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, false)
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, false)
 	}
+	p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
 }
+
+type status int
+
+const (
+	connecting status = iota
+	counting
+	fighting
+)
 
 type playing struct {
 	changer       stage.Changer
@@ -97,15 +111,64 @@ type playing struct {
 	rats          draw.Sheet
 	herd          []rat.Rat
 	font          draw.Font
+	countdown     int
+	status        status
 }
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {
+	if p.status == counting {
+		currentCountdownSeconds := p.countdown / 1000
+		p.countdown -= elapsedTime
+		countDownSeconds := p.countdown / 1000
+		if countDownSeconds != currentCountdownSeconds {
+			if countDownSeconds == 0 {
+				p.ui.SetLabelText(ui.LABEL_COUNTDOWN, "GO!")
+				p.audioPlayer.PlaySound(GO_SOUND)
+				p.audioPlayer.PlaySound(START_SOUND)
+				p.ui.SetStatusMessage("Game "+
+					colors.Blue.Tag()+"started."+
+					colors.Yellow.Tag()+" Attack any rat with"+
+					colors.Red.Tag()+" !attack"+
+					colors.Yellow.Tag()+" or heal yourself or any rat with"+
+					colors.Green.Tag()+" !heal",
+					colors.Yellow)
+				p.ui.SetStatusMessage("If you"+
+					colors.Red.Tag()+" die"+
+					colors.Yellow.Tag()+" you can re-spawn using"+
+					colors.Red.Tag()+" !rat"+
+					colors.Yellow.Tag()+" again",
+					colors.Yellow)
+			} else if p.countdown <= -1000 {
+				p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
+				p.status = fighting
+			} else {
+				p.ui.SetLabelText(ui.LABEL_COUNTDOWN, fmt.Sprintf("%d", countDownSeconds))
+				if countDownSeconds >= 1 && countDownSeconds <= 10 {
+					p.audioPlayer.PlaySound(fmt.Sprintf(COUNTDOWN_SOUND, countDownSeconds))
+					p.audioPlayer.PlaySound(TICK_SOUND)
+				} else {
+					p.audioPlayer.PlaySound(TICK_SOUND)
+				}
+			}
+		}
+	}
+
 	p.ui.Update(elapsedTime)
 	select {
 	case event := <-p.eventsChan:
 		switch event.Type_ {
 		case chat.Connect:
 			p.ui.SetStatusMessage("Connected to "+colors.Green.Tag()+p.channel, colors.White)
+			p.countdown = 30000
+			p.status = counting
+			p.ui.SetStatusMessage("Game starting in"+
+				colors.Green.Tag()+" 30"+
+				colors.Yellow.Tag()+" seconds."+
+				colors.Yellow.Tag()+" Join at any time with"+
+				colors.Red.Tag()+" !rat",
+				colors.Yellow)
+			p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, true)
+			p.ui.SetLabelText(ui.LABEL_COUNTDOWN, "30")
 		case chat.Disconnect:
 			p.ui.SetStatusMessage("Disconnected", colors.White)
 		case chat.Message:
@@ -163,7 +226,7 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 				p.ui.SetStatusMessage(fmt.Sprintf("%s%s%s rejoin", userColor.Tag(), user, colors.White.Tag()), colors.White)
 			}
 		}
-	} else if command == ATTACK_COMMAND {
+	} else if command == ATTACK_COMMAND && p.status == fighting {
 		if userRat := p.getRat(user); userRat != nil {
 			if userRat.CanDoAction() {
 				if targetRat := p.getRat(args); targetRat != nil {
@@ -177,7 +240,7 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 				}
 			}
 		}
-	} else if command == HEAL_COMMAND {
+	} else if command == HEAL_COMMAND && p.status == fighting {
 		if userRat := p.getRat(user); userRat != nil {
 			if userRat.CanDoAction() {
 				targetRat := userRat
@@ -282,6 +345,12 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 	audioPlayer.LoadSound(rat.HIT_SOUND)
 	audioPlayer.LoadSound(rat.DEAD_SOUND)
 	audioPlayer.LoadSound(rat.HEAL_SOUND)
+	audioPlayer.LoadSound(GO_SOUND)
+	audioPlayer.LoadSound(TICK_SOUND)
+	audioPlayer.LoadSound(START_SOUND)
+	for i := 1; i <= 10; i++ {
+		audioPlayer.LoadSound(fmt.Sprintf(COUNTDOWN_SOUND, i))
+	}
 	var chatInterface chat.Chat
 	if debug := settings.GetBoolValue("debug", false); !debug {
 		chatInterface = chat.New()
