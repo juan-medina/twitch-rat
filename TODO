@@ -1,6 +1,7 @@
 - Check if the rats array can grow
 - Make Life Bigger
 - Implement Rat heal another rat
+- Implement killing himself
 - Make Attack and Heal random & crit
 - Implement flying combat text
 - Implement Countdown

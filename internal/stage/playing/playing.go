@@ -45,6 +45,8 @@ const (
 	GAME_MUSIC      = "embed/music/game.ogg"
 	RAT_SPAWN_POINT = -64
 	MAX_RATS        = 40
+	SPAWN_COMMAND   = "rat"
+	ATTACK_COMMAND  = "attack"
 )
 
 func (p *playing) Init() {
@@ -144,7 +146,7 @@ func (p *playing) processCommand(message string, user string, userColor color.Co
 		args = message[firstSpace+1:]
 	}
 
-	if command == "play" {
+	if command == SPAWN_COMMAND {
 		findRat := p.getRat(user)
 		if findRat == nil && len(p.herd) < MAX_RATS {
 			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.font, user, userColor)
@@ -161,7 +163,7 @@ func (p *playing) processCommand(message string, user string, userColor color.Co
 				p.ui.SetStatusMessage(fmt.Sprintf("%s re-spawned", user), colors.White)
 			}
 		}
-	} else if command == "attack" {
+	} else if command == ATTACK_COMMAND {
 		if userRat := p.getRat(user); userRat != nil {
 			if userRat.CanAttack() {
 				if targetRat := p.getRat(args); targetRat != nil {
