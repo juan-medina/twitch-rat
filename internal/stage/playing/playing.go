@@ -44,7 +44,7 @@ import (
 const (
 	GAME_MUSIC      = "embed/music/game.ogg"
 	RAT_SPAWN_POINT = -64
-	MAX_RATS        = 40
+	MAX_RATS        = 2
 	SPAWN_COMMAND   = "rat"
 	ATTACK_COMMAND  = "attack"
 )
@@ -67,7 +67,7 @@ func (p *playing) Init() {
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, true)
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, true)
 	}
-	p.herd = make([]rat.Rat, 0, MAX_RATS)
+	p.herd = p.herd[:0]
 }
 
 func (p *playing) End() {
@@ -148,7 +148,7 @@ func (p *playing) processCommand(message string, user string, userColor color.Co
 
 	if command == SPAWN_COMMAND {
 		findRat := p.getRat(user)
-		if findRat == nil && len(p.herd) < MAX_RATS {
+		if findRat == nil {
 			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.font, user, userColor)
 			rat.RandomWalk()
 			rat.SetX(RAT_SPAWN_POINT)
