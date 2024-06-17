@@ -23,7 +23,9 @@
 package game
 
 import (
+	"bytes"
 	"embed"
+	"image"
 	"image/color"
 	"runtime"
 	"time"
@@ -105,7 +107,6 @@ func (g *game) onLayoutChange(width, height float64) {
 func (g *game) init() {
 	g.settings.Init()
 	g.keys.Init()
-
 	g.fontSmall.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_small.fnt")
 	g.fontNormal.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_normal.fnt")
 	g.fontBig.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_big.fnt")
@@ -201,6 +202,15 @@ func (g *game) Run() error {
 	ebiten.SetWindowTitle(TITLE)
 	ebiten.SetTPS(60)
 	if runtime.GOOS != "js" {
+		if iconData, err := g.fileSystem.ReadFile("embed/icon/rat.png"); err == nil {
+			if img, _, err := image.Decode(bytes.NewReader(iconData)); err == nil {
+				ebiten.SetWindowIcon([]image.Image{img})
+			} else {
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
 		ebiten.SetFullscreen(true)
 		//ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	} else {
