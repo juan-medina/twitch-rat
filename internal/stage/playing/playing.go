@@ -180,7 +180,11 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 	} else if command == HEAL_COMMAND {
 		if userRat := p.getRat(user); userRat != nil {
 			if userRat.CanDoAction() {
-				if targetRat := p.getRat(args); targetRat != nil {
+				targetRat := userRat
+				if args != "" {
+					targetRat = p.getRat(args)
+				}
+				if targetRat != nil {
 					if targetRat.IsAlive() {
 						userRat.Heal(targetRat)
 					}
