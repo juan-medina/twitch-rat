@@ -46,6 +46,7 @@ const (
 	MAX_RATS        = 2
 	SPAWN_COMMAND   = "rat"
 	ATTACK_COMMAND  = "attack"
+	HEAL_COMMAND    = "heal"
 )
 
 func (p *playing) Init() {
@@ -164,7 +165,7 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 		}
 	} else if command == ATTACK_COMMAND {
 		if userRat := p.getRat(user); userRat != nil {
-			if userRat.CanAttack() {
+			if userRat.CanDoAction() {
 				if targetRat := p.getRat(args); targetRat != nil {
 					if targetRat.IsAlive() {
 						targetName := targetRat.GetName()
@@ -172,6 +173,16 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 						if targetName != userName {
 							userRat.Attack(targetRat)
 						}
+					}
+				}
+			}
+		}
+	} else if command == HEAL_COMMAND {
+		if userRat := p.getRat(user); userRat != nil {
+			if userRat.CanDoAction() {
+				if targetRat := p.getRat(args); targetRat != nil {
+					if targetRat.IsAlive() {
+						userRat.Heal(targetRat)
 					}
 				}
 			}
@@ -266,6 +277,7 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 	audioPlayer.LoadSong(GAME_MUSIC)
 	audioPlayer.LoadSound(rat.HIT_SOUND)
 	audioPlayer.LoadSound(rat.DEAD_SOUND)
+	audioPlayer.LoadSound(rat.HEAL_SOUND)
 	var chatInterface chat.Chat
 	if debug := settings.GetBoolValue("debug", false); !debug {
 		chatInterface = chat.New()

@@ -40,6 +40,7 @@ import (
 const (
 	HIT_SOUND              = "embed/sounds/hit.ogg"
 	DEAD_SOUND             = "embed/sounds/dead.ogg"
+	HEAL_SOUND             = "embed/sounds/heal.ogg"
 	RAT_SCALE              = 4
 	RAT_Y_POS              = 768
 	LABEL_GAP              = 25
@@ -57,6 +58,7 @@ const (
 	HEALTH_BAR_HEIGHT      = 15
 	HEALTH_MAX             = 100
 	RAT_DAMAGE             = 20
+	RAT_HEAL               = 20
 )
 
 type Rat interface {
@@ -69,13 +71,15 @@ type Rat interface {
 	SetVisible(visible bool)
 	IsVisible() bool
 	RandomWalk()
-	CanAttack() bool
+	CanDoAction() bool
 	Attack(otherRat Rat)
 	GetX() float64
-	Hurt(hit int)
+	Hurt(hit int) (amount int, over int)
 	IsAlive() bool
 	ReSpawn(color colors.CustomColor)
 	GetColor() colors.CustomColor
+	Heal(otherRat Rat)
+	Cure(amount int) (total int, over int)
 }
 
 type animation struct {
@@ -107,6 +111,7 @@ const (
 	walking
 	running
 	dead
+	healing
 )
 
 type ratImpl struct {
@@ -210,28 +215,9 @@ func (r *ratImpl) Update(elapsedTime int) {
 					r.idle()
 					r.SetAnimation(FIGHT_ANIM)
 					r.waitingTime = WAIT_AFTER_HIT
-					r.target.Hurt(RAT_DAMAGE)
+					damage, over := r.target.Hurt(RAT_DAMAGE)
+					r.logDamage(damage, over)
 					r.audioPlayer.PlaySound(HIT_SOUND)
-					targetColor := r.target.GetColor()
-					if r.target.IsAlive() {
-						damageStr := r.color.Tag() + r.name +
-							colors.Yellow.Tag() + " hit " +
-							targetColor.Tag() + r.target.GetName() +
-							colors.Yellow.Tag() + " with " +
-							colors.Red.Tag() + strconv.Itoa(RAT_DAMAGE) +
-							colors.Yellow.Tag() + " damage"
-						r.ui.SetStatusMessage(damageStr, colors.Yellow)
-
-					} else {
-						damageStr := r.color.Tag() + r.name +
-							colors.Yellow.Tag() + " hit " +
-							targetColor.Tag() + r.target.GetName() +
-							colors.Yellow.Tag() + " with " +
-							colors.Red.Tag() + strconv.Itoa(RAT_DAMAGE) +
-							colors.Yellow.Tag() + " damage and" +
-							colors.Red.Tag() + " kill it"
-						r.ui.SetStatusMessage(damageStr, colors.Yellow)
-					}
 					r.target = nil
 				}
 			} else {
@@ -243,6 +229,20 @@ func (r *ratImpl) Update(elapsedTime int) {
 			r.waitingTime -= elapsedTime
 		} else {
 			r.RandomWalk()
+		}
+	case healing:
+		if !r.target.IsAlive() {
+			r.target = nil
+			r.idle()
+		}
+		r.updateDestinationToTarget()
+		r.vx = 0
+		if r.animationStatus.end {
+			heal, over := r.target.Cure(RAT_HEAL)
+			r.logHeal(heal, over)
+			r.target = nil
+			r.idle()
+			r.audioPlayer.PlaySound(HEAL_SOUND)
 		}
 	}
 
@@ -298,7 +298,9 @@ func (r *ratImpl) RandomWalk() {
 	r.state = walking
 	r.waitingTime = 0
 }
-func (r *ratImpl) Hurt(hit int) {
+func (r *ratImpl) Hurt(hit int) (amount int, over int) {
+	amount = hit
+	original := r.health
 	r.health -= hit
 	if r.health <= 0 {
 		r.health = 0
@@ -311,6 +313,8 @@ func (r *ratImpl) Hurt(hit int) {
 		r.waitingTime = WAIT_AFTER_HIT
 	}
 	r.vx = 0
+	over = amount - (original - r.health)
+	return
 }
 
 func (r *ratImpl) idle() {
@@ -320,7 +324,7 @@ func (r *ratImpl) idle() {
 	r.waitingTime = rand.Intn(WAIT_TO_WALK_AGAIN_MAX-WAIT_TO_WALK_AGAIN_MIN) + WAIT_TO_WALK_AGAIN_MIN
 }
 
-func (r ratImpl) CanAttack() bool {
+func (r ratImpl) CanDoAction() bool {
 	return r.state == idle || r.state == walking
 }
 
@@ -336,6 +340,28 @@ func (r *ratImpl) Attack(otherRat Rat) {
 		targetColor.Tag() + r.target.GetName()
 	r.ui.SetStatusMessage(damageStr, colors.White)
 }
+
+func (r *ratImpl) Heal(otherRat Rat) {
+	r.state = healing
+	r.SetAnimation(HEAL_ANIM)
+	r.target = otherRat
+	r.waitingTime = 0
+	r.updateDestinationToTarget()
+	r.vx = 0
+	targetColor := otherRat.GetColor()
+	healingStr := ""
+	if r.name != r.target.GetName() {
+		healingStr = r.color.Tag() + r.name +
+			colors.White.Tag() + " is healing " +
+			targetColor.Tag() + r.target.GetName()
+	} else {
+		healingStr = r.color.Tag() + r.name +
+			colors.White.Tag() + " is healing himself"
+	}
+
+	r.ui.SetStatusMessage(healingStr, colors.White)
+}
+
 func (r *ratImpl) updateDestinationToTarget() {
 	r.vx = RUN_SPEED
 	r.destination = r.target.GetX()
@@ -368,6 +394,66 @@ func (r *ratImpl) ReSpawn(color colors.CustomColor) {
 
 func (r ratImpl) GetColor() colors.CustomColor {
 	return r.color
+}
+
+func (r *ratImpl) Cure(amount int) (total int, over int) {
+	total = amount
+	original := r.health
+	r.health += amount
+	if r.health >= HEALTH_MAX {
+		r.health = HEALTH_MAX
+	}
+	over = amount - (r.health - original)
+	return
+}
+
+func (r ratImpl) logHeal(amount, over int) {
+	targetColor := r.target.GetColor()
+	var healStr = ""
+	if r.name == r.target.GetName() {
+		healStr = r.color.Tag() + r.name +
+			colors.Yellow.Tag() + " heal himself"
+	} else {
+		healStr = r.color.Tag() + r.name +
+			colors.Yellow.Tag() + " heal " +
+			targetColor.Tag() + r.target.GetName()
+	}
+
+	healStr += colors.Yellow.Tag() + " by " +
+		colors.Green.Tag() + strconv.Itoa(amount)
+
+	if over > 0 {
+		healStr += colors.Yellow.Tag() + " (" +
+			colors.Blue.Tag() + strconv.Itoa(over) +
+			colors.Yellow.Tag() + " over heal)"
+	}
+
+	r.ui.SetStatusMessage(healStr, colors.Yellow)
+}
+
+func (r ratImpl) logDamage(amount, over int) {
+	targetColor := r.target.GetColor()
+	var damageStr = ""
+
+	damageStr = r.color.Tag() + r.name +
+		colors.Yellow.Tag() + " hurt " +
+		targetColor.Tag() + r.target.GetName()
+
+	damageStr += colors.Yellow.Tag() + " by " +
+		colors.Red.Tag() + strconv.Itoa(amount)
+
+	if over > 0 {
+		damageStr += colors.Yellow.Tag() + " (" +
+			colors.Blue.Tag() + strconv.Itoa(over) +
+			colors.Yellow.Tag() + " over kill)"
+	}
+	if !r.target.IsAlive() {
+		damageStr += colors.Yellow.Tag() + " and" +
+			colors.Red.Tag() + " kill " +
+			colors.Yellow.Tag() + "it"
+	}
+
+	r.ui.SetStatusMessage(damageStr, colors.Yellow)
 }
 
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor colors.CustomColor) Rat {

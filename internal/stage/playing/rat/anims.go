@@ -29,6 +29,8 @@ const (
 	FIGHT_ANIM = "fight"
 	HURT_ANIM  = "hurt"
 	DEAD_ANIM  = "dead"
+	JUMP_ANIM  = "jump"
+	HEAL_ANIM  = "heal"
 )
 
 var animationMap = map[string]animation{
@@ -72,6 +74,20 @@ var animationMap = map[string]animation{
 		startFrame:    1,
 		endFrame:      9,
 		frameDuration: 100,
+		loop:          false,
+	},
+	JUMP_ANIM: {
+		pattern:       "rat_normal_jump_%02d",
+		startFrame:    1,
+		endFrame:      5,
+		frameDuration: 100,
+		loop:          false,
+	},
+	HEAL_ANIM: {
+		pattern:       "rat_normal_heal_%02d",
+		startFrame:    1,
+		endFrame:      5,
+		frameDuration: 150,
 		loop:          false,
 	},
 }

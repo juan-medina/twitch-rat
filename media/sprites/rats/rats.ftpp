@@ -80,6 +80,31 @@
       "folder": ""
     },
     {
+      "name": "rat_normal_heal_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_heal_01.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_heal_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_heal_02.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_heal_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_heal_03.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_heal_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_heal_04.png",
+      "folder": ""
+    },
+    {
+      "name": "rat_normal_heal_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_heal_05.png",
+      "folder": ""
+    },
+    {
       "name": "rat_normal_hurt_01.png",
       "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_hurt_01.png",
       "folder": ""
