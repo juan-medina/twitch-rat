@@ -193,6 +193,11 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 }
 
 func (p *playing) processCommand(message string, user string, userColor colors.CustomColor) {
+	if userColor == colors.Black {
+		userColor = labelColors[nextLabelColor]
+		nextLabelColor = (nextLabelColor + 1) % len(labelColors)
+	}
+
 	lenStr := len(message)
 
 	firstSpace := strings.Index(message, " ")
@@ -331,9 +336,7 @@ func (p *playing) onButtonClick(id button.Id) {
 	case ui.DEBUG_BUTTON:
 		user := p.ui.GetInputText(ui.INPUT_DEBUG_USER)
 		message := p.ui.GetInputText(ui.INPUT_DEBUG_MESSAGE)
-		userColor := labelColors[nextLabelColor]
-		nextLabelColor = (nextLabelColor + 1) % len(labelColors)
-		p.onChatEvent(chat.Event{Type_: chat.Message, Sender: user, Message: message, UserColor: userColor})
+		p.onChatEvent(chat.Event{Type_: chat.Message, Sender: user, Message: message, UserColor: colors.Black})
 	}
 }
 func (p *playing) onChatEvent(e chat.Event) {
