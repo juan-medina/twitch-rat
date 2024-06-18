@@ -114,7 +114,7 @@ func (s *scoresImpl) Update(elapsedTime int) {
 
 	maxScoreLength := 0
 	maxScore := ""
-	for i, _ := range s.entries {
+	for i := range s.entries {
 		if calculateScore {
 			health := s.entries[i].data.GetHealth()
 			fmt.Printf("health: in data %d %d\n", i, health)
@@ -138,7 +138,7 @@ func (s *scoresImpl) Update(elapsedTime int) {
 
 	mameWidth, _ := s.fontSmall.Measure(maxName, s.fontSmall.DefaultSize())
 	scoreWidth, _ := s.fontSmall.Measure(maxScore, s.fontSmall.DefaultSize())
-	for i, _ := range s.entries {
+	for i := range s.entries {
 		entryScoreWidth, _ := s.fontSmall.Measure(s.entries[i].text, s.fontSmall.DefaultSize())
 		s.entries[i].pointX = s.x + (mameWidth + ENTRIES_GAP_X) + (scoreWidth - entryScoreWidth)
 	}
