@@ -38,6 +38,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
+	"github.com/juan-medina/twitch-rat/internal/ui/scores"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
@@ -70,6 +71,10 @@ type UI interface {
 	SetSliderValue(id slider.Id, value float64)
 	SetSliderChangeCallback(callback func(id slider.Id, value float64))
 	AddFlyingText(text string, color colors.CustomColor, x, y float64)
+
+	SetScoreVisible(visible bool)
+	AddScoreEntry(data scores.ScoreData)
+	StartsCore()
 }
 
 var (
@@ -99,8 +104,7 @@ type uiImpl struct {
 	fontNormal   draw.Font
 	fontBig      draw.Font
 	flyingTexts  []flyingText
-	// TODO: For Scores
-	//headSprite   draw.Sprite
+	scores       scores.Scores
 }
 
 const (
@@ -126,6 +130,8 @@ const (
 	FLYING_TIME_FULL             = 1000
 	FLYING_TIME_TO_VANISH        = 500
 	FLYING_TIME_TO_FREE          = 1
+	SCORE_X                      = 10
+	SCORE_Y                      = 10
 )
 
 const (
@@ -166,9 +172,8 @@ const (
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.fileSystem = fileSystem
 	u.keys = keys
-	// TODO: For Scores
-	//u.headSprite = sheet.Sprite("rat_head_small")
-	//u.headSprite.SetScale(2.0)
+
+	u.scores.Init()
 
 	data, _ := fileSystem.ReadFile("embed/text/license.txt")
 	licenseText := string(data)
@@ -257,9 +262,7 @@ func (u *uiImpl) Draw(screen *ebiten.Image) {
 		f.draw(screen, u.fontSmall)
 	}
 
-	// TODO: For Scores
-	//u.headSprite.SetColor(colors.Red)
-	//u.headSprite.Draw(screen, 100, 100, false, false)
+	u.scores.Draw(screen)
 }
 
 func (f flyingText) draw(screen *ebiten.Image, font draw.Font) {
@@ -281,6 +284,7 @@ func (u *uiImpl) Update(elapsedTime int) {
 	u.updateInputs(x, y, justPressed, elapsedTime)
 	u.updateSliders(x, y, justPressed, pressed, elapsedTime)
 	u.updateFlyingTexts(elapsedTime)
+	u.scores.Update(elapsedTime)
 }
 
 func (u *uiImpl) updateFlyingTexts(elapsedTime int) {
@@ -358,7 +362,7 @@ func (u *uiImpl) layoutMainElements(cx, cy float64) {
 	cx, _ = versionLabel.Measure()
 	versionLabel.Move(u.screenWidth-cx-gapX, u.screenHeight-gapY)
 
-	px = 0
+	px = 450
 	py = 0
 	u.getInput(INPUT_DEBUG_USER).Move(px, py)
 
@@ -440,6 +444,8 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	u.layoutOptionsSubMenuElements(cx, cy)
 	u.layoutLicenseElements(cx, cy)
 	u.layoutCounter()
+
+	u.scores.Move(SCORE_X, SCORE_Y)
 }
 
 func (u *uiImpl) getButton(id button.Id) button.Button {
@@ -671,6 +677,20 @@ func (u *uiImpl) AddFlyingText(text string, color colors.CustomColor, x, y float
 		alpha:   step.NewFromMiddleToPauseValue(255, 255, 0, FLYING_TIME_FULL, FLYING_TIME_TO_VANISH, FLYING_TIME_TO_FREE),
 	})
 }
+func (u *uiImpl) AddScoreEntry(data scores.ScoreData) {
+	u.scores.Add(data)
+}
+
+func (u *uiImpl) SetScoreVisible(visible bool) {
+	u.scores.SetVisible(visible)
+	if visible {
+		u.scores.Reset()
+	}
+}
+
+func (u *uiImpl) StartsCore() {
+	u.scores.Start()
+}
 
 func New(audioPlayer audio.Player, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {
 	return &uiImpl{
@@ -679,5 +699,6 @@ func New(audioPlayer audio.Player, fontSmall draw.Font, fontNormal draw.Font, fo
 		fontNormal:  fontNormal,
 		fontBig:     fontBig,
 		flyingTexts: make([]flyingText, 0, MAX_FLYING_TEXTS),
+		scores:      scores.New(fontSmall, fontNormal),
 	}
 }

@@ -48,7 +48,7 @@ const (
 	TICK_SOUND       = "embed/sounds/tick.ogg"
 	START_SOUND      = "embed/sounds/start.ogg"
 	RAT_SPAWN_POINT  = -64
-	MAX_RATS         = 2
+	MAX_RATS         = 40
 	SPAWN_COMMAND    = "rat"
 	ATTACK_COMMAND   = "attack"
 	HEAL_COMMAND     = "heal"
@@ -81,6 +81,7 @@ func (p *playing) Init() {
 	p.herd = p.herd[:0]
 	p.searchSlice = p.searchSlice[:0]
 	p.status = connecting
+	p.ui.SetScoreVisible(true)
 }
 
 func (p *playing) End() {
@@ -96,6 +97,7 @@ func (p *playing) End() {
 	}
 	p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
 	p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, false)
+	p.ui.SetScoreVisible(false)
 }
 
 type status int
@@ -152,6 +154,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 					colors.Yellow)
 				p.status = endCountdown
 				p.countdown = GO_VANISH
+				p.ui.StartsCore()
 			} else {
 				p.ui.SetLabelText(ui.LABEL_COUNTDOWN, fmt.Sprintf("%d", countDownSeconds))
 				if countDownSeconds >= 1 && countDownSeconds <= 10 {
@@ -302,6 +305,7 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 			rat.SetCenter((p.currentWidth / 2))
 			p.herd = append(p.herd, rat)
 			p.ui.SetStatusMessage(fmt.Sprintf("%s%s%s join the fight!", userColor.Tag(), user, colors.White.Tag()), colors.White)
+			p.ui.AddScoreEntry(rat)
 		} else {
 			if !findRat.IsAlive() {
 				findRat.SetX(RAT_SPAWN_POINT)

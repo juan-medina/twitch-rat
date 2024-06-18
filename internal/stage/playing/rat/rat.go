@@ -56,11 +56,11 @@ const (
 	HEALTH_BAR_GAP         = 22
 	HEALTH_BAR_WIDTH       = 80
 	HEALTH_BAR_HEIGHT      = 15
-	HEALTH_MAX             = 100
-	RAT_DAMAGE             = 20
-	RAT_HEAL               = 20
 	CRIT_CHANGE            = 0.25
 	MOD_VALUE              = 0.25
+	HEALTH_MAX             = 50
+	RAT_DAMAGE             = 15
+	RAT_HEAL               = 15
 )
 
 type Rat interface {
@@ -88,8 +88,8 @@ type Rat interface {
 	TimeSinceLastCommand() int
 	ResetTimeSinceLastCommand()
 	IsAttacking() bool
+	GetHealth() int
 }
-
 type animation struct {
 	pattern       string
 	startFrame    int
@@ -550,6 +550,9 @@ func (r *ratImpl) ResetTimeSinceLastCommand() {
 
 func (r *ratImpl) IsAttacking() bool {
 	return (r.state == running || r.state == healing) && r.target != nil
+}
+func (r ratImpl) GetHealth() int {
+	return r.health
 }
 
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor colors.CustomColor) Rat {
