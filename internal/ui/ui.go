@@ -42,7 +42,7 @@ import (
 )
 
 type UI interface {
-	Init(fileSystem embed.FS, keys keys.Keys)
+	Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet)
 	Update(elapsedTime int)
 	Draw(screen *ebiten.Image)
 
@@ -101,6 +101,8 @@ type uiImpl struct {
 	fontNormal   draw.Font
 	fontBig      draw.Font
 	flyingTexts  []flyingText
+	// TODO: For Scores
+	//headSprite   draw.Sprite
 }
 
 const (
@@ -162,9 +164,12 @@ const (
 	AUDIO_VOLUME_SLIDER
 )
 
-func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys) {
+func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.fileSystem = fileSystem
 	u.keys = keys
+	// TODO: For Scores
+	//u.headSprite = sheet.Sprite("rat_head_small")
+	//u.headSprite.SetScale(2.0)
 
 	data, _ := fileSystem.ReadFile("embed/text/license.txt")
 	u.licenseText = string(data)
@@ -247,6 +252,10 @@ func (u *uiImpl) Draw(screen *ebiten.Image) {
 	for _, f := range u.flyingTexts {
 		f.draw(screen, u.fontSmall)
 	}
+
+	// TODO: For Scores
+	//u.headSprite.SetColor(colors.Red)
+	//u.headSprite.Draw(screen, 100, 100, false, false)
 }
 
 func (f flyingText) draw(screen *ebiten.Image, font draw.Font) {

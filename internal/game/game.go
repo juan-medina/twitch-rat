@@ -110,8 +110,10 @@ func (g *game) init() {
 	g.fontSmall.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_small.fnt")
 	g.fontNormal.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_normal.fnt")
 	g.fontBig.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_big.fnt")
+	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
+	rats := draw.NewSheet(g.fileSystem, "embed/sprites/rats/rats.json")
 
-	g.ui.Init(g.fileSystem, g.keys)
+	g.ui.Init(g.fileSystem, g.keys, rats)
 	g.ui.OnLayoutChange(g.currentWidth, g.currentHeight)
 
 	song := g.settings.GetFloatValue("song_volume", 0.5)
@@ -120,9 +122,6 @@ func (g *game) init() {
 	g.audioPlayer.ChangeSoundVolume(sound)
 
 	g.lastUpdateTime = time.Now()
-
-	sewerMap := draw.NewMap(g.fileSystem, "embed/sprites/sewer/sewer.ldtk", 4)
-	rats := draw.NewSheet(g.fileSystem, "embed/sprites/rats/rats.json")
 
 	g.addStage(stage.LICENSE, license.New(g, g.ui))
 	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.audioPlayer))
