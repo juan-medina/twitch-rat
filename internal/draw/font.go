@@ -194,6 +194,8 @@ func (f *fontImpl) processChars() {
 }
 
 func (f *fontImpl) Draw(screen *ebiten.Image, text string, x, y float64, size float64, color color.Color) {
+	_, _, _, originalAlpha := color.RGBA()
+	originalAlpha = originalAlpha >> 8
 	currentPosX := x
 	currentPosY := y
 	scale := size / float64(f.fontDef.Common.LineHeight)
@@ -212,7 +214,7 @@ func (f *fontImpl) Draw(screen *ebiten.Image, text string, x, y float64, size fl
 		}
 		if r == colors.TEXT_TAG {
 			colorStr := text[i+2 : i+10]
-			color = colors.FromHtml(colorStr)
+			color = colors.FromHtml(colorStr).NewWithAlpha(uint8(originalAlpha))
 			skip = 8
 			continue
 		} else if char, ok := f.runes[r]; ok {
