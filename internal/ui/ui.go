@@ -120,7 +120,7 @@ const (
 	MAX_LABELS                   = 10
 	SLIDER_WITH                  = 300
 	SLIDER_HEIGHT                = 30
-	TOTAL_LAST_MESSAGES          = 10
+	TOTAL_LAST_MESSAGES          = 15
 	MAX_FLYING_TEXTS             = 20
 	FLYING_TEXT_VY               = 0.10
 	FLYING_TIME_FULL             = 1000
