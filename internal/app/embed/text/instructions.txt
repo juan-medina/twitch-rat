@@ -7,4 +7,4 @@ If you rat don't get a command in ͼCFCF00FF30sͼFFFFFFFF it will auto attack or
 
 Every ͼCFCF00FF10sͼFFFFFFFF all rats alive will get ͼC87AFFFFpointsͼFFFFFFFF!
 
-By twitch limitations ͼCFCF00FFrepeat textͼFFFFFFFF may not reach the game, ͼC87AFFFFtype something elseͼFFFFFFFF.
+By twitch limitations ͼCFCF00FFrepeated textͼFFFFFFFF may not reach the game, ͼC87AFFFFtype something elseͼFFFFFFFF.

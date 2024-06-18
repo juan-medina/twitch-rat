@@ -53,8 +53,9 @@ const (
 	ATTACK_COMMAND   = "attack"
 	HEAL_COMMAND     = "heal"
 	SECOND           = 1000
-	COUNTDOWN_LENGTH = 5 * SECOND
+	COUNTDOWN_LENGTH = 30 * SECOND
 	GO_VANISH        = 0.5 * SECOND
+	TIME_TO_AUTO     = 30 * SECOND
 )
 
 func (p *playing) Init() {
@@ -78,6 +79,7 @@ func (p *playing) Init() {
 	p.ui.SetLabelText(ui.LABEL_COUNTDOWN, strconv.FormatInt(COUNTDOWN_LENGTH/SECOND, 10))
 	p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, true)
 	p.herd = p.herd[:0]
+	p.searchSlice = p.searchSlice[:0]
 	p.status = connecting
 }
 
@@ -118,6 +120,7 @@ type playing struct {
 	audioPlayer   audio.Player
 	rats          draw.Sheet
 	herd          []rat.Rat
+	searchSlice   []rat.Rat
 	font          draw.Font
 	countdown     int
 	status        status
@@ -164,6 +167,7 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 		if p.countdown <= 0 {
 			p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
 			p.status = fighting
+			p.ResetTimeSinceLastCommand()
 		}
 	}
 
@@ -199,9 +203,72 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 			p.ui.ClickButton(ui.BACK_BUTTON)
 		}
 	}
+
 	for i := range p.herd {
 		p.herd[i].Update(elapsedTime)
+		if p.status == fighting {
+			timeSinceLastCommand := p.herd[i].TimeSinceLastCommand()
+			if p.herd[i].CanDoAction() {
+				origin := p.herd[i]
+				if timeSinceLastCommand > TIME_TO_AUTO {
+					var target rat.Rat
+					if rand.Intn(100) < 30 {
+						if target = p.findTargetToHeal(); target != nil {
+							p.herd[i].Heal(target)
+						} else {
+							if target = p.findTargetToAttack(origin); target != nil {
+								p.herd[i].Attack(target)
+							}
+						}
+					} else {
+						if target = p.findTargetToAttack(origin); target != nil {
+							p.herd[i].Attack(target)
+						}
+					}
+
+				}
+			}
+		}
 	}
+}
+
+func (p *playing) ResetTimeSinceLastCommand() {
+	for i := range p.herd {
+		p.herd[i].ResetTimeSinceLastCommand()
+	}
+}
+func (p playing) findTargetToAttack(origin rat.Rat) rat.Rat {
+	p.searchSlice = p.searchSlice[:0]
+	for i := range p.herd {
+		if origin != p.herd[i] {
+			if p.herd[i].IsVisible() && p.herd[i].IsAlive() {
+				p.searchSlice = append(p.searchSlice, p.herd[i])
+			}
+		}
+	}
+
+	if len(p.searchSlice) == 0 {
+		return nil
+	}
+
+	r := rand.Intn(len(p.searchSlice))
+	return p.searchSlice[r]
+}
+
+func (p playing) findTargetToHeal() rat.Rat {
+	p.searchSlice = p.searchSlice[:0]
+	for i := range p.herd {
+		if p.herd[i].IsAlive() && !p.herd[i].IsFullHealth() {
+			p.searchSlice = append(p.searchSlice, p.herd[i])
+		}
+	}
+
+	if len(p.searchSlice) == 0 {
+		return nil
+	}
+
+	r := rand.Intn(len(p.searchSlice))
+	return p.searchSlice[r]
 }
 
 func (p *playing) processCommand(message string, user string, userColor colors.CustomColor) {
@@ -382,6 +449,7 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 		audioPlayer: audioPlayer,
 		rats:        rats,
 		herd:        make([]rat.Rat, 0, MAX_RATS),
+		searchSlice: make([]rat.Rat, 0, MAX_RATS),
 		font:        font,
 	}
 	return &p

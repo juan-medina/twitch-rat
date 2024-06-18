@@ -81,9 +81,13 @@ type Rat interface {
 	ReSpawn(color colors.CustomColor)
 	GetColor() colors.CustomColor
 	Heal(otherRat Rat)
+	IsFullHealth() bool
 	Cure(heal int) (amount int, over int, crit bool)
 	Modify(points int) (value int, crit bool)
 	AddFlyingText(text string, color colors.CustomColor)
+	TimeSinceLastCommand() int
+	ResetTimeSinceLastCommand()
+	IsAttacking() bool
 }
 
 type animation struct {
@@ -119,27 +123,28 @@ const (
 )
 
 type ratImpl struct {
-	x, y, screenCenterX float64
-	vx                  float64
-	sheet               draw.Sheet
-	sprite              draw.Sprite
-	animationStatus     animationStatus
-	name                string
-	nameLabel           label.Label
-	labelWidth          float64
-	visible             bool
-	facing              direction
-	state               state
-	destination         float64
-	waitingTime         int
-	target              Rat
-	ui                  ui.UI
-	audioPlayer         audio.Player
-	color               colors.CustomColor
-	barX                float64
-	barY                float64
-	health              int
-	flyingTextY         float64
+	x, y, screenCenterX  float64
+	vx                   float64
+	sheet                draw.Sheet
+	sprite               draw.Sprite
+	animationStatus      animationStatus
+	name                 string
+	nameLabel            label.Label
+	labelWidth           float64
+	visible              bool
+	facing               direction
+	state                state
+	destination          float64
+	waitingTime          int
+	target               Rat
+	ui                   ui.UI
+	audioPlayer          audio.Player
+	color                colors.CustomColor
+	barX                 float64
+	barY                 float64
+	health               int
+	flyingTextY          float64
+	timeSinceLastCommand int
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -197,6 +202,8 @@ func (r *ratImpl) Update(elapsedTime int) {
 		return
 	}
 
+	r.timeSinceLastCommand += elapsedTime
+
 	r.SetX(r.x + r.vx*float64(elapsedTime))
 	if x := r.GetX(); x < ARENA_LEFT_X || x > ARENA_RIGHT_X {
 		r.RandomWalk()
@@ -222,8 +229,12 @@ func (r *ratImpl) Update(elapsedTime int) {
 					r.idle()
 					r.SetAnimation(FIGHT_ANIM)
 					r.waitingTime = WAIT_AFTER_HIT
+					targetWasAttacking := r.target.IsAttacking()
 					damage, over, crit := r.target.Hurt(RAT_DAMAGE)
 					r.logDamage(damage, over, crit)
+					if targetWasAttacking {
+						r.ui.SetStatusMessage(r.target.GetColor().Tag()+r.target.GetName()+colors.Yellow.Tag()+" was interrupted", colors.Yellow)
+					}
 					r.audioPlayer.PlaySound(HIT_SOUND)
 					r.target = nil
 				}
@@ -238,18 +249,24 @@ func (r *ratImpl) Update(elapsedTime int) {
 			r.RandomWalk()
 		}
 	case healing:
-		if !r.target.IsAlive() {
-			r.target = nil
+		if r.target != nil {
+			if r.target.IsAlive() {
+				r.updateDestinationToTarget()
+				r.vx = 0
+				if r.animationStatus.end {
+					heal, over, crit := r.target.Cure(RAT_HEAL)
+					r.logHeal(heal, over, crit)
+					r.target = nil
+					r.idle()
+					r.audioPlayer.PlaySound(HEAL_SOUND)
+				}
+			} else {
+				r.target = nil
+				r.idle()
+			}
+		} else {
 			r.idle()
-		}
-		r.updateDestinationToTarget()
-		r.vx = 0
-		if r.animationStatus.end {
-			heal, over, crit := r.target.Cure(RAT_HEAL)
-			r.logHeal(heal, over, crit)
-			r.target = nil
-			r.idle()
-			r.audioPlayer.PlaySound(HEAL_SOUND)
+			return
 		}
 	}
 
@@ -318,7 +335,11 @@ func (r *ratImpl) Hurt(hit int) (amount int, over int, crit bool) {
 		r.SetAnimation(HURT_ANIM)
 		r.state = idle
 		r.waitingTime = WAIT_AFTER_HIT
+		if r.target != nil || r.state == running || r.state == healing {
+			r.target = nil
+		}
 	}
+
 	r.vx = 0
 	over = amount - (original - r.health)
 	return
@@ -336,6 +357,8 @@ func (r ratImpl) CanDoAction() bool {
 }
 
 func (r *ratImpl) Attack(otherRat Rat) {
+	r.timeSinceLastCommand = 0
+
 	r.state = running
 	r.SetAnimation(RUN_ANIM)
 	r.target = otherRat
@@ -349,6 +372,8 @@ func (r *ratImpl) Attack(otherRat Rat) {
 }
 
 func (r *ratImpl) Heal(otherRat Rat) {
+	r.timeSinceLastCommand = 0
+
 	r.state = healing
 	r.SetAnimation(HEAL_ANIM)
 	r.target = otherRat
@@ -367,6 +392,10 @@ func (r *ratImpl) Heal(otherRat Rat) {
 	}
 
 	r.ui.SetStatusMessage(healingStr, colors.White)
+}
+
+func (r ratImpl) IsFullHealth() bool {
+	return r.health == HEALTH_MAX
 }
 
 func (r *ratImpl) updateDestinationToTarget() {
@@ -391,6 +420,7 @@ func (r ratImpl) IsAlive() bool {
 }
 
 func (r *ratImpl) ReSpawn(color colors.CustomColor) {
+	r.timeSinceLastCommand = 0
 	r.nameLabel.SetColor(color)
 	r.color = color
 	r.health = HEALTH_MAX
@@ -478,6 +508,7 @@ func (r ratImpl) logDamage(amount, over int, crit bool) {
 			colors.Blue.Tag() + strconv.Itoa(over) +
 			colors.Yellow.Tag() + " over kill)"
 	}
+
 	if !r.target.IsAlive() {
 		damageStr += colors.Yellow.Tag() + " and" +
 			colors.Red.Tag() + " kill " +
@@ -507,6 +538,18 @@ func (r ratImpl) Modify(points int) (value int, crit bool) {
 
 func (r ratImpl) AddFlyingText(text string, color colors.CustomColor) {
 	r.ui.AddFlyingText(text, color, r.screenCenterX+r.x, r.flyingTextY)
+}
+
+func (r ratImpl) TimeSinceLastCommand() int {
+	return r.timeSinceLastCommand
+}
+
+func (r *ratImpl) ResetTimeSinceLastCommand() {
+	r.timeSinceLastCommand = 0
+}
+
+func (r *ratImpl) IsAttacking() bool {
+	return (r.state == running || r.state == healing) && r.target != nil
 }
 
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor colors.CustomColor) Rat {
