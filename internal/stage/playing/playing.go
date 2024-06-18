@@ -25,6 +25,7 @@ package playing
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -41,16 +42,19 @@ import (
 )
 
 const (
-	GAME_MUSIC      = "embed/music/game.ogg"
-	COUNTDOWN_SOUND = "embed/sounds/%d.ogg"
-	GO_SOUND        = "embed/sounds/go.ogg"
-	TICK_SOUND      = "embed/sounds/tick.ogg"
-	START_SOUND     = "embed/sounds/start.ogg"
-	RAT_SPAWN_POINT = -64
-	MAX_RATS        = 2
-	SPAWN_COMMAND   = "rat"
-	ATTACK_COMMAND  = "attack"
-	HEAL_COMMAND    = "heal"
+	GAME_MUSIC       = "embed/music/game.ogg"
+	COUNTDOWN_SOUND  = "embed/sounds/%d.ogg"
+	GO_SOUND         = "embed/sounds/go.ogg"
+	TICK_SOUND       = "embed/sounds/tick.ogg"
+	START_SOUND      = "embed/sounds/start.ogg"
+	RAT_SPAWN_POINT  = -64
+	MAX_RATS         = 2
+	SPAWN_COMMAND    = "rat"
+	ATTACK_COMMAND   = "attack"
+	HEAL_COMMAND     = "heal"
+	SECOND           = 1000
+	COUNTDOWN_LENGTH = 5 * SECOND
+	GO_VANISH        = 0.5 * SECOND
 )
 
 func (p *playing) Init() {
@@ -70,8 +74,10 @@ func (p *playing) Init() {
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, true)
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, true)
 	}
+	p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, true)
+	p.ui.SetLabelText(ui.LABEL_COUNTDOWN, strconv.FormatInt(COUNTDOWN_LENGTH/SECOND, 10))
+	p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, true)
 	p.herd = p.herd[:0]
-	p.countdown = 30000
 	p.status = connecting
 }
 
@@ -87,6 +93,7 @@ func (p *playing) End() {
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, false)
 	}
 	p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
+	p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, false)
 }
 
 type status int
@@ -94,6 +101,7 @@ type status int
 const (
 	connecting status = iota
 	counting
+	endCountdown
 	fighting
 )
 
@@ -117,14 +125,15 @@ type playing struct {
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 	if p.status == counting {
-		currentCountdownSeconds := p.countdown / 1000
+		currentCountdownSeconds := p.countdown / SECOND
 		p.countdown -= elapsedTime
-		countDownSeconds := p.countdown / 1000
+		countDownSeconds := p.countdown / SECOND
 		if countDownSeconds != currentCountdownSeconds {
 			if countDownSeconds == 0 {
 				p.ui.SetLabelText(ui.LABEL_COUNTDOWN, "GO!")
 				p.audioPlayer.PlaySound(GO_SOUND)
 				p.audioPlayer.PlaySound(START_SOUND)
+				p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, false)
 				p.ui.SetStatusMessage("Game "+
 					colors.Blue.Tag()+"started."+
 					colors.Yellow.Tag()+" Attack any rat with"+
@@ -138,9 +147,8 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 					colors.Red.Tag()+" !rat"+
 					colors.Yellow.Tag()+" again",
 					colors.Yellow)
-			} else if p.countdown <= -1000 {
-				p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
-				p.status = fighting
+				p.status = endCountdown
+				p.countdown = GO_VANISH
 			} else {
 				p.ui.SetLabelText(ui.LABEL_COUNTDOWN, fmt.Sprintf("%d", countDownSeconds))
 				if countDownSeconds >= 1 && countDownSeconds <= 10 {
@@ -151,6 +159,12 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 				}
 			}
 		}
+	} else if p.status == endCountdown {
+		p.countdown -= elapsedTime
+		if p.countdown <= 0 {
+			p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
+			p.status = fighting
+		}
 	}
 
 	p.ui.Update(elapsedTime)
@@ -159,16 +173,14 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 		switch event.Type_ {
 		case chat.Connect:
 			p.ui.SetStatusMessage("Connected to "+colors.Green.Tag()+p.channel, colors.White)
-			p.countdown = 30000
+			p.countdown = COUNTDOWN_LENGTH
 			p.status = counting
 			p.ui.SetStatusMessage("Game starting in"+
-				colors.Green.Tag()+" 30"+
+				colors.Green.Tag()+" "+strconv.FormatInt(COUNTDOWN_LENGTH/SECOND, 10)+
 				colors.Yellow.Tag()+" seconds."+
 				colors.Yellow.Tag()+" Join at any time with"+
 				colors.Red.Tag()+" !rat",
 				colors.Yellow)
-			p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, true)
-			p.ui.SetLabelText(ui.LABEL_COUNTDOWN, "30")
 		case chat.Disconnect:
 			p.ui.SetStatusMessage("Disconnected", colors.White)
 		case chat.Message:

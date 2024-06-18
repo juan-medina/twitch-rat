@@ -95,8 +95,6 @@ type uiImpl struct {
 	sliders      []slider.Slider
 	keys         keys.Keys
 	audioPlayer  audio.Player
-	licenseText  string
-	aboutText    string
 	fontSmall    draw.Font
 	fontNormal   draw.Font
 	fontBig      draw.Font
@@ -154,9 +152,10 @@ const (
 	LABEL_ABOUT_MESSAGE
 	LABEL_OPTIONS_MUSIC_VOLUME
 	LABEL_OPTIONS_AUDIO_VOLUME
+	LABEL_COUNTDOWN
+	LABEL_INSTRUCTIONS
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
-	LABEL_COUNTDOWN         = LABEL_LAST_MESSAGE_LAST + 1
 )
 
 const (
@@ -172,10 +171,13 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	//u.headSprite.SetScale(2.0)
 
 	data, _ := fileSystem.ReadFile("embed/text/license.txt")
-	u.licenseText = string(data)
+	licenseText := string(data)
 
 	data, _ = fileSystem.ReadFile("embed/text/about.txt")
-	u.aboutText = string(data)
+	aboutText := string(data)
+
+	data, _ = fileSystem.ReadFile("embed/text/instructions.txt")
+	instructions := string(data)
 
 	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
 		id := LABEL_LAST_MESSAGE + label.Id(i)
@@ -206,11 +208,11 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Options", button.Enabled)
 	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
 
-	u.addLabel(LABEL_ABOUT_MESSAGE, u.aboutText, u.fontSmall, normalLabelColor)
+	u.addLabel(LABEL_ABOUT_MESSAGE, aboutText, u.fontSmall, normalLabelColor)
 	u.addButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 	u.addButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 
-	u.addLabel(LABEL_LICENSE, u.licenseText, u.fontSmall, normalLabelColor)
+	u.addLabel(LABEL_LICENSE, licenseText, u.fontSmall, normalLabelColor)
 	u.addButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Accept", button.Enabled)
 
 	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.fontNormal, normalLabelColor)
@@ -228,6 +230,8 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	}
 
 	u.addLabel(LABEL_COUNTDOWN, "30", u.fontBig, normalLabelColor)
+	u.addLabel(LABEL_INSTRUCTIONS, instructions, u.fontNormal, normalLabelColor)
+
 	u.SetLabelVisible(LABEL_VERSION, true)
 }
 
@@ -315,10 +319,14 @@ func (u *uiImpl) layoutCounter() {
 	cy := MENU_START
 
 	countdownLabel := u.getLabel(LABEL_COUNTDOWN)
-	ix, _ := countdownLabel.Measure()
-	px := cx - (ix / 2)
+	ix, iy := countdownLabel.Measure()
+	px := cx - ix
 	py := cy
 	countdownLabel.Move(px, py)
+
+	py = py + iy + BUTTON_GAP
+	w, _ := u.getLabel(LABEL_INSTRUCTIONS).Measure()
+	u.moveLabel(LABEL_INSTRUCTIONS, cx-(w/2), py)
 }
 
 func (u *uiImpl) layoutMainElements(cx, cy float64) {
