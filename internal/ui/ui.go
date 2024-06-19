@@ -87,20 +87,21 @@ type flyingText struct {
 }
 
 type uiImpl struct {
-	screenWidth  float64
-	screenHeight float64
-	fileSystem   embed.FS
-	buttons      []button.Button
-	inputs       []input.Input
-	labels       []label.Label
-	sliders      []slider.Slider
-	keys         keys.Keys
-	audioPlayer  audio.Player
-	fontSmall    draw.Font
-	fontNormal   draw.Font
-	fontBig      draw.Font
-	flyingTexts  []flyingText
-	scores       scores.Scores
+	screenWidth   float64
+	screenHeight  float64
+	fileSystem    embed.FS
+	buttons       []button.Button
+	inputs        []input.Input
+	labels        []label.Label
+	sliders       []slider.Slider
+	keys          keys.Keys
+	audioPlayer   audio.Player
+	fontVerySmall draw.Font
+	fontSmall     draw.Font
+	fontNormal    draw.Font
+	fontBig       draw.Font
+	flyingTexts   []flyingText
+	scores        scores.Scores
 }
 
 const (
@@ -688,13 +689,14 @@ func (u *uiImpl) StartsCore() {
 	u.scores.Start()
 }
 
-func New(audioPlayer audio.Player, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {
+func New(audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {
 	return &uiImpl{
-		audioPlayer: audioPlayer,
-		fontSmall:   fontSmall,
-		fontNormal:  fontNormal,
-		fontBig:     fontBig,
-		flyingTexts: make([]flyingText, 0, MAX_FLYING_TEXTS),
-		scores:      scores.New(fontSmall, fontNormal),
+		audioPlayer:   audioPlayer,
+		fontVerySmall: fontVerySmall,
+		fontSmall:     fontSmall,
+		fontNormal:    fontNormal,
+		fontBig:       fontBig,
+		flyingTexts:   make([]flyingText, 0, MAX_FLYING_TEXTS),
+		scores:        scores.New(fontSmall, fontNormal),
 	}
 }

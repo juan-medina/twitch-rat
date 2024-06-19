@@ -119,7 +119,8 @@ type playing struct {
 	rats          draw.Sheet
 	herd          []rat.Rat
 	searchSlice   []rat.Rat
-	font          draw.Font
+	fontVerySmall draw.Font
+	fontSmall     draw.Font
 	countdown     int
 	status        status
 }
@@ -316,7 +317,7 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 	if command == SPAWN_COMMAND {
 		findRat := p.getRat(user)
 		if findRat == nil {
-			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.font, user, userColor)
+			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.fontVerySmall, p.fontSmall, user, userColor)
 			rat.RandomWalk()
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
@@ -443,7 +444,7 @@ func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player, font draw.Font) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font) stage.Stage {
 	audioPlayer.LoadSong(GAME_MUSIC)
 	audioPlayer.LoadSound(rat.HIT_SOUND)
 	audioPlayer.LoadSound(rat.DEAD_SOUND)
@@ -461,17 +462,18 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 		chatInterface = chat.NewDebug()
 	}
 	p := playing{
-		changer:     changer,
-		settings:    settings,
-		ui:          ui,
-		eventsChan:  make(chan chat.Event, 10),
-		chat:        chatInterface,
-		sewerMap:    sewerMap,
-		audioPlayer: audioPlayer,
-		rats:        rats,
-		herd:        make([]rat.Rat, 0, MAX_RATS),
-		searchSlice: make([]rat.Rat, 0, MAX_RATS),
-		font:        font,
+		changer:       changer,
+		settings:      settings,
+		ui:            ui,
+		eventsChan:    make(chan chat.Event, 10),
+		chat:          chatInterface,
+		sewerMap:      sewerMap,
+		audioPlayer:   audioPlayer,
+		rats:          rats,
+		herd:          make([]rat.Rat, 0, MAX_RATS),
+		searchSlice:   make([]rat.Rat, 0, MAX_RATS),
+		fontVerySmall: fontVerySmall,
+		fontSmall:     fontSmall,
 	}
 	return &p
 }

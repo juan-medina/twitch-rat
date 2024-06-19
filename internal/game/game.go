@@ -71,6 +71,7 @@ type game struct {
 	currentHeight  float64
 	valueToChange  step.Value
 	audioPlayer    audio.Player
+	fontVerySmall  draw.Font
 	fontSmall      draw.Font
 	fontNormal     draw.Font
 	fontBig        draw.Font
@@ -103,6 +104,7 @@ func (g *game) onLayoutChange(width, height float64) {
 func (g *game) init() {
 	g.settings.Init()
 	g.keys.Init()
+	g.fontVerySmall.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_very_small.fnt")
 	g.fontSmall.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_small.fnt")
 	g.fontNormal.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_normal.fnt")
 	g.fontBig.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_big.fnt")
@@ -121,7 +123,7 @@ func (g *game) init() {
 
 	g.addStage(stage.LICENSE, license.New(g, g.ui))
 	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.audioPlayer))
-	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, rats, g.audioPlayer, g.fontSmall))
+	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, rats, g.audioPlayer, g.fontVerySmall, g.fontSmall))
 
 	if debug := g.settings.GetBoolValue("debug", false); !debug {
 		g.changeStage(stage.LICENSE)
@@ -232,19 +234,21 @@ func (g *game) changeStage(id stage.Id) {
 
 func New(er embed.FS) *game {
 	audioPlayer := audio.NewPlayer(er, 1, 1)
+	fontVerySmall := draw.NewFont()
 	fontSmall := draw.NewFont()
 	fontNormal := draw.NewFont()
 	fontBig := draw.NewFont()
 	g := game{
 		fileSystem:    er,
 		state:         LOADING,
-		ui:            ui.New(audioPlayer, fontSmall, fontNormal, fontBig),
+		ui:            ui.New(audioPlayer, fontVerySmall, fontSmall, fontNormal, fontBig),
 		keys:          keys.New(),
 		settings:      settings.New(APPLICATION),
 		stages:        make(map[stage.Id]stage.Stage),
 		currentStage:  stage.NONE,
 		valueToChange: step.NewFromToPauseValue(0, 255, 200, 100),
 		audioPlayer:   audioPlayer,
+		fontVerySmall: fontVerySmall,
 		fontSmall:     fontSmall,
 		fontNormal:    fontNormal,
 		fontBig:       fontBig,

@@ -50,8 +50,8 @@ const (
 	WAIT_TO_WALK_AGAIN_MAX = 4500
 	WAIT_AFTER_HIT         = 1000
 	HEALTH_BAR_GAP         = 22
-	HEALTH_BAR_WIDTH       = 80
-	HEALTH_BAR_HEIGHT      = 15
+	HEALTH_BAR_WIDTH       = 110
+	HEALTH_BAR_HEIGHT      = 20
 	CRIT_CHANGE            = 0.25
 	MOD_VALUE              = 0.25
 	HEALTH_MAX             = 50
@@ -126,7 +126,10 @@ type ratImpl struct {
 	animationStatus      animationStatus
 	name                 string
 	nameLabel            label.Label
+	hpLabel              label.Label
 	labelWidth           float64
+	hpLabelWidth         float64
+	hpLabelHeight        float64
 	visible              bool
 	facing               direction
 	state                state
@@ -166,7 +169,8 @@ func (r *ratImpl) Draw(screen *ebiten.Image) {
 	vector.DrawFilledRect(screen, float32(r.barX), float32(r.barY), greenWidth, HEALTH_BAR_HEIGHT, colors.Green, false)
 	vector.DrawFilledRect(screen, redStart, float32(r.barY), redWidth, HEALTH_BAR_HEIGHT, colors.Red, false)
 
-	vector.StrokeRect(screen, float32(r.barX), float32(r.barY), HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 2, colors.Black, false)
+	vector.StrokeRect(screen, float32(r.barX), float32(r.barY), HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 3, colors.Black, false)
+	r.hpLabel.Draw(screen)
 }
 
 func (r *ratImpl) SetCenter(screenCenterX float64) {
@@ -189,6 +193,8 @@ func (r *ratImpl) moveLabel() {
 
 	r.barX = r.screenCenterX + r.x - HEALTH_BAR_WIDTH/2
 	r.barY = y + HEALTH_BAR_GAP
+
+	r.hpLabel.Move(r.screenCenterX+r.x-(r.hpLabelWidth/2), r.barY+(HEALTH_BAR_HEIGHT/2)-(r.hpLabelHeight/2))
 
 	r.flyingTextY = r.y - (rh / 2)
 }
@@ -336,6 +342,8 @@ func (r *ratImpl) Hurt(hit int) (amount int, over int, crit bool) {
 		}
 	}
 
+	r.hpLabel.SetText(strconv.Itoa(r.health))
+	r.hpLabelWidth, r.hpLabelHeight = r.hpLabel.Measure()
 	r.vx = 0
 	over = amount - (original - r.health)
 	return
@@ -420,6 +428,8 @@ func (r *ratImpl) ReSpawn(color colors.CustomColor) {
 	r.nameLabel.SetColor(color)
 	r.color = color
 	r.health = HEALTH_MAX
+	r.hpLabel.SetText(strconv.Itoa(r.health))
+	r.hpLabelWidth, r.hpLabelHeight = r.hpLabel.Measure()
 	r.x = 0
 	r.RandomWalk()
 	r.visible = true
@@ -436,6 +446,7 @@ func (r *ratImpl) Cure(heal int) (amount int, over int, crit bool) {
 	if r.health >= HEALTH_MAX {
 		r.health = HEALTH_MAX
 	}
+	r.hpLabel.SetText(strconv.Itoa(r.health))
 	over = heal - (r.health - original)
 	return
 }
@@ -551,24 +562,31 @@ func (r ratImpl) GetHealth() int {
 	return r.health
 }
 
-func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, font draw.Font, name string, ratColor colors.CustomColor) Rat {
-	label := label.NewLabel(0, name, font, font.DefaultSize(), ratColor)
-	labelWidth, _ := label.Measure()
-	label.SetVisible(true)
+func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, fontVerySmall draw.Font, fontSmall draw.Font, name string, ratColor colors.CustomColor) Rat {
+	nameLabel := label.NewLabel(0, name, fontSmall, fontSmall.DefaultSize(), ratColor)
+	labelWidth, _ := nameLabel.Measure()
+	nameLabel.SetVisible(true)
+
+	hpLabel := label.NewLabel(0, strconv.Itoa(HEALTH_MAX), fontVerySmall, fontVerySmall.DefaultSize(), colors.White)
+	hpLabelWidth, hpLabelHeight := hpLabel.Measure()
+	hpLabel.SetVisible(true)
 
 	return &ratImpl{
-		audioPlayer: audioPlayer,
-		name:        name,
-		x:           0,
-		y:           0,
-		vx:          0,
-		sheet:       sheet,
-		nameLabel:   label,
-		labelWidth:  labelWidth,
-		visible:     true,
-		facing:      right,
-		ui:          ui,
-		color:       ratColor,
-		health:      HEALTH_MAX,
+		audioPlayer:   audioPlayer,
+		name:          name,
+		x:             0,
+		y:             0,
+		vx:            0,
+		sheet:         sheet,
+		nameLabel:     nameLabel,
+		hpLabel:       hpLabel,
+		labelWidth:    labelWidth,
+		hpLabelWidth:  hpLabelWidth,
+		hpLabelHeight: hpLabelHeight,
+		visible:       true,
+		facing:        right,
+		ui:            ui,
+		color:         ratColor,
+		health:        HEALTH_MAX,
 	}
 }
