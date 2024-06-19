@@ -32,6 +32,8 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
+	"github.com/juan-medina/twitch-rat/internal/ui/button/imageButton"
+	"github.com/juan-medina/twitch-rat/internal/ui/button/textButton"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 	"github.com/juan-medina/twitch-rat/internal/ui/scores"
@@ -103,6 +105,7 @@ type uiImpl struct {
 	fontBig       draw.Font
 	flyingTexts   []flyingText
 	scores        scores.Scores
+	sheet         draw.Sheet
 }
 
 const (
@@ -169,6 +172,7 @@ const (
 )
 
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
+	u.sheet = sheet
 	u.fileSystem = fileSystem
 	u.keys = keys
 
@@ -207,18 +211,20 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
-	u.addButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
-	u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, u.fontSmall, "X", button.Enabled)
-	u.addButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Options", button.Enabled)
-	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
+	u.addTextButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
+	//u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, u.fontSmall, "X", button.Enabled)
+	u.addImageButton(BACK_BUTTON, "exitLeft", button.Enabled)
+
+	u.addTextButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Options", button.Enabled)
+	u.addTextButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
 
 	u.addLabel(LABEL_ABOUT_MESSAGE, aboutText, u.fontSmall, normalLabelColor)
 	u.SetLabelBackgroundColor(LABEL_ABOUT_MESSAGE, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
-	u.addButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
-	u.addButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
+	u.addTextButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
+	u.addTextButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 
 	u.addLabel(LABEL_LICENSE, licenseText, u.fontSmall, normalLabelColor)
-	u.addButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Accept", button.Enabled)
+	u.addTextButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Accept", button.Enabled)
 
 	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.fontNormal, normalLabelColor)
 	u.addSlider(MUSIC_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
@@ -228,7 +234,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 
 	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User", u.fontNormal)
 	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message", u.fontNormal)
-	u.addButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Debug", button.Enabled)
+	u.addTextButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Debug", button.Enabled)
 
 	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
 		u.SetLabelVisible(LABEL_LAST_MESSAGE+label.Id(i), true)
@@ -478,8 +484,12 @@ func (u *uiImpl) moveButton(id button.Id, x, y float64) {
 	}
 }
 
-func (u *uiImpl) addButton(id button.Id, w, h float64, font draw.Font, label string, state button.State) {
-	u.buttons = append(u.buttons, button.New(id, w, h, label, font, font.DefaultSize(), u.audioPlayer, state))
+func (u *uiImpl) addTextButton(id button.Id, w, h float64, font draw.Font, label string, state button.State) {
+	u.buttons = append(u.buttons, textButton.New(id, w, h, label, font, font.DefaultSize(), u.audioPlayer, state))
+}
+
+func (u *uiImpl) addImageButton(id button.Id, spriteName string, state button.State) {
+	u.buttons = append(u.buttons, imageButton.New(id, u.sheet.Sprite(spriteName), u.audioPlayer, state))
 }
 
 func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {

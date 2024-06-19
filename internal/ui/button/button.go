@@ -19,24 +19,12 @@
 package button
 
 import (
-	"image/color"
-
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
-	"github.com/juan-medina/twitch-rat/internal/audio"
-	"github.com/juan-medina/twitch-rat/internal/colors"
-	"github.com/juan-medina/twitch-rat/internal/draw"
-	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
-var (
-	enabledColor  = colors.DarkPurple
-	hoverColor    = colors.Purple
-	pressedColor  = colors.Violet
-	disabledColor = colors.DarkGray
-
-	buttonEnabledTextColor  = colors.LightYellow
-	buttonDisabledTextColor = colors.Gray
+const (
+	CLICK_SENT_DELAY = 200
+	CLICK_SOUND      = "embed/sounds/click.ogg"
 )
 
 type Id int
@@ -59,130 +47,3 @@ const (
 	Hover
 	Pressed
 )
-
-type button struct {
-	id                  Id
-	x, y, w, h          float64
-	color               color.Color
-	visible             bool
-	label               label.Label
-	state               State
-	timeToSendClick     int
-	buttonClickCallback func(id Id)
-	audioPlayer         audio.Player
-}
-
-func dummyButtonCallback(id Id) {}
-
-const (
-	CLICK_SENT_DELAY = 200
-	CLICK_SOUND      = "embed/sounds/click.ogg"
-)
-
-func (b button) GetId() Id {
-	return b.id
-}
-
-func (b button) Draw(screen *ebiten.Image) {
-	if b.visible {
-		vector.DrawFilledRect(screen, float32(b.x), float32(b.y), float32(b.w), float32(b.h), b.color, true)
-		b.label.Draw(screen)
-	}
-}
-
-func (b *button) ChangeState(state State) {
-	b.state = state
-	textColor := buttonEnabledTextColor
-	switch state {
-	case Hover:
-		b.color = hoverColor
-	case Enabled:
-		b.color = enabledColor
-	case Pressed:
-		b.color = pressedColor
-	case Disabled:
-		b.color = disabledColor
-		textColor = buttonDisabledTextColor
-	}
-	b.label.SetColor(textColor)
-}
-
-func (b *button) SetVisible(visible bool) {
-	b.visible = visible
-	b.label.SetVisible(visible)
-}
-
-func (b button) hit(x, y float64) bool {
-	if x > b.x && x < b.x+b.w && y > b.y && y < b.y+b.h {
-		return true
-	}
-	return false
-}
-
-func (b *button) Move(x, y float64) {
-	b.x = x
-	b.y = y
-
-	dx, dy := b.label.Measure()
-	tx := x + (b.w / 2) - (dx / 2)
-	ty := y + (b.h / 2) - (dy / 2)
-
-	b.label.Move(tx, ty)
-}
-
-func (b *button) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
-	if b.visible {
-		if b.state != Disabled {
-			if b.hit(mouseX, mouseY) {
-				if leftPressed {
-					b.Click()
-				} else {
-					ebiten.SetCursorShape(ebiten.CursorShapePointer)
-					b.ChangeState(Hover)
-				}
-			} else {
-				b.ChangeState(Enabled)
-			}
-		}
-		if b.timeToSendClick != 0 {
-			b.timeToSendClick -= elapsedTime
-			if b.timeToSendClick <= 0 {
-				b.timeToSendClick = 0
-				b.buttonClickCallback(b.id)
-			}
-		}
-	}
-}
-
-func (b *button) OnButtonClickCallback(onButtonClick func(id Id)) {
-	if onButtonClick != nil {
-		b.buttonClickCallback = onButtonClick
-	} else {
-		b.buttonClickCallback = dummyButtonCallback
-	}
-}
-
-func (b *button) Click() {
-	if b.state != Pressed {
-		if b.timeToSendClick == 0 {
-			b.ChangeState(Pressed)
-			b.timeToSendClick = CLICK_SENT_DELAY
-			b.audioPlayer.PlaySound(CLICK_SOUND)
-		}
-	}
-}
-
-func New(id Id, w, h float64, text string, font draw.Font, lineHeight float64, audioPlayer audio.Player, state State) Button {
-	audioPlayer.LoadSound(CLICK_SOUND)
-	b := button{
-		id:                  id,
-		w:                   w,
-		h:                   h,
-		label:               label.NewLabel(0, text, font, lineHeight, buttonEnabledTextColor),
-		visible:             false,
-		buttonClickCallback: dummyButtonCallback,
-		audioPlayer:         audioPlayer,
-	}
-	b.ChangeState(state)
-	return &b
-}

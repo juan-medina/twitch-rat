@@ -5,8 +5,13 @@
   "savePath": "D:\\Documents\\source\\twitch-rat\\internal\\app\\embed\\sprites\\rats",
   "images": [
     {
-      "name": "rat_head_small.png",
-      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_head_small.png",
+      "name": "exitLeft.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/exitLeft.png",
+      "folder": ""
+    },
+    {
+      "name": "gear.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/gear.png",
       "folder": ""
     },
     {
