@@ -270,10 +270,31 @@ func (p playing) findTargetToHeal() rat.Rat {
 	return p.searchSlice[r]
 }
 
+var lastRandomName = 0
+
+func (p playing) getRandomRatName() (name string) {
+
+	r := rand.Intn(100)
+	if r < 50 {
+		name = "rat"
+	} else {
+		name = "mouse"
+	}
+
+	lastRandomName += rand.Intn(10) + 1
+
+	name = fmt.Sprintf("%s%d", name, lastRandomName)
+	return
+}
+
 func (p *playing) processCommand(message string, user string, userColor colors.CustomColor) {
 	if userColor == colors.Black {
 		userColor = labelColors[nextLabelColor]
 		nextLabelColor = (nextLabelColor + 1) % len(labelColors)
+	}
+
+	if user == "" {
+		user = p.getRandomRatName()
 	}
 
 	lenStr := len(message)
