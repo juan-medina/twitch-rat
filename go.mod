@@ -3,6 +3,7 @@ module github.com/juan-medina/twitch-rat
 go 1.22.2
 
 require (
+	github.com/f1bonacc1/glippy v0.0.0-20230614190937-e7ca07f99f6f
 	github.com/gempir/go-twitch-irc/v4 v4.0.0
 	github.com/hajimehoshi/ebiten/v2 v2.7.4
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
@@ -14,7 +15,6 @@ require (
 	github.com/ebitengine/hideconsole v1.0.0 // indirect
 	github.com/ebitengine/oto/v3 v3.2.0 // indirect
 	github.com/ebitengine/purego v0.7.1 // indirect
-	github.com/f1bonacc1/glippy v0.0.0-20230614190937-e7ca07f99f6f // indirect
 	github.com/go-text/typesetting v0.1.1 // indirect
 	github.com/jezek/xgb v1.1.1 // indirect
 	github.com/jfreymuth/oggvorbis v1.0.5 // indirect
