@@ -30,13 +30,14 @@ import (
 )
 
 const (
-	HEAD_SPRITE      = "rat_head_small"
-	ENTRIES_GAP_Y    = 8
-	ENTRIES_GAP_X    = 24
-	MAX_ENTRIES      = 40
-	SCORE_WIDTH      = 400
-	SECOND           = 1000
-	COUNTDOWN_LENGTH = 11 * SECOND
+	HEAD_SPRITE        = "rat_head_small"
+	ENTRIES_GAP_Y      = 8
+	ENTRIES_GAP_X      = 24
+	MAX_ENTRIES        = 40
+	SCORE_WIDTH        = 400
+	SECOND             = 1000
+	COUNTDOWN_LENGTH   = 11 * SECOND
+	MAX_SCORES_DISPLAY = 24
 )
 
 type ScoreData interface {
@@ -78,6 +79,7 @@ type scoresImpl struct {
 	started       bool
 	countdown     int
 	countdownText string
+	limitText     string
 }
 
 func (s *scoresImpl) Init() {
@@ -153,7 +155,13 @@ func (s scoresImpl) Draw(screen *ebiten.Image) {
 	startX := s.x
 	startY := s.y
 
-	s.fontNormal.Draw(screen, "Scores", startX-(s.x/2), startY, s.fontNormal.DefaultSize(), colors.White)
+	scoreText := "Score"
+
+	if !s.started {
+		scoreText = "Rats"
+	}
+
+	s.fontNormal.Draw(screen, scoreText, startX-(s.x/2), startY, s.fontNormal.DefaultSize(), colors.White)
 
 	startY += s.fontNormal.DefaultSize() + ENTRIES_GAP_Y
 
@@ -162,13 +170,22 @@ func (s scoresImpl) Draw(screen *ebiten.Image) {
 	startY += ENTRIES_GAP_Y * 2
 
 	textHeight := s.fontSmall.DefaultSize()
-	for _, e := range s.entries {
+
+	for i, e := range s.entries {
+		if i >= MAX_SCORES_DISPLAY {
+			break
+		}
 		s.fontSmall.Draw(screen, e.data.GetName(), startX, startY, textHeight, e.data.GetColor())
 
 		if s.started {
 			s.fontSmall.Draw(screen, e.text, e.pointX, startY, textHeight, colors.White)
 		}
 		startY += textHeight + ENTRIES_GAP_Y
+	}
+
+	if len(s.entries) > 0 {
+		vector.StrokeLine(screen, 0, float32(startY), float32(s.x+s.scoreWidth+(s.x/2)), float32(startY), 2, colors.White, false)
+		s.fontSmall.Draw(screen, s.limitText, 6, startY-6, textHeight, colors.White)
 	}
 
 	if s.started {
@@ -182,6 +199,11 @@ func (s *scoresImpl) SetVisible(visible bool) {
 
 func (s *scoresImpl) Add(data ScoreData) {
 	s.entries = append(s.entries, scoreEntry{data: data, score: 0})
+	if len(s.entries) > MAX_SCORES_DISPLAY {
+		s.limitText = fmt.Sprintf("%d/%d rats", MAX_SCORES_DISPLAY, len(s.entries))
+	} else {
+		s.limitText = fmt.Sprintf("%d rats", len(s.entries))
+	}
 }
 
 func (s *scoresImpl) Move(x float64, y float64) {
@@ -192,6 +214,7 @@ func (s *scoresImpl) Move(x float64, y float64) {
 func (s *scoresImpl) Reset() {
 	s.entries = s.entries[:0]
 	s.started = false
+	s.limitText = ""
 }
 
 func (s *scoresImpl) Start() {
@@ -205,5 +228,6 @@ func New(fontSmall draw.Font, fontNormal draw.Font) Scores {
 		entries:    make([]scoreEntry, 0, MAX_ENTRIES),
 		fontSmall:  fontSmall,
 		fontNormal: fontNormal,
+		limitText:  "",
 	}
 }
