@@ -62,10 +62,14 @@ type Scores interface {
 }
 
 type scoreEntry struct {
-	data   ScoreData
-	score  int
-	pointX float64
-	text   string
+	data         ScoreData
+	score        int
+	pointX       float64
+	text         string
+	addText      string
+	addX         float64
+	delayAddTime int
+	delayValue   int
 }
 type scoresImpl struct {
 	visible       bool
@@ -90,6 +94,7 @@ func (s *scoresImpl) Update(elapsedTime int) {
 		return
 	}
 
+	secondsLogic := -1
 	calculateScore := false
 	if s.started {
 
@@ -98,7 +103,8 @@ func (s *scoresImpl) Update(elapsedTime int) {
 		countDownSeconds := s.countdown / SECOND
 
 		if currentCountdownSeconds != countDownSeconds {
-			s.countdownText = fmt.Sprintf("%02d/10s", int(countDownSeconds))
+			secondsLogic = int(countDownSeconds)
+			s.countdownText = fmt.Sprintf("%02d/10s", secondsLogic)
 		}
 		if countDownSeconds <= 0 {
 			s.countdown = COUNTDOWN_LENGTH
@@ -112,10 +118,26 @@ func (s *scoresImpl) Update(elapsedTime int) {
 
 	maxScoreLength := 0
 	maxScore := ""
+
+	needSort := false
 	for i := range s.entries {
 		if calculateScore {
 			health := s.entries[i].data.GetHealth()
-			s.entries[i].score += (5 * health)
+			toAdd := 5 * health
+			if toAdd > 0 {
+				s.entries[i].delayValue = toAdd
+				s.entries[i].delayAddTime = 2 * SECOND
+				s.entries[i].addText = fmt.Sprintf("+ %d", toAdd)
+			}
+		} else if s.entries[i].delayAddTime > 0 {
+			s.entries[i].delayAddTime -= elapsedTime
+			if s.entries[i].delayAddTime <= 0 {
+				s.entries[i].score += s.entries[i].delayValue
+				s.entries[i].delayValue = 0
+				s.entries[i].delayAddTime = 0
+				s.entries[i].addText = ""
+				needSort = true
+			}
 		}
 
 		s.entries[i].text = strconv.Itoa(s.entries[i].score)
@@ -129,15 +151,19 @@ func (s *scoresImpl) Update(elapsedTime int) {
 			maxScore = s.entries[i].text
 		}
 	}
-	sort.Slice(s.entries, func(i, j int) bool {
-		return s.entries[i].score > s.entries[j].score
-	})
+
+	if needSort {
+		sort.Slice(s.entries, func(i, j int) bool {
+			return s.entries[i].score > s.entries[j].score
+		})
+	}
 
 	mameWidth, _ := s.fontSmall.Measure(maxName, s.fontSmall.DefaultSize())
 	scoreWidth, _ := s.fontSmall.Measure(maxScore, s.fontSmall.DefaultSize())
 	for i := range s.entries {
 		entryScoreWidth, _ := s.fontSmall.Measure(s.entries[i].text, s.fontSmall.DefaultSize())
 		s.entries[i].pointX = s.x + (mameWidth + ENTRIES_GAP_X) + (scoreWidth - entryScoreWidth)
+		s.entries[i].addX = s.entries[i].pointX + entryScoreWidth + ENTRIES_GAP_X/2
 	}
 
 	s.scoreWidth = mameWidth + ENTRIES_GAP_X + scoreWidth
@@ -179,6 +205,7 @@ func (s scoresImpl) Draw(screen *ebiten.Image) {
 
 		if s.started {
 			s.fontSmall.Draw(screen, e.text, e.pointX, startY, textHeight, colors.White)
+			s.fontSmall.Draw(screen, e.addText, e.addX, startY, textHeight, colors.Green)
 		}
 		startY += textHeight + ENTRIES_GAP_Y
 	}
