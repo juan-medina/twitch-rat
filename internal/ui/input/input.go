@@ -24,6 +24,7 @@ package input
 
 import (
 	"image/color"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -63,6 +64,7 @@ type input struct {
 	editing         bool
 	savedText       string
 	audioPlayer     audio.Player
+	clipboard       Clipboard
 }
 
 const (
@@ -185,6 +187,15 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 		keys.SwallowKey(ebiten.KeyEscape)
 	}
 
+	if keys.IsDown(ebiten.KeyControl) && keys.IsDownNoRepeat(ebiten.KeyV) {
+		if i.IsEditing() {
+			playSound = true
+			keys.SwallowKey(ebiten.KeyControl)
+			keys.SwallowKey(ebiten.KeyV)
+			i.clipboard.Request(i.id)
+		}
+	}
+
 	if playSound {
 		i.audioPlayer.PlaySound(KEY_PRESS_SOUND)
 	}
@@ -246,10 +257,21 @@ func (i *input) Move(x, y float64) {
 	i.textPlaceHolder.Move(i.x+INPUT_LEFT_GAP, i.y+INPUT_TOP_GAP)
 }
 
+func (i *input) onClipboard(id Id, text string) {
+	if i.visible && i.editing && i.id == id {
+		text = strings.ReplaceAll(text, "\n", "")
+		clipboardText := i.GetText() + text
+		if len(clipboardText) > i.maxLength {
+			clipboardText = clipboardText[:i.maxLength]
+		}
+		i.SetText(clipboardText)
+	}
+}
+
 func New(id Id, w, h float64, maxLength int, initialText string, placeholder string, font draw.Font, lineHeight float64, audioPlayer audio.Player) Input {
 	audioPlayer.LoadSound(MOUSE_CLICK_SOUND)
 	audioPlayer.LoadSound(KEY_PRESS_SOUND)
-	return &input{
+	i := input{
 		id:              id,
 		w:               w,
 		h:               h,
@@ -263,4 +285,9 @@ func New(id Id, w, h float64, maxLength int, initialText string, placeholder str
 		caretAlpha:      step.NewPingPongValue(0, 1, 200, 100),
 		audioPlayer:     audioPlayer,
 	}
+
+	i.clipboard = newClipboard()
+	i.clipboard.OnReady(i.onClipboard)
+
+	return &i
 }
