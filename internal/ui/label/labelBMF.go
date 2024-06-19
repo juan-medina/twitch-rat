@@ -22,17 +22,23 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 )
 
 type labelBMPF struct {
-	id         Id
-	text       string
-	visible    bool
-	lineHeight float64
-	font       draw.Font
-	color      color.Color
-	x, y       float64
+	id               Id
+	text             string
+	visible          bool
+	lineHeight       float64
+	font             draw.Font
+	color            color.Color
+	x, y             float64
+	hasBackground    bool
+	backgroundColor  color.Color
+	bgX, bgY         float64
+	bgW, bgH         float64
+	expandBackground float64
 }
 
 func (l labelBMPF) GetId() Id {
@@ -41,6 +47,9 @@ func (l labelBMPF) GetId() Id {
 
 func (l *labelBMPF) Draw(screen *ebiten.Image) {
 	if l.visible {
+		if l.hasBackground {
+			vector.DrawFilledRect(screen, float32(l.bgX), float32(l.bgY), float32(l.bgW), float32(l.bgH), l.backgroundColor, false)
+		}
 		l.font.Draw(screen, l.text, l.x, l.y, l.lineHeight, l.color)
 	}
 }
@@ -48,18 +57,23 @@ func (l *labelBMPF) Draw(screen *ebiten.Image) {
 func (l *labelBMPF) Move(x float64, y float64) {
 	l.x = x
 	l.y = y
+	l.calculateBackground()
 }
 
 func (l *labelBMPF) SetText(text string) {
 	l.text = text
+	l.calculateBackground()
 }
 
 func (l labelBMPF) GetText() string {
 	return l.text
 }
 
-func (l labelBMPF) Measure() (float64, float64) {
-	return l.font.Measure(l.text, l.lineHeight)
+func (l labelBMPF) Measure() (width float64, height float64) {
+	width, height = l.font.Measure(l.text, l.lineHeight)
+	width += l.expandBackground * 2
+	height += l.expandBackground * 2
+	return
 }
 
 func (l *labelBMPF) SetColor(color color.Color) {
@@ -76,6 +90,23 @@ func (l *labelBMPF) SetAlpha(alpha float32) {
 
 func (l *labelBMPF) SetVisible(visible bool) {
 	l.visible = visible
+}
+
+func (l *labelBMPF) SetBackgroundColor(color color.Color, expand float64) {
+	l.hasBackground = color != nil
+	l.backgroundColor = color
+	l.expandBackground = expand
+	l.calculateBackground()
+}
+
+func (l *labelBMPF) calculateBackground() {
+	if l.hasBackground {
+		w, h := l.font.Measure(l.text, l.lineHeight)
+		l.bgX = l.x - l.expandBackground
+		l.bgY = l.y - l.expandBackground
+		l.bgW = w + l.expandBackground*2
+		l.bgH = h + l.expandBackground*2
+	}
 }
 
 func NewLabel(id Id, text string, font draw.Font, lineHeight float64, color color.Color) Label {

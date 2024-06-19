@@ -62,6 +62,7 @@ type UI interface {
 	SetLabelColor(id label.Id, color color.Color)
 	GetLabelColor(id label.Id) color.Color
 	SetLabelVisible(id label.Id, visible bool)
+	SetLabelBackgroundColor(id label.Id, color color.Color, expand float64)
 
 	SetSliderVisible(id slider.Id, visible bool)
 	SetSliderValue(id slider.Id, value float64)
@@ -129,6 +130,7 @@ const (
 	FLYING_TIME_TO_FREE          = 1
 	SCORE_X                      = 10
 	SCORE_Y                      = 10
+	BACKGROUND_EXPAND            = 5
 )
 
 const (
@@ -211,6 +213,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
 
 	u.addLabel(LABEL_ABOUT_MESSAGE, aboutText, u.fontSmall, normalLabelColor)
+	u.SetLabelBackgroundColor(LABEL_ABOUT_MESSAGE, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 	u.addButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 	u.addButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 
@@ -233,6 +236,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 
 	u.addLabel(LABEL_COUNTDOWN, "30", u.fontBig, normalLabelColor)
 	u.addLabel(LABEL_INSTRUCTIONS, instructions, u.fontNormal, normalLabelColor)
+	u.SetLabelBackgroundColor(LABEL_INSTRUCTIONS, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 
 	u.SetLabelVisible(LABEL_VERSION, true)
 }
@@ -307,7 +311,7 @@ func (u *uiImpl) SetStatusMessage(message string, textColor color.Color) {
 		u.SetLabelText(currentLabelId, u.GetLabelText(prevLabelId))
 		prevColor := u.GetLabelColor(prevLabelId)
 		r, g, b, _ := prevColor.RGBA()
-		newAlpha := uint32(255 - (i * (255 - 64) / (TOTAL_LAST_MESSAGES - 1)))
+		newAlpha := uint32(255 - (i * (255 - 128) / (TOTAL_LAST_MESSAGES - 1)))
 		u.SetLabelColor(currentLabelId, color.RGBA{uint8(r), uint8(g), uint8(b), uint8(newAlpha)})
 	}
 
@@ -687,6 +691,12 @@ func (u *uiImpl) SetScoreVisible(visible bool) {
 
 func (u *uiImpl) StartsCore() {
 	u.scores.Start()
+}
+
+func (u *uiImpl) SetLabelBackgroundColor(id label.Id, color color.Color, expand float64) {
+	if l := u.getLabel(id); l != nil {
+		l.SetBackgroundColor(color, expand)
+	}
 }
 
 func New(audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {

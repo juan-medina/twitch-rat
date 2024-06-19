@@ -36,4 +36,5 @@ type Label interface {
 	GetColor() color.Color
 	SetAlpha(alpha float32)
 	SetVisible(visible bool)
+	SetBackgroundColor(color color.Color, expand float64)
 }
