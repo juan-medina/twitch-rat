@@ -141,6 +141,8 @@ type ratImpl struct {
 	color                colors.CustomColor
 	barX                 float64
 	barY                 float64
+	redStart             float64
+	redWidth             float64
 	health               int
 	flyingTextY          float64
 	timeSinceLastCommand int
@@ -162,15 +164,17 @@ func (r *ratImpl) Draw(screen *ebiten.Image) {
 	r.sprite.Draw(screen, r.screenCenterX+r.x, r.y, r.facing == left, false)
 	r.nameLabel.Draw(screen)
 
-	greenWidth := float32(float64(HEALTH_BAR_WIDTH) * (float64(r.health) / HEALTH_MAX))
-	redWidth := float32(HEALTH_BAR_WIDTH - greenWidth)
-	redStart := float32(float32(r.barX) + greenWidth)
-
 	vector.DrawFilledRect(screen, float32(r.barX), float32(r.barY), HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, colors.Green, false)
-	vector.DrawFilledRect(screen, redStart, float32(r.barY), redWidth, HEALTH_BAR_HEIGHT, colors.Red, false)
+	vector.DrawFilledRect(screen, float32(r.redStart), float32(r.barY), float32(r.redWidth), HEALTH_BAR_HEIGHT, colors.Red, false)
 
 	vector.StrokeRect(screen, float32(r.barX), float32(r.barY), HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 3, colors.Black, false)
 	r.hpLabel.Draw(screen)
+}
+
+func (r *ratImpl) calculateRedHPBar() {
+	greenWidth := float64(HEALTH_BAR_WIDTH) * (float64(r.health) / HEALTH_MAX)
+	r.redWidth = HEALTH_BAR_WIDTH - greenWidth
+	r.redStart = r.barX + greenWidth
 }
 
 func (r *ratImpl) SetCenter(screenCenterX float64) {
@@ -197,6 +201,7 @@ func (r *ratImpl) moveLabel() {
 	r.hpLabel.Move(r.screenCenterX+r.x-(r.hpLabelWidth/2), r.barY+(HEALTH_BAR_HEIGHT/2)-(r.hpLabelHeight/2))
 
 	r.flyingTextY = r.y - (rh / 2)
+	r.calculateRedHPBar()
 }
 
 func (r *ratImpl) Update(elapsedTime int) {
@@ -342,11 +347,16 @@ func (r *ratImpl) Hurt(hit int) (amount int, over int, crit bool) {
 		}
 	}
 
-	r.hpLabel.SetText(strconv.Itoa(r.health))
-	r.hpLabelWidth, r.hpLabelHeight = r.hpLabel.Measure()
+	r.updateHP()
 	r.vx = 0
 	over = amount - (original - r.health)
 	return
+}
+
+func (r *ratImpl) updateHP() {
+	r.hpLabel.SetText(strconv.Itoa(r.health))
+	r.hpLabelWidth, r.hpLabelHeight = r.hpLabel.Measure()
+	r.calculateRedHPBar()
 }
 
 func (r *ratImpl) idle() {
@@ -428,8 +438,7 @@ func (r *ratImpl) ReSpawn(color colors.CustomColor) {
 	r.nameLabel.SetColor(color)
 	r.color = color
 	r.health = HEALTH_MAX
-	r.hpLabel.SetText(strconv.Itoa(r.health))
-	r.hpLabelWidth, r.hpLabelHeight = r.hpLabel.Measure()
+	r.updateHP()
 	r.x = 0
 	r.RandomWalk()
 	r.visible = true
