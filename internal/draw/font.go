@@ -105,6 +105,7 @@ type Font interface {
 	Draw(screen *ebiten.Image, text string, x, y float64, size float64, color color.Color)
 	Measure(text string, size float64) (float64, float64)
 	DefaultSize() float64
+	GetLineHeight() float64
 }
 
 type runeDef struct {
@@ -274,6 +275,9 @@ func (f fontImpl) Measure(text string, size float64) (float64, float64) {
 
 func (f fontImpl) DefaultSize() float64 {
 	return float64(f.fontDef.Common.LineHeight)
+}
+func (f fontImpl) GetLineHeight() float64 {
+	return float64(f.fontDef.Common.LineHeight) + f.spacingY
 }
 
 func NewFont() Font {

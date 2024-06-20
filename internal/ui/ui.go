@@ -238,10 +238,14 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addTextButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
 
 	u.addLabel(LABEL_ABOUT_MESSAGE, aboutText, u.fontSmall, normalLabelColor)
+	u.getLabel(LABEL_ABOUT_MESSAGE).ParseLinks()
+
 	u.SetLabelBackgroundColor(LABEL_ABOUT_MESSAGE, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 	u.addTextButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 
 	u.addLabel(LABEL_LICENSE, licenseText, u.fontSmall, normalLabelColor)
+	u.getLabel(LABEL_LICENSE).ParseLinks()
+
 	u.addTextButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Accept", button.Enabled)
 
 	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User", u.fontNormal)
@@ -296,6 +300,7 @@ func (u *uiImpl) Update(elapsedTime int) {
 	u.updateInputs(x, y, justPressed, elapsedTime)
 	u.updateSliders(x, y, justPressed, pressed, elapsedTime)
 	u.updateFlyingTexts(elapsedTime)
+	u.updateLabels(x, y, justPressed, elapsedTime)
 	u.scores.Update(elapsedTime)
 }
 
@@ -590,7 +595,7 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 }
 
 func (u *uiImpl) addLabel(id label.Id, text string, font draw.Font, color color.Color) {
-	l := label.NewLabel(id, text, font, font.DefaultSize(), color)
+	l := label.NewLabel(id, text, font, font.DefaultSize(), color, u.audioPlayer)
 	u.labels = append(u.labels, l)
 	u.widgets = append(u.widgets, l)
 }
@@ -759,6 +764,12 @@ func (u *uiImpl) SetPanelVisible(id panel.Id, visible bool) {
 func (u *uiImpl) movePanel(id panel.Id, x, y float64) {
 	if p := u.getPanel(id); p != nil {
 		p.Move(x, y)
+	}
+}
+
+func (u *uiImpl) updateLabels(x, y float64, justPressed bool, elapsedTime int) {
+	for i := range u.labels {
+		u.labels[i].Update(x, y, justPressed, elapsedTime)
 	}
 }
 

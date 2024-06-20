@@ -25,6 +25,6 @@ import (
 )
 
 func (g *game) exit() error {
-	js.Global().Get("navigateTo").Invoke("about:blank")
+	js.Global().Get("navigateTo").Invoke("about:blank", false)
 	return nil
 }

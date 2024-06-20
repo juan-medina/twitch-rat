@@ -1,3 +1,5 @@
+//go:build wasm
+
 /*
  *  Copyright (c) 2024 Juan Medina
  *
@@ -18,25 +20,8 @@
 
 package label
 
-import (
-	"image/color"
+import "syscall/js"
 
-	"github.com/hajimehoshi/ebiten/v2"
-)
-
-type Id int
-type Label interface {
-	GetId() Id
-	SetText(text string)
-	GetText() string
-	Draw(screen *ebiten.Image)
-	Move(x, y float64)
-	Measure() (float64, float64)
-	SetColor(color color.Color)
-	GetColor() color.Color
-	SetAlpha(alpha float32)
-	SetVisible(visible bool)
-	SetBackgroundColor(color color.Color, expand float64)
-	ParseLinks()
-	Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int)
+func (l *labelBMPF) newTab(url string) {
+	js.Global().Get("navigateTo").Invoke(url, true)
 }

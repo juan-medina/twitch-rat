@@ -197,7 +197,7 @@ func New(id Id, w, h float64, font draw.Font, lineHeight float64, labelColor col
 		w:                   w,
 		h:                   h,
 		color:               sliderColor,
-		valueLabel:          label.NewLabel(0, " 100%", font, lineHeight, labelColor),
+		valueLabel:          label.NewLabel(0, " 100%", font, lineHeight, labelColor, nil),
 		markerWidth:         markerWidth,
 		markerHeight:        markerHeight,
 		markerColor:         markerNormalColor,

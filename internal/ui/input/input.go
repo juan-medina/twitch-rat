@@ -275,9 +275,9 @@ func New(id Id, w, h float64, maxLength int, initialText string, placeholder str
 		borderColor:     inputBorderColor,
 		color:           inputColor,
 		visible:         false,
-		textLabel:       label.NewLabel(0, initialText, font, lineHeight, inputTextColor),
-		textPlaceHolder: label.NewLabel(0, placeholder, font, lineHeight, inputPlaceHolderColor),
-		caretLabel:      label.NewLabel(0, "|", font, lineHeight, caretColor),
+		textLabel:       label.NewLabel(0, initialText, font, lineHeight, inputTextColor, nil),
+		textPlaceHolder: label.NewLabel(0, placeholder, font, lineHeight, inputPlaceHolderColor, nil),
+		caretLabel:      label.NewLabel(0, "|", font, lineHeight, caretColor, nil),
 		caretAlpha:      step.NewPingPongValue(0, 1, 200, 100),
 		audioPlayer:     audioPlayer,
 	}

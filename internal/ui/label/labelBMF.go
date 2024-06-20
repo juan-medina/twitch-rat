@@ -20,11 +20,45 @@ package label
 
 import (
 	"image/color"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/audio"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 )
+
+const (
+	CLICK_SENT_DELAY = 200
+	CLICK_SOUND      = "embed/sounds/click.ogg"
+)
+
+type linkState int
+
+const (
+	Enabled linkState = iota
+	Hover
+	Pressed
+)
+
+var (
+	linkHoverColor   = colors.Purple
+	linkPressedColor = colors.Violet
+)
+
+type linkInfo struct {
+	start           int
+	end             int
+	url             string
+	x, y, w, h      float64
+	state           linkState
+	timeToSendClick int
+}
+
+func (l linkInfo) Hit(x, y float64) bool {
+	return x >= l.x && x <= l.x+l.w && y >= l.y && y <= l.y+l.h
+}
 
 type labelBMPF struct {
 	id               Id
@@ -39,6 +73,8 @@ type labelBMPF struct {
 	bgX, bgY         float64
 	bgW, bgH         float64
 	expandBackground float64
+	links            []linkInfo
+	audio            audio.Player
 }
 
 func (l labelBMPF) GetId() Id {
@@ -51,6 +87,13 @@ func (l *labelBMPF) Draw(screen *ebiten.Image) {
 			vector.DrawFilledRect(screen, float32(l.bgX), float32(l.bgY), float32(l.bgW), float32(l.bgH), l.backgroundColor, false)
 		}
 		l.font.Draw(screen, l.text, l.x, l.y, l.lineHeight, l.color)
+		for _, link := range l.links {
+			if link.state == Hover {
+				vector.StrokeLine(screen, float32(link.x+l.x), float32(link.y+l.y+link.h), float32(link.x+l.x+link.w), float32(link.y+l.y+link.h), 1.0, linkHoverColor, false)
+			} else if link.state == Pressed {
+				vector.StrokeLine(screen, float32(link.x+l.x), float32(link.y+l.y+link.h), float32(link.x+l.x+link.w), float32(link.y+l.y+link.h), 1.0, linkPressedColor, false)
+			}
+		}
 	}
 }
 
@@ -109,7 +152,91 @@ func (l *labelBMPF) calculateBackground() {
 	}
 }
 
-func NewLabel(id Id, text string, font draw.Font, lineHeight float64, color color.Color) Label {
+func (l *labelBMPF) ParseLinks() {
+	text := l.stripColorTags()
+	currentY := 0.0
+	for _, link := range strings.Split(text, "\n") {
+		start := strings.Index(link, "https://")
+		if start != -1 {
+			end := strings.Index(link[start:], " ")
+			if end == -1 {
+				end = len(link)
+			} else {
+				end += start
+			}
+			found := link[start:end]
+			preLink := link[:start]
+			preLinkWidth, _ := l.font.Measure(preLink, l.lineHeight)
+			linkWidth, _ := l.font.Measure(found, l.lineHeight)
+
+			l.links = append(l.links, linkInfo{
+				start: start,
+				end:   end,
+				url:   found,
+				x:     preLinkWidth,
+				y:     currentY,
+				w:     linkWidth,
+				h:     l.font.GetLineHeight(),
+			})
+		}
+
+		currentY += l.font.GetLineHeight()
+	}
+}
+func (l labelBMPF) stripColorTags() string {
+	result := make([]rune, 0, len(l.text))
+	skip := 0
+	for _, rune := range l.text {
+		if rune == colors.TEXT_TAG {
+			skip = 8
+		} else {
+			if skip > 0 {
+				skip--
+			} else {
+				result = append(result, rune)
+			}
+		}
+	}
+
+	return string(result)
+}
+
+func (l *labelBMPF) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
+	if !l.visible {
+		return
+	}
+	for i, link := range l.links {
+		if link.Hit(mouseX-l.x, mouseY-l.y) {
+			if l.links[i].state == Hover {
+				ebiten.SetCursorShape(ebiten.CursorShapePointer)
+				if leftPressed {
+					if l.links[i].timeToSendClick == 0 && l.links[i].state != Pressed {
+						l.links[i].state = Pressed
+						l.links[i].timeToSendClick = CLICK_SENT_DELAY
+						return
+					}
+				} else {
+					l.links[i].state = Hover
+				}
+			} else {
+				l.links[i].state = Hover
+			}
+		} else {
+			l.links[i].state = Enabled
+		}
+		if l.links[i].timeToSendClick != 0 {
+			l.links[i].timeToSendClick -= elapsedTime
+			if l.links[i].timeToSendClick <= 0 {
+				l.links[i].timeToSendClick = 0
+				l.links[i].state = Enabled
+				l.audio.PlaySound(CLICK_SOUND)
+				l.newTab(l.links[i].url)
+			}
+		}
+	}
+}
+
+func NewLabel(id Id, text string, font draw.Font, lineHeight float64, color color.Color, audio audio.Player) Label {
 	return &labelBMPF{
 		id:         id,
 		text:       text,
@@ -117,5 +244,7 @@ func NewLabel(id Id, text string, font draw.Font, lineHeight float64, color colo
 		lineHeight: lineHeight,
 		font:       font,
 		color:      color,
+		links:      make([]linkInfo, 0, 10),
+		audio:      audio,
 	}
 }

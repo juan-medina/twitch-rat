@@ -1,3 +1,5 @@
+//go:build !wasm
+
 /*
  *  Copyright (c) 2024 Juan Medina
  *
@@ -19,24 +21,33 @@
 package label
 
 import (
-	"image/color"
-
-	"github.com/hajimehoshi/ebiten/v2"
+	"log"
+	"os/exec"
+	"runtime"
 )
 
-type Id int
-type Label interface {
-	GetId() Id
-	SetText(text string)
-	GetText() string
-	Draw(screen *ebiten.Image)
-	Move(x, y float64)
-	Measure() (float64, float64)
-	SetColor(color color.Color)
-	GetColor() color.Color
-	SetAlpha(alpha float32)
-	SetVisible(visible bool)
-	SetBackgroundColor(color color.Color, expand float64)
-	ParseLinks()
-	Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int)
+func (l *labelBMPF) newTab(url string) {
+	// Determine the command to open the URL based on the operating system
+	var cmd string
+	var args []string
+
+	switch os := runtime.GOOS; os {
+	case "linux":
+		cmd = "xdg-open"
+		args = []string{url}
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start", url}
+	case "darwin":
+		cmd = "open"
+		args = []string{url}
+	default:
+		log.Fatalf("Unsupported operating system: %s", os)
+	}
+
+	// Execute the command to open the URL
+	err := exec.Command(cmd, args...).Start()
+	if err != nil {
+		log.Fatalf("Failed to open URL: %v", err)
+	}
 }

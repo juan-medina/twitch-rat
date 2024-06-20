@@ -572,11 +572,11 @@ func (r ratImpl) GetHealth() int {
 }
 
 func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, fontVerySmall draw.Font, fontSmall draw.Font, name string, ratColor colors.CustomColor) Rat {
-	nameLabel := label.NewLabel(0, name, fontSmall, fontSmall.DefaultSize(), ratColor)
+	nameLabel := label.NewLabel(0, name, fontSmall, fontSmall.DefaultSize(), ratColor, nil)
 	labelWidth, _ := nameLabel.Measure()
 	nameLabel.SetVisible(true)
 
-	hpLabel := label.NewLabel(0, strconv.Itoa(HEALTH_MAX), fontVerySmall, fontVerySmall.DefaultSize(), colors.White)
+	hpLabel := label.NewLabel(0, strconv.Itoa(HEALTH_MAX), fontVerySmall, fontVerySmall.DefaultSize(), colors.White, nil)
 	hpLabelWidth, hpLabelHeight := hpLabel.Measure()
 	hpLabel.SetVisible(true)
 

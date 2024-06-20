@@ -157,7 +157,7 @@ func New(id button.Id, w, h float64, text string, font draw.Font, lineHeight flo
 		id:                  id,
 		w:                   w,
 		h:                   h,
-		label:               label.NewLabel(0, text, font, lineHeight, textButtonEnabledTextColor),
+		label:               label.NewLabel(0, text, font, lineHeight, textButtonEnabledTextColor, nil),
 		visible:             false,
 		buttonClickCallback: dummyButtonCallback,
 		audioPlayer:         audioPlayer,
