@@ -36,13 +36,18 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/ui/button/textButton"
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
+	"github.com/juan-medina/twitch-rat/internal/ui/panel"
 	"github.com/juan-medina/twitch-rat/internal/ui/scores"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
+type Widget interface {
+	Draw(screen *ebiten.Image)
+}
 type UI interface {
 	Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet)
 	Update(elapsedTime int)
+
 	Draw(screen *ebiten.Image)
 
 	SetStatusMessage(message string, color color.Color)
@@ -74,6 +79,8 @@ type UI interface {
 	SetScoreVisible(visible bool)
 	AddScoreEntry(data scores.ScoreData)
 	StartsCore()
+
+	SetPanelVisible(id panel.Id, visible bool)
 }
 
 var (
@@ -97,6 +104,7 @@ type uiImpl struct {
 	inputs        []input.Input
 	labels        []label.Label
 	sliders       []slider.Slider
+	panels        []panel.Panel
 	keys          keys.Keys
 	audioPlayer   audio.Player
 	fontVerySmall draw.Font
@@ -106,9 +114,11 @@ type uiImpl struct {
 	flyingTexts   []flyingText
 	scores        scores.Scores
 	sheet         draw.Sheet
+	widgets       []Widget
 }
 
 const (
+	MAX_WIDGETS                  = 200
 	MAX_BUTTONS                  = 10
 	MENU_START                   = 250.0
 	BUTTON_WIDTH                 = 180.0
@@ -116,8 +126,6 @@ const (
 	SMALL_BUTTON_WIDTH           = 85.0
 	SMALL_BUTTON_HEIGHT          = 25.0
 	BUTTON_GAP                   = 20.0
-	BACK_BUTTON_WIDTH            = 35.0
-	BACK_BUTTON_HEIGHT           = 35.0
 	TITLE_TO_ELEMENTS_SEPARATION = 50.0
 	MAX_INPUTS                   = 1
 	INPUT_WIDTH                  = BUTTON_WIDTH*2.0 + BUTTON_GAP*2.0
@@ -134,6 +142,9 @@ const (
 	SCORE_X                      = 10
 	SCORE_Y                      = 10
 	BACKGROUND_EXPAND            = 5
+	MAX_PANELS                   = 5
+	OPTION_PANEL_WIDTH           = 450
+	OPTION_PANEL_HEIGHT          = 220
 )
 
 const (
@@ -145,6 +156,7 @@ const (
 	SUBMENU_OPTION_BACK_BUTTON
 	ACCEPT_LICENSE_BUTTON
 	DEBUG_BUTTON
+	IN_GAME_OPTIONS_BUTTON
 )
 
 const (
@@ -169,6 +181,10 @@ const (
 const (
 	MUSIC_VOLUME_SLIDER slider.Id = iota
 	AUDIO_VOLUME_SLIDER
+)
+
+const (
+	OPTIONS_PANEL panel.Id = iota
 )
 
 func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
@@ -207,13 +223,16 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 		colors.Red.Tag(), parts[3], colors.White.Tag())
 	u.addLabel(LABEL_VERSION, versionStr, u.fontSmall, normalLabelColor)
 
+	u.widgets = make([]Widget, 0, MAX_WIDGETS)
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
+	u.panels = make([]panel.Panel, 0, MAX_PANELS)
+	u.widgets = append(u.widgets, u.scores)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
 	u.addTextButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
-	//u.addButton(BACK_BUTTON, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, u.fontSmall, "X", button.Enabled)
 	u.addImageButton(BACK_BUTTON, "exitLeft", button.Enabled)
+	u.addImageButton(IN_GAME_OPTIONS_BUTTON, "gear", button.Enabled)
 
 	u.addTextButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Options", button.Enabled)
 	u.addTextButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
@@ -221,16 +240,9 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addLabel(LABEL_ABOUT_MESSAGE, aboutText, u.fontSmall, normalLabelColor)
 	u.SetLabelBackgroundColor(LABEL_ABOUT_MESSAGE, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 	u.addTextButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
-	u.addTextButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 
 	u.addLabel(LABEL_LICENSE, licenseText, u.fontSmall, normalLabelColor)
 	u.addTextButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Accept", button.Enabled)
-
-	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.fontNormal, normalLabelColor)
-	u.addSlider(MUSIC_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
-
-	u.addLabel(LABEL_OPTIONS_AUDIO_VOLUME, "Audio Volume", u.fontNormal, normalLabelColor)
-	u.addSlider(AUDIO_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
 
 	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User", u.fontNormal)
 	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message", u.fontNormal)
@@ -244,32 +256,25 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addLabel(LABEL_INSTRUCTIONS, instructions, u.fontNormal, normalLabelColor)
 	u.SetLabelBackgroundColor(LABEL_INSTRUCTIONS, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 
+	u.addPanel(OPTIONS_PANEL, OPTION_PANEL_WIDTH, OPTION_PANEL_HEIGHT, colors.Black.NewWithAlpha(50))
+	u.addTextButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
+	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.fontNormal, normalLabelColor)
+	u.addSlider(MUSIC_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
+
+	u.addLabel(LABEL_OPTIONS_AUDIO_VOLUME, "Audio Volume", u.fontNormal, normalLabelColor)
+	u.addSlider(AUDIO_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
+
 	u.SetLabelVisible(LABEL_VERSION, true)
 }
 
 func (u *uiImpl) Draw(screen *ebiten.Image) {
-	for _, l := range u.labels {
-		l.Draw(screen)
-	}
-
-	for _, b := range u.buttons {
-		b.Draw(screen)
-
-	}
-
-	for _, i := range u.inputs {
-		i.Draw(screen)
-	}
-
-	for _, s := range u.sliders {
-		s.Draw(screen)
+	for _, w := range u.widgets {
+		w.Draw(screen)
 	}
 
 	for _, f := range u.flyingTexts {
 		f.draw(screen, u.fontSmall)
 	}
-
-	u.scores.Draw(screen)
 }
 
 func (f flyingText) draw(screen *ebiten.Image, font draw.Font) {
@@ -338,6 +343,10 @@ func (u *uiImpl) layoutCounter() {
 	py = py + iy + BUTTON_GAP
 	w, _ := u.getLabel(LABEL_INSTRUCTIONS).Measure()
 	u.moveLabel(LABEL_INSTRUCTIONS, cx-(w/2), py)
+
+	cx = (u.screenWidth / 2) - (OPTION_PANEL_WIDTH / 2)
+	cy = cy + 100
+	u.movePanel(OPTIONS_PANEL, cx, cy)
 }
 
 func (u *uiImpl) layoutMainElements(cx, cy float64) {
@@ -348,9 +357,16 @@ func (u *uiImpl) layoutMainElements(cx, cy float64) {
 	py := cy
 	titleLabel.Move(px, py)
 
-	px = u.screenWidth - BACK_BUTTON_WIDTH
+	bb := u.getButton(BACK_BUTTON)
+	bw, _ := bb.Size()
+	px = u.screenWidth - bw
 	py = 0
 	u.moveButton(BACK_BUTTON, px, py)
+
+	bb = u.getButton(IN_GAME_OPTIONS_BUTTON)
+	bw, _ = bb.Size()
+	px -= bw
+	u.moveButton(IN_GAME_OPTIONS_BUTTON, px, py)
 
 	gapX := float64(u.fontSmall.DefaultSize()) * 0.5
 	gapY := float64(u.fontSmall.DefaultSize()) * 1.5
@@ -485,11 +501,15 @@ func (u *uiImpl) moveButton(id button.Id, x, y float64) {
 }
 
 func (u *uiImpl) addTextButton(id button.Id, w, h float64, font draw.Font, label string, state button.State) {
-	u.buttons = append(u.buttons, textButton.New(id, w, h, label, font, font.DefaultSize(), u.audioPlayer, state))
+	tb := textButton.New(id, w, h, label, font, font.DefaultSize(), u.audioPlayer, state)
+	u.buttons = append(u.buttons, tb)
+	u.widgets = append(u.widgets, tb)
 }
 
 func (u *uiImpl) addImageButton(id button.Id, spriteName string, state button.State) {
-	u.buttons = append(u.buttons, imageButton.New(id, u.sheet.Sprite(spriteName), u.audioPlayer, state))
+	ib := imageButton.New(id, u.sheet.Sprite(spriteName), u.audioPlayer, state)
+	u.buttons = append(u.buttons, ib)
+	u.widgets = append(u.widgets, ib)
 }
 
 func (u *uiImpl) SetButtonVisible(id button.Id, visible bool) {
@@ -558,7 +578,9 @@ func (ui uiImpl) IsInputEditing(id input.Id) bool {
 }
 
 func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText string, placeHolder string, font draw.Font) {
-	u.inputs = append(u.inputs, input.New(id, w, h, maxLength, initialText, placeHolder, font, font.DefaultSize(), u.audioPlayer))
+	i := input.New(id, w, h, maxLength, initialText, placeHolder, font, font.DefaultSize(), u.audioPlayer)
+	u.inputs = append(u.inputs, i)
+	u.widgets = append(u.widgets, i)
 }
 
 func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
@@ -568,7 +590,9 @@ func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedT
 }
 
 func (u *uiImpl) addLabel(id label.Id, text string, font draw.Font, color color.Color) {
-	u.labels = append(u.labels, label.NewLabel(id, text, font, font.DefaultSize(), color))
+	l := label.NewLabel(id, text, font, font.DefaultSize(), color)
+	u.labels = append(u.labels, l)
+	u.widgets = append(u.widgets, l)
 }
 
 func (u *uiImpl) getLabel(id label.Id) label.Label {
@@ -648,7 +672,9 @@ func (ui *uiImpl) SetSliderValue(id slider.Id, value float64) {
 }
 
 func (ui *uiImpl) addSlider(id slider.Id, w, h float64, font draw.Font, labelColor color.Color) {
-	ui.sliders = append(ui.sliders, slider.New(id, w, h, font, font.DefaultSize(), labelColor))
+	s := slider.New(id, w, h, font, font.DefaultSize(), labelColor)
+	ui.sliders = append(ui.sliders, s)
+	ui.widgets = append(ui.widgets, s)
 }
 
 func (u *uiImpl) updateSliders(mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, elapsedTime int) {
@@ -706,6 +732,33 @@ func (u *uiImpl) StartsCore() {
 func (u *uiImpl) SetLabelBackgroundColor(id label.Id, color color.Color, expand float64) {
 	if l := u.getLabel(id); l != nil {
 		l.SetBackgroundColor(color, expand)
+	}
+}
+
+func (u *uiImpl) addPanel(id panel.Id, w, h float64, color color.Color) {
+	p := panel.New(id, w, h, color)
+	u.panels = append(u.panels, p)
+	u.widgets = append(u.widgets, p)
+}
+
+func (u *uiImpl) getPanel(id panel.Id) panel.Panel {
+	for i := range u.panels {
+		if u.panels[i].GetId() == id {
+			return u.panels[i]
+		}
+	}
+	return nil
+}
+
+func (u *uiImpl) SetPanelVisible(id panel.Id, visible bool) {
+	if p := u.getPanel(id); p != nil {
+		p.SetVisible(visible)
+	}
+}
+
+func (u *uiImpl) movePanel(id panel.Id, x, y float64) {
+	if p := u.getPanel(id); p != nil {
+		p.Move(x, y)
 	}
 }
 

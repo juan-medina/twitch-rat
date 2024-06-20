@@ -145,6 +145,10 @@ func (b *textButton) Click() {
 	}
 }
 
+func (b textButton) Size() (width float64, height float64) {
+	return b.w, b.h
+}
+
 func dummyButtonCallback(id button.Id) {}
 
 func New(id button.Id, w, h float64, text string, font draw.Font, lineHeight float64, audioPlayer audio.Player, state button.State) button.Button {

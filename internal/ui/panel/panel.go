@@ -16,35 +16,65 @@
  *   DEALINGS IN THE SOFTWARE.
  */
 
-package button
+package panel
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
-)
+	"image/color"
 
-const (
-	CLICK_SENT_DELAY = 200
-	CLICK_SOUND      = "embed/sounds/click.ogg"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type Id int
-type Button interface {
+type Panel interface {
 	GetId() Id
 	Draw(screen *ebiten.Image)
-	Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int)
-	OnButtonClickCallback(onButtonClick func(id Id))
-	SetVisible(visible bool)
-	ChangeState(state State)
 	Move(x, y float64)
-	Click()
-	Size() (width float64, height float64)
+	Measure() (float64, float64)
+	SetColor(color color.Color)
+	SetVisible(visible bool)
 }
 
-type State int
+type panelImp struct {
+	id         Id
+	visible    bool
+	color      color.Color
+	x, y, w, h float64
+}
 
-const (
-	Disabled State = iota
-	Enabled
-	Hover
-	Pressed
-)
+func (p panelImp) GetId() Id {
+	return p.id
+}
+
+func (p *panelImp) Draw(screen *ebiten.Image) {
+	if p.visible {
+		vector.DrawFilledRect(screen, float32(p.x), float32(p.y), float32(p.w), float32(p.h), p.color, false)
+	}
+}
+
+func (p *panelImp) Move(x float64, y float64) {
+	p.x = x
+	p.y = y
+}
+
+func (p panelImp) Measure() (width float64, height float64) {
+	return p.w, p.h
+}
+
+func (p *panelImp) SetColor(color color.Color) {
+	p.color = color
+}
+
+func (p *panelImp) SetVisible(visible bool) {
+	p.visible = visible
+}
+
+func New(id Id, width float64, height float64, color color.Color) Panel {
+	return &panelImp{
+		id:      id,
+		visible: false,
+		color:   color,
+		w:       width,
+		h:       height,
+	}
+}

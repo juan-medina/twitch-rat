@@ -132,6 +132,10 @@ func (b *imageButton) Click() {
 	}
 }
 
+func (b imageButton) Size() (width float64, height float64) {
+	return b.sprite.Size()
+}
+
 func dummyButtonCallback(id button.Id) {}
 
 func New(id button.Id, sprite draw.Sprite, audioPlayer audio.Player, state button.State) button.Button {

@@ -35,6 +35,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/stage/playing/rat"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
+	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
 const (
@@ -56,8 +57,10 @@ const (
 
 func (p *playing) Init() {
 	p.ui.SetButtonClickCallback(p.onButtonClick)
+	p.ui.SetSliderChangeCallback(p.onSliderChange)
 
 	p.ui.SetButtonVisible(ui.BACK_BUTTON, true)
+	p.ui.SetButtonVisible(ui.IN_GAME_OPTIONS_BUTTON, true)
 
 	p.ui.SetStatusMessage("Connecting..", colors.White)
 
@@ -82,6 +85,7 @@ func (p *playing) Init() {
 
 func (p *playing) End() {
 	p.ui.SetButtonVisible(ui.BACK_BUTTON, false)
+	p.ui.SetButtonVisible(ui.IN_GAME_OPTIONS_BUTTON, false)
 	p.chat.Disconnect()
 	p.ui.SetStatusMessage("Disconnected", colors.White)
 	p.audioPlayer.Stop()
@@ -94,6 +98,13 @@ func (p *playing) End() {
 	p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
 	p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, false)
 	p.ui.SetScoreVisible(false)
+
+	p.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, false)
+	p.ui.SetSliderVisible(ui.MUSIC_VOLUME_SLIDER, false)
+	p.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, false)
+	p.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, false)
+	p.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, false)
+	p.ui.SetPanelVisible(ui.OPTIONS_PANEL, false)
 }
 
 type status int
@@ -106,23 +117,24 @@ const (
 )
 
 type playing struct {
-	changer       stage.Changer
-	ui            ui.UI
-	settings      settings.Settings
-	eventsChan    chan chat.Event
-	chat          chat.Chat
-	channel       string
-	currentWidth  float64
-	currentHeight float64
-	sewerMap      draw.Map
-	audioPlayer   audio.Player
-	rats          draw.Sheet
-	herd          []rat.Rat
-	searchSlice   []rat.Rat
-	fontVerySmall draw.Font
-	fontSmall     draw.Font
-	countdown     int
-	status        status
+	changer        stage.Changer
+	ui             ui.UI
+	settings       settings.Settings
+	eventsChan     chan chat.Event
+	chat           chat.Chat
+	channel        string
+	currentWidth   float64
+	currentHeight  float64
+	sewerMap       draw.Map
+	audioPlayer    audio.Player
+	rats           draw.Sheet
+	herd           []rat.Rat
+	searchSlice    []rat.Rat
+	fontVerySmall  draw.Font
+	fontSmall      draw.Font
+	countdown      int
+	status         status
+	optionsVisible bool
 }
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {
@@ -200,7 +212,11 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 
 	if !p.ui.IsInputEditing(ui.INPUT_CHANNEL) {
 		if keys.IsDownNoRepeat(ebiten.KeyEscape) {
-			p.ui.ClickButton(ui.BACK_BUTTON)
+			if p.optionsVisible {
+				p.ui.ClickButton(ui.SUBMENU_OPTION_BACK_BUTTON)
+			} else {
+				p.ui.ClickButton(ui.BACK_BUTTON)
+			}
 		}
 	}
 
@@ -428,7 +444,8 @@ var (
 func (p *playing) onButtonClick(id button.Id) {
 	switch id {
 	case ui.BACK_BUTTON:
-		p.ui.SetButtonClickCallback(nil)
+		p.ui.SetButtonClickCallback(nil) 
+		p.ui.SetSliderChangeCallback(nil)
 		if debug := p.settings.GetBoolValue("debug", false); !debug {
 			p.changer.ChangeStage(stage.MENU)
 		} else {
@@ -438,10 +455,54 @@ func (p *playing) onButtonClick(id button.Id) {
 		user := p.ui.GetInputText(ui.INPUT_DEBUG_USER)
 		message := p.ui.GetInputText(ui.INPUT_DEBUG_MESSAGE)
 		p.onChatEvent(chat.Event{Type_: chat.Message, Sender: user, Message: message, UserColor: colors.Black})
+	case ui.IN_GAME_OPTIONS_BUTTON:
+		p.optionsMenu(true)
+	case ui.SUBMENU_OPTION_BACK_BUTTON:
+		p.optionsMenu(false)
+	}
+}
+
+func (p *playing) optionsMenu(enable bool) {
+	p.optionsVisible = enable
+	p.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, p.optionsVisible)
+	p.ui.SetSliderVisible(ui.MUSIC_VOLUME_SLIDER, p.optionsVisible)
+	p.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, p.optionsVisible)
+	p.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, p.optionsVisible)
+	p.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, p.optionsVisible)
+	p.ui.SetPanelVisible(ui.OPTIONS_PANEL, p.optionsVisible)
+	song := p.settings.GetFloatValue("song_volume", 0.2)
+	p.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
+	sound := p.settings.GetFloatValue("sound_volume", 0.5)
+	p.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
+	if p.optionsVisible {
+		p.ui.DisableButton(ui.BACK_BUTTON)
+		p.ui.DisableButton(ui.IN_GAME_OPTIONS_BUTTON)
+		p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, false)
+		p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, false)
+	} else {
+		p.ui.EnableButton(ui.BACK_BUTTON)
+		p.ui.EnableButton(ui.IN_GAME_OPTIONS_BUTTON)
+		if p.status != fighting {
+			p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, true)
+			p.ui.SetLabelVisible(ui.LABEL_COUNTDOWN, true)
+		}
 	}
 }
 func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
+}
+
+func (p *playing) onSliderChange(id slider.Id, value float64) {
+	switch id {
+	case ui.MUSIC_VOLUME_SLIDER:
+		p.settings.SetFloatValue("song_volume", value)
+		p.settings.Save()
+		p.audioPlayer.ChangeSongVolume(value)
+	case ui.AUDIO_VOLUME_SLIDER:
+		p.settings.SetFloatValue("sound_volume", value)
+		p.settings.Save()
+		p.audioPlayer.ChangeSoundVolume(value)
+	}
 }
 
 func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font) stage.Stage {
