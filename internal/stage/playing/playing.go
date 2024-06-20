@@ -444,7 +444,7 @@ var (
 func (p *playing) onButtonClick(id button.Id) {
 	switch id {
 	case ui.BACK_BUTTON:
-		p.ui.SetButtonClickCallback(nil) 
+		p.ui.SetButtonClickCallback(nil)
 		p.ui.SetSliderChangeCallback(nil)
 		if debug := p.settings.GetBoolValue("debug", false); !debug {
 			p.changer.ChangeStage(stage.MENU)

@@ -20,7 +20,6 @@ package license
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/stage"
@@ -51,8 +50,6 @@ func (l *license) End() {
 type license struct {
 	changer stage.Changer
 	ui      ui.UI
-	width   float32
-	height  float32
 }
 
 func (l *license) Update(elapsedTime int, keys keys.Keys) {
@@ -66,13 +63,10 @@ func (l *license) Update(elapsedTime int, keys keys.Keys) {
 }
 
 func (l *license) Draw(screen *ebiten.Image) {
-	vector.DrawFilledRect(screen, 0, 0, l.width, l.height, colors.Teal, false)
 	l.ui.Draw(screen)
 }
 
 func (l *license) OnLayoutChange(width, height float64) {
-	l.width = float32(width)
-	l.height = float32(height)
 }
 
 func (l *license) onButtonClick(id button.Id) {

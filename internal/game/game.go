@@ -29,6 +29,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/audio"
+	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/settings"
@@ -184,6 +185,7 @@ func (g *game) Update() error {
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
+	vector.DrawFilledRect(screen, 0, 0, float32(g.currentWidth), float32(g.currentHeight), colors.Teal, false)
 	if g.currentStage != stage.NONE {
 		g.stages[g.currentStage].Draw(screen)
 	}

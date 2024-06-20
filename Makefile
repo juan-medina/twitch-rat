@@ -64,14 +64,18 @@ ifeq ($(OS),Windows_NT)
 	if not exist build mkdir build
 	if not exist build\web mkdir build\web
 	if not exist build\web\js mkdir build\web\js
+	if not exist build\web\css mkdir build\web\css
 	copy $(GOROOT)\misc\wasm\wasm_exec.js build\web\wasm_exec.js
 	copy web\*.* build\web\\
 	copy web\js\*.* build\web\js\\
+	copy web\css\*.* build\web\css\\
 else
 	mkdir -p build/web/js
+	mkdir -p build/web/css
 	cp $(GOROOT)/misc/wasm/wasm_exec.js build/web/wasm_exec.js
 	cp web/*.* build/web/
 	cp web/js/*.* build/web/js/
+	cp web/css/*.* build/web/css/
 endif
 #set GOOS & GOARCH to wasm
 	$(GOCMD) env -w GOOS=js GOARCH=wasm

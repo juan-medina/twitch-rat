@@ -413,8 +413,8 @@ func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
-	py := cy + BUTTON_GAP*3
 	w, h := u.getLabel(LABEL_LICENSE).Measure()
+	py := u.screenHeight/2 - (h / 2)
 	u.moveLabel(LABEL_LICENSE, cx-(w/2), py)
 
 	px := cx - (SMALL_BUTTON_WIDTH / 2)
@@ -423,8 +423,8 @@ func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
-	py := cy + BUTTON_GAP*3
 	w, h := u.getLabel(LABEL_ABOUT_MESSAGE).Measure()
+	py := u.screenHeight/2 - (h / 2)
 	u.moveLabel(LABEL_ABOUT_MESSAGE, cx-(w/2), py)
 
 	px := cx - (SMALL_BUTTON_WIDTH / 2)
