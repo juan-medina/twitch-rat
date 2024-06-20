@@ -166,7 +166,7 @@ func (r *ratImpl) Draw(screen *ebiten.Image) {
 	redWidth := float32(HEALTH_BAR_WIDTH - greenWidth)
 	redStart := float32(float32(r.barX) + greenWidth)
 
-	vector.DrawFilledRect(screen, float32(r.barX), float32(r.barY), greenWidth, HEALTH_BAR_HEIGHT, colors.Green, false)
+	vector.DrawFilledRect(screen, float32(r.barX), float32(r.barY), HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, colors.Green, false)
 	vector.DrawFilledRect(screen, redStart, float32(r.barY), redWidth, HEALTH_BAR_HEIGHT, colors.Red, false)
 
 	vector.StrokeRect(screen, float32(r.barX), float32(r.barY), HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT, 3, colors.Black, false)
