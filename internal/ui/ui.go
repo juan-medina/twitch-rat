@@ -192,6 +192,13 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.fileSystem = fileSystem
 	u.keys = keys
 
+	u.labels = make([]label.Label, 0, MAX_LABELS)
+	u.widgets = make([]Widget, 0, MAX_WIDGETS)
+	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
+	u.inputs = make([]input.Input, 0, MAX_INPUTS)
+	u.panels = make([]panel.Panel, 0, MAX_PANELS)
+	u.widgets = append(u.widgets, u.scores)
+
 	u.scores.Init()
 
 	data, _ := fileSystem.ReadFile("embed/text/license.txt")
@@ -202,11 +209,6 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 
 	data, _ = fileSystem.ReadFile("embed/text/instructions.txt")
 	instructions := string(data)
-
-	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
-		id := LABEL_LAST_MESSAGE + label.Id(i)
-		u.addLabel(id, "", u.fontSmall, normalLabelColor)
-	}
 
 	u.addLabel(LABEL_TITLE, "Twitch Rat", u.fontBig, normalLabelColor)
 
@@ -222,12 +224,6 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 		colors.Orange.Tag(), parts[2], colors.White.Tag(),
 		colors.Red.Tag(), parts[3], colors.White.Tag())
 	u.addLabel(LABEL_VERSION, versionStr, u.fontSmall, normalLabelColor)
-
-	u.widgets = make([]Widget, 0, MAX_WIDGETS)
-	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
-	u.inputs = make([]input.Input, 0, MAX_INPUTS)
-	u.panels = make([]panel.Panel, 0, MAX_PANELS)
-	u.widgets = append(u.widgets, u.scores)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
 	u.addTextButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
@@ -251,6 +247,11 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User", u.fontNormal)
 	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message", u.fontNormal)
 	u.addTextButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Debug", button.Enabled)
+
+	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
+		id := LABEL_LAST_MESSAGE + label.Id(i)
+		u.addLabel(id, "", u.fontSmall, normalLabelColor)
+	}
 
 	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
 		u.SetLabelVisible(LABEL_LAST_MESSAGE+label.Id(i), true)
@@ -418,8 +419,8 @@ func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
+	py := cy + BUTTON_GAP*3
 	w, h := u.getLabel(LABEL_LICENSE).Measure()
-	py := u.screenHeight/2 - (h / 2)
 	u.moveLabel(LABEL_LICENSE, cx-(w/2), py)
 
 	px := cx - (SMALL_BUTTON_WIDTH / 2)
@@ -428,8 +429,8 @@ func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
+	py := cy + BUTTON_GAP*3
 	w, h := u.getLabel(LABEL_ABOUT_MESSAGE).Measure()
-	py := u.screenHeight/2 - (h / 2)
 	u.moveLabel(LABEL_ABOUT_MESSAGE, cx-(w/2), py)
 
 	px := cx - (SMALL_BUTTON_WIDTH / 2)
