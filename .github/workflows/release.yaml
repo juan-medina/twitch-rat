@@ -46,4 +46,4 @@ jobs:
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         project_path: "./internal/app"
-        extra_files: "internal/app/embed/text/license.txt"
+        extra_files: "build/desktop/license.txt"

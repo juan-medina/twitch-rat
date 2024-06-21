@@ -1,5 +1,9 @@
 .idea
 *.iml
-/build/
+!build
+build/*
+!build/desktop
+build/desktop/*
+!build/desktop/license.txt
 *.exe
 .vscode/settings.json
