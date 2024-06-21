@@ -27,6 +27,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 )
 
 const (
@@ -207,7 +208,7 @@ func (l labelBMPF) stripColorTags() string {
 	return string(result)
 }
 
-func (l *labelBMPF) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
+func (l *labelBMPF) Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys) {
 	if !l.visible {
 		return
 	}
@@ -215,7 +216,7 @@ func (l *labelBMPF) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime
 		if link.Hit(mouseX-l.x, mouseY-l.y) {
 			if l.links[i].state == Hover {
 				ebiten.SetCursorShape(ebiten.CursorShapePointer)
-				if leftPressed {
+				if leftJustPressed {
 					if l.links[i].timeToSendClick == 0 && l.links[i].state != Pressed {
 						l.links[i].state = Pressed
 						l.links[i].timeToSendClick = CLICK_SENT_DELAY

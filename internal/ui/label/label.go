@@ -22,6 +22,7 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 )
 
 type Id int
@@ -38,5 +39,5 @@ type Label interface {
 	SetVisible(visible bool)
 	SetBackgroundColor(color color.Color, expand float64)
 	ParseLinks()
-	Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int)
+	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 }

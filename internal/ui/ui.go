@@ -43,6 +43,7 @@ import (
 
 type Widget interface {
 	Draw(screen *ebiten.Image)
+	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 }
 type UI interface {
 	Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet)
@@ -297,12 +298,12 @@ func (u *uiImpl) Update(elapsedTime int) {
 	pressed := ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft)
 
 	ebiten.SetCursorShape(ebiten.CursorShapeDefault)
-	u.updateButtons(x, y, justPressed, elapsedTime)
-	u.updateInputs(x, y, justPressed, elapsedTime)
-	u.updateSliders(x, y, justPressed, pressed, elapsedTime)
+
+	for _, w := range u.widgets {
+		w.Update(elapsedTime, x, y, justPressed, pressed, u.keys)
+	}
+
 	u.updateFlyingTexts(elapsedTime)
-	u.updateLabels(x, y, justPressed, elapsedTime)
-	u.scores.Update(elapsedTime)
 }
 
 func (u *uiImpl) updateFlyingTexts(elapsedTime int) {
@@ -536,12 +537,6 @@ func (u *uiImpl) SetButtonClickCallback(callback func(id button.Id)) {
 	}
 }
 
-func (u *uiImpl) updateButtons(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
-	for i := range u.buttons {
-		u.buttons[i].Update(mouseX, mouseY, leftPressed, elapsedTime)
-	}
-}
-
 func (u *uiImpl) getInput(id input.Id) input.Input {
 	for i := range u.inputs {
 		if u.inputs[i].GetId() == id {
@@ -587,12 +582,6 @@ func (u *uiImpl) addInput(id input.Id, w, h float64, maxLength int, initialText 
 	i := input.New(id, w, h, maxLength, initialText, placeHolder, font, font.DefaultSize(), u.audioPlayer)
 	u.inputs = append(u.inputs, i)
 	u.widgets = append(u.widgets, i)
-}
-
-func (u *uiImpl) updateInputs(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
-	for i := range u.inputs {
-		u.inputs[i].Update(mouseX, mouseY, leftPressed, u.keys, elapsedTime)
-	}
 }
 
 func (u *uiImpl) addLabel(id label.Id, text string, font draw.Font, color color.Color) {
@@ -683,12 +672,6 @@ func (ui *uiImpl) addSlider(id slider.Id, w, h float64, font draw.Font, labelCol
 	ui.widgets = append(ui.widgets, s)
 }
 
-func (u *uiImpl) updateSliders(mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, elapsedTime int) {
-	for i := range u.sliders {
-		u.sliders[i].Update(mouseX, mouseY, leftJustPressed, leftPressed, elapsedTime)
-	}
-}
-
 func (u *uiImpl) SetSliderChangeCallback(callback func(id slider.Id, value float64)) {
 	for i := range u.sliders {
 		u.sliders[i].OnValueChangeCallback(callback)
@@ -765,12 +748,6 @@ func (u *uiImpl) SetPanelVisible(id panel.Id, visible bool) {
 func (u *uiImpl) movePanel(id panel.Id, x, y float64) {
 	if p := u.getPanel(id); p != nil {
 		p.Move(x, y)
-	}
-}
-
-func (u *uiImpl) updateLabels(x, y float64, justPressed bool, elapsedTime int) {
-	for i := range u.labels {
-		u.labels[i].Update(x, y, justPressed, elapsedTime)
 	}
 }
 

@@ -26,6 +26,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/audio"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
@@ -103,11 +104,11 @@ func (b *textButton) Move(x, y float64) {
 	b.label.Move(tx, ty)
 }
 
-func (b *textButton) Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int) {
+func (b *textButton) Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys) {
 	if b.visible {
 		if b.state != button.Disabled {
 			if b.hit(mouseX, mouseY) {
-				if leftPressed {
+				if leftJustPressed {
 					b.Click()
 				} else {
 					ebiten.SetCursorShape(ebiten.CursorShapePointer)

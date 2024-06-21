@@ -23,6 +23,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 )
 
 type Id int
@@ -33,6 +34,7 @@ type Panel interface {
 	Measure() (float64, float64)
 	SetColor(color color.Color)
 	SetVisible(visible bool)
+	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 }
 
 type panelImp struct {
@@ -67,6 +69,10 @@ func (p *panelImp) SetColor(color color.Color) {
 
 func (p *panelImp) SetVisible(visible bool) {
 	p.visible = visible
+}
+
+func (p panelImp) Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys) {
+
 }
 
 func New(id Id, width float64, height float64, color color.Color) Panel {

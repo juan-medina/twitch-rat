@@ -37,7 +37,7 @@ type Id int
 type Input interface {
 	GetId() Id
 	Draw(screen *ebiten.Image)
-	Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys, elapsedTime int)
+	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 	SetVisible(visible bool)
 	Move(x, y float64)
 	GetText() string
@@ -131,8 +131,7 @@ func (i *input) SetVisible(visible bool) {
 	i.textPlaceHolder.SetVisible(visible)
 }
 
-func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys, elapsedTime int) {
-
+func (i *input) Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys) {
 	if !i.visible {
 		return
 	}
@@ -142,7 +141,7 @@ func (i *input) Update(mouseX, mouseY float64, leftPressed bool, keys keys.Keys,
 		ebiten.SetCursorShape(ebiten.CursorShapeText)
 	}
 
-	if leftPressed {
+	if leftJustPressed {
 		if hit {
 			if !i.IsEditing() {
 				i.edit()

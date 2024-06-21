@@ -27,6 +27,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 )
 
 const (
@@ -49,7 +50,7 @@ type ScoreData interface {
 type Scores interface {
 	Init()
 
-	Update(elapsedTime int)
+	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 	Draw(screen *ebiten.Image)
 	SetVisible(visible bool)
 
@@ -89,7 +90,7 @@ type scoresImpl struct {
 func (s *scoresImpl) Init() {
 }
 
-func (s *scoresImpl) Update(elapsedTime int) {
+func (s *scoresImpl) Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys) {
 	if !s.visible {
 		return
 	}

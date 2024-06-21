@@ -26,6 +26,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 )
 
@@ -34,7 +35,7 @@ type Id int
 type Slider interface {
 	GetId() Id
 	SetVisible(visible bool)
-	Update(mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, elapsedTime int)
+	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 	Draw(screen *ebiten.Image)
 	Move(x, y float64)
 	SetValue(value float64)
@@ -82,7 +83,7 @@ func (s *sliderImpl) SetVisible(visible bool) {
 	s.valueLabel.SetVisible(visible)
 }
 
-func (s *sliderImpl) Update(mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, elapsedTime int) {
+func (s *sliderImpl) Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys) {
 	if !s.visible {
 		return
 	}

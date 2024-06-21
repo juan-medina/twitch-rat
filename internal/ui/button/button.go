@@ -20,6 +20,7 @@ package button
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/juan-medina/twitch-rat/internal/keys"
 )
 
 const (
@@ -31,7 +32,7 @@ type Id int
 type Button interface {
 	GetId() Id
 	Draw(screen *ebiten.Image)
-	Update(mouseX, mouseY float64, leftPressed bool, elapsedTime int)
+	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 	OnButtonClickCallback(onButtonClick func(id Id))
 	SetVisible(visible bool)
 	ChangeState(state State)
