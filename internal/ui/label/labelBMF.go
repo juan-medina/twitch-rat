@@ -43,6 +43,7 @@ const (
 )
 
 var (
+	linkEnabledColor = colors.Yellow
 	linkHoverColor   = colors.Purple
 	linkPressedColor = colors.Violet
 )
@@ -88,11 +89,16 @@ func (l *labelBMPF) Draw(screen *ebiten.Image) {
 		}
 		l.font.Draw(screen, l.text, l.x, l.y, l.lineHeight, l.color)
 		for _, link := range l.links {
-			if link.state == Hover {
-				vector.StrokeLine(screen, float32(link.x+l.x), float32(link.y+l.y+link.h), float32(link.x+l.x+link.w), float32(link.y+l.y+link.h), 1.0, linkHoverColor, false)
-			} else if link.state == Pressed {
-				vector.StrokeLine(screen, float32(link.x+l.x), float32(link.y+l.y+link.h), float32(link.x+l.x+link.w), float32(link.y+l.y+link.h), 1.0, linkPressedColor, false)
+			var color colors.CustomColor
+			switch link.state {
+			case Enabled:
+				color = linkEnabledColor
+			case Hover:
+				color = linkHoverColor
+			case Pressed:
+				color = linkPressedColor
 			}
+			l.font.Draw(screen, link.url, link.x+l.x, link.y+l.y, l.lineHeight, color)
 		}
 	}
 }

@@ -9,22 +9,22 @@
   I can not wait to find it out the ͼCFCF00FFmetaͼFFFFFFFF, a hint is 
     related to your rat health.
 
-  ͼC87AFFFFJuan Medina ͼFF7F50FF(AKA Cecile Valdelius)
+  ͼ00FFFFFFJuan MedinaͼFFFFFFFF ͼFF7F50FF(AKA Cecile Valdelius)ͼFFFFFFFF
 
-ͼCFCF00FFResources :ͼFFFFFFFF
+ͼCFCF00FFResourcesͼFFFFFFFF:
 
 - The Background graphics are part of "Sewer Asset Pack"
-   by ͼC87AFFFFMakBadGam ͼ00FFFFFFhttps://www.patreon.com/MakbadgamͼFFFFFFFF
+   by ͼ00FFFFFFMakBadGamͼFFFFFFFF https://www.patreon.com/Makbadgam
 
 - The Rats graphics are part of "Rodents - Animated Pixel Characters"
-   by ͼC87AFFFFPixelmia ͼ00FFFFFFhttps://pixelmia.itch.io/ͼFFFFFFFF
+   by ͼ00FFFFFFPixelmiaͼFFFFFFFF https://pixelmia.itch.io/
 
 - The Music is part of "16-Bit Starter Pack"
-   composed by ͼC87AFFFFBert Cole ͼ00FFFFFFhttps://bitbybitsound.comͼFFFFFFFF
+   composed by ͼ00FFFFFFBert ColeͼFFFFFFFF https://bitbybitsound.com
 
 - Other graphics and sounds are part of "Kenney Game Assets All-in-1"
-   by ͼC87AFFFFKenney ͼ00FFFFFFhttps://www.kenney.nl/ͼFFFFFFFF
+   by ͼ00FFFFFFKenneyͼFFFFFFFF https://www.kenney.nl/
 
-- The font used is Pixeloid by ͼC87AFFFFGGBot ͼ00FFFFFFhttps://ggbot.net/fontsͼFFFFFFFF
+- The font used is Pixeloid by ͼ00FFFFFFBotͼFFFFFFFF https://ggbot.net/fonts
 
-- This game is powered by ͼC87AFFFFEbitengine ͼ00FFFFFFhttps://ebitengine.org/ͼFFFFFFFF
+- This game is powered by ͼ00FFFFFFEbitengineͼFFFFFFFF https://ebitengine.org/
