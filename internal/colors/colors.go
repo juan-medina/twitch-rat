@@ -23,13 +23,9 @@ import (
 	"strconv"
 )
 
-const (
-	TEXT_TAG = 'ͼ'
-)
-
 type CustomColor interface {
 	RGBA() (r, g, b, a uint32)
-	Tag() string
+	BBCoded(data interface{}) string
 	NewWithAlpha(a uint8) CustomColor
 }
 
@@ -84,14 +80,8 @@ func (c customColorImpl) RGBA() (r, g, b, a uint32) {
 func (c *customColorImpl) NewWithAlpha(a uint8) CustomColor {
 	return New(c.r, c.g, c.b, a)
 }
-func (c customColorImpl) Tag() string {
-	return c.tagged(TEXT_TAG)
-}
-func (c customColorImpl) HTML() string {
-	return c.tagged('#')
-}
-func (c customColorImpl) tagged(r rune) string {
-	return string(r) + c.str
+func (c customColorImpl) BBCoded(data interface{}) string {
+	return "[color=#" + c.str + "]" + fmt.Sprintf("%v", data) + "[/color]"
 }
 
 func FromHtml(colorStr string) CustomColor {

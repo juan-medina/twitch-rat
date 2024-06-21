@@ -20,7 +20,6 @@ package ui
 
 import (
 	"embed"
-	"fmt"
 	"image/color"
 	"strings"
 
@@ -218,12 +217,11 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 		versionStr = string(data)
 	}
 	parts := strings.Split(versionStr, ".")
-	versionStr = fmt.Sprintf("%sv%s%s%s.%s%s%s.%s%s%s.%s%s%s",
-		colors.Blue.Tag(),
-		colors.Green.Tag(), parts[0], colors.White.Tag(),
-		colors.Yellow.Tag(), parts[1], colors.White.Tag(),
-		colors.Orange.Tag(), parts[2], colors.White.Tag(),
-		colors.Red.Tag(), parts[3], colors.White.Tag())
+	versionStr = colors.Blue.BBCoded("v") +
+		colors.Green.BBCoded(parts[0]) + "." +
+		colors.Yellow.BBCoded(parts[1]) + "." +
+		colors.Orange.BBCoded(parts[2]) + "." +
+		colors.Red.BBCoded(parts[3])
 	u.addLabel(LABEL_VERSION, versionStr, u.fontSmall, normalLabelColor)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
@@ -235,13 +233,11 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addTextButton(ABOUT_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "About", button.Enabled)
 
 	u.addLabel(LABEL_ABOUT_MESSAGE, aboutText, u.fontSmall, normalLabelColor)
-	u.getLabel(LABEL_ABOUT_MESSAGE).ParseLinks()
 
 	u.SetLabelBackgroundColor(LABEL_ABOUT_MESSAGE, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 	u.addTextButton(SUBMENU_ABOUT_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 
 	u.addLabel(LABEL_LICENSE, licenseText, u.fontSmall, normalLabelColor)
-	u.getLabel(LABEL_LICENSE).ParseLinks()
 
 	u.addTextButton(ACCEPT_LICENSE_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Accept", button.Enabled)
 

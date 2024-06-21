@@ -38,6 +38,5 @@ type Label interface {
 	SetAlpha(alpha float32)
 	SetVisible(visible bool)
 	SetBackgroundColor(color color.Color, expand float64)
-	ParseLinks()
 	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 }

@@ -7,6 +7,7 @@ require (
 	github.com/gempir/go-twitch-irc/v4 v4.0.0
 	github.com/hajimehoshi/ebiten/v2 v2.7.5
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
+	github.com/prgra/bbcode v0.0.0-20211201071652-b104e932de6e
 	github.com/solarlune/ldtkgo v0.9.4-0.20240506142612-af45cb805cde
 )
 

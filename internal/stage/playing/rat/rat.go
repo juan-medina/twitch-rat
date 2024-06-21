@@ -240,7 +240,7 @@ func (r *ratImpl) Update(elapsedTime int) {
 					damage, over, crit := r.target.Hurt(RAT_DAMAGE)
 					r.logDamage(damage, over, crit)
 					if targetWasAttacking {
-						r.ui.SetStatusMessage(r.target.GetColor().Tag()+r.target.GetName()+colors.Yellow.Tag()+" was interrupted", colors.Yellow)
+						r.ui.SetStatusMessage(r.target.GetColor().BBCoded(r.target.GetName())+" was interrupted", colors.Yellow)
 					}
 					r.audioPlayer.PlaySound(HIT_SOUND)
 					r.target = nil
@@ -379,9 +379,8 @@ func (r *ratImpl) Attack(otherRat Rat) {
 	r.waitingTime = 0
 	r.updateDestinationToTarget()
 	targetColor := otherRat.GetColor()
-	damageStr := r.color.Tag() + r.name +
-		colors.White.Tag() + " is attacking " +
-		targetColor.Tag() + r.target.GetName()
+	damageStr := r.color.BBCoded(r.name) + " is attacking " +
+		targetColor.BBCoded(r.target.GetName())
 	r.ui.SetStatusMessage(damageStr, colors.White)
 }
 
@@ -394,15 +393,14 @@ func (r *ratImpl) Heal(otherRat Rat) {
 	r.waitingTime = 0
 	r.updateDestinationToTarget()
 	r.vx = 0
-	targetColor := otherRat.GetColor()
+
 	healingStr := ""
+	targetColor := otherRat.GetColor()
 	if r.name != r.target.GetName() {
-		healingStr = r.color.Tag() + r.name +
-			colors.White.Tag() + " is healing " +
-			targetColor.Tag() + r.target.GetName()
+		healingStr = r.color.BBCoded(r.name) + " is healing " +
+			targetColor.BBCoded(r.target.GetName())
 	} else {
-		healingStr = r.color.Tag() + r.name +
-			colors.White.Tag() + " is healing himself"
+		healingStr = r.color.BBCoded(r.name) + " is healing himself"
 	}
 
 	r.ui.SetStatusMessage(healingStr, colors.White)
@@ -464,30 +462,26 @@ func (r ratImpl) logHeal(amount, over int, crit bool) {
 	targetColor := r.target.GetColor()
 	var healStr = ""
 	if r.name == r.target.GetName() {
-		healStr = r.color.Tag() + r.name +
-			colors.Yellow.Tag() + " heal himself"
+		healStr = r.color.BBCoded(r.name) + " heal himself"
 	} else {
-		healStr = r.color.Tag() + r.name +
-			colors.Yellow.Tag() + " heal " +
-			targetColor.Tag() + r.target.GetName()
+		healStr = r.color.BBCoded(r.name) + " heal " +
+			targetColor.BBCoded(r.target.GetName())
 	}
 
-	healStr += colors.Yellow.Tag() + " by " + colors.Green.Tag()
-
+	strAmount := ""
 	if crit {
-		healStr += "*"
+		strAmount += "*"
 	}
-
-	healStr += strconv.Itoa(amount)
-
+	strAmount += strconv.Itoa(amount)
 	if crit {
-		healStr += "* CRITICAL"
+		strAmount += "* CRITICAL"
 	}
+
+	healStr += " by " + colors.Green.BBCoded(strAmount)
 
 	if over > 0 {
-		healStr += colors.Yellow.Tag() + " (" +
-			colors.Blue.Tag() + strconv.Itoa(over) +
-			colors.Yellow.Tag() + " over heal)"
+		healStr += " " +
+			colors.Blue.BBCoded("("+strconv.Itoa(over)+" over heal)")
 	}
 
 	r.ui.SetStatusMessage(healStr, colors.Yellow)
@@ -503,32 +497,27 @@ func (r ratImpl) logDamage(amount, over int, crit bool) {
 	targetColor := r.target.GetColor()
 	var damageStr = ""
 
-	damageStr = r.color.Tag() + r.name +
-		colors.Yellow.Tag() + " hurt " +
-		targetColor.Tag() + r.target.GetName()
+	damageStr = r.color.BBCoded(r.name) + " damage " +
+		targetColor.BBCoded(r.target.GetName())
 
-	damageStr += colors.Yellow.Tag() + " by " + colors.Red.Tag()
-
+	strAmount := ""
 	if crit {
-		damageStr += "*"
+		strAmount += "*"
+	}
+	strAmount += strconv.Itoa(amount)
+	if crit {
+		strAmount += "* CRITICAL"
 	}
 
-	damageStr += strconv.Itoa(amount)
-
-	if crit {
-		damageStr += "* CRITICAL"
-	}
+	damageStr += " by " + colors.Red.BBCoded(strAmount)
 
 	if over > 0 {
-		damageStr += colors.Yellow.Tag() + " (" +
-			colors.Blue.Tag() + strconv.Itoa(over) +
-			colors.Yellow.Tag() + " over kill)"
-	}
-
-	if !r.target.IsAlive() {
-		damageStr += colors.Yellow.Tag() + " and" +
-			colors.Red.Tag() + " kill " +
-			colors.Yellow.Tag() + "it"
+		damageStr += " " +
+			colors.Blue.BBCoded("("+strconv.Itoa(over)+" over kill)")
+	} else {
+		if !r.target.IsAlive() {
+			damageStr += " " + colors.Blue.BBCoded("(killed)")
+		}
 	}
 
 	r.ui.SetStatusMessage(damageStr, colors.Yellow)

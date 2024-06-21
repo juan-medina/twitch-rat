@@ -1,10 +1,10 @@
-The game will ͼCFCF00FFstart shortlyͼFFFFFFFF, you can join at anytime, even after dying, using: ͼC87AFFFF!ratͼFFFFFFFF
+The game will [color=CFCF00FF]start shortly[/color], you can join at anytime, even after dying, using: [color=C87AFFFF]!rat[/color]
 
-You can attack any other rat using: ͼFF0000FF!attackͼFFFFFFFF
-You can Heal yourself or any other rat using ͼ00FF00FF!healͼFFFFFFFF
+You can attack any other rat using: [color=FF0000FF]!attack[/color]
+You can Heal yourself or any other rat using [color=00FF00FF]!heal[/color]
 
-If you rat don't get a command in ͼCFCF00FF30sͼFFFFFFFF it will auto attack or heal ͼC87AFFFFrandomͼFFFFFFFF rats.
+If you rat don't get a command in [color=CFCF00FF]30s[/color] it will auto attack or heal [color=C87AFFFF]random[/color] rats.
 
-Every ͼCFCF00FF10sͼFFFFFFFF all rats alive will get ͼC87AFFFF5 points per each heal pointsͼFFFFFFFF they have!
+Every [color=CFCF00FF]10s[/color] all rats alive will get [color=C87AFFFF]5 points per each heal points[/color] they have!
 
-By twitch limitations ͼCFCF00FFrepeated textͼFFFFFFFF may not reach the game, ͼC87AFFFFtype something elseͼFFFFFFFF.
+By twitch limitations [color=CFCF00FF]repeated text[/color] may not reach the game, [color=C87AFFFF]type something else[/color].

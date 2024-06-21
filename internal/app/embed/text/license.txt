@@ -1,30 +1,30 @@
-ͼC87AFFFFCopyright (c) 2024 Juan MedinaͼFFFFFFFF
+[color=#C87AFF]Copyright (c) 2024 Juan Medina[/color]
 
 Proprietary Software License Agreement
 
-ͼCFCF00FF1. License Grant:ͼFFFFFFFF
+[color=#CFCF00]1. License Grant:[/color]
     - You are granted a non-exclusive, non-transferable license to
       download, use, stream and distribute the software for general
       entertainment purposes.
     - You may not sell, sublicense, or modify the software.
 
-ͼCFCF00FF2. Restrictions:ͼFFFFFFFF
+[color=#CFCF00]2. Restrictions:[/color]
    - Reverse engineering, decompiling, or disassembling the software
      is prohibited.
    - You may not use the software for any illegal or harmful activities.
 
-ͼCFCF00FF3. Ownership:ͼFFFFFFFF
+[color=#CFCF00]3. Ownership:[/color]
    - The software remains the property of Juan Medina.
    - You do not acquire any ownership rights.
 
-ͼCFCF00FF4. Warranty and Support:ͼFFFFFFFF
+[color=#CFCF00]4. Warranty and Support:[/color]
    - The software is provided "as is," without warranties.
    - Juan Medina is not liable for any damages or issues arising from
      the use of the software.
 
-ͼCFCF00FF5. Termination:ͼFFFFFFFF
+[color=#CFCF00]5. Termination:[/color]
    - Juan Medina may terminate this license if you violate its terms.
    - Upon termination, you must uninstall the software.
 
-ͼC87AFFFFBy downloading, using, or distributing the software, you agree to
-these terms.
+[color=#C87AFF]By downloading, using, or distributing the software, you agree to[/color]
+[color=#C87AFF]these terms.[/color]

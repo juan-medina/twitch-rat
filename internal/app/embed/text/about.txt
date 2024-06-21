@@ -1,4 +1,4 @@
-ͼCFCF00FFWelcomeͼFFFFFFFF
+[color=#CFCF00FF]Welcome[/color]
 
   Twitch Rat is a small game that was developed
    to be used as a AFK/intro screen for any streamer.
@@ -6,25 +6,25 @@
   I hope you enjoy it and feel free to share with your
     friends & community.
 
-  I can not wait to find it out the ͼCFCF00FFmetaͼFFFFFFFF, a hint is 
+  I can not wait to find it out the [color=#CFCF00FF]meta[/color], a hint is 
     related to your rat health.
 
-  ͼ00FFFFFFJuan MedinaͼFFFFFFFF ͼFF7F50FF(AKA Cecile Valdelius)ͼFFFFFFFF
+[color=#00FFFFFF]  Juan Medina[/color] [color=#FF7F50FF] (AKA Cecile Valdelius)[/color]
 
-ͼCFCF00FFResourcesͼFFFFFFFF:
+[color=#CFCF00FF]Resources[/color]:
 
 - The Background graphics are part of "Sewer Asset Pack"
-   by ͼ00FFFFFFMakBadGamͼFFFFFFFF https://www.patreon.com/Makbadgam
+   by [color=#00FFFFFF]MakBadGam[/color] [url=https://www.patreon.com/Makbadgam]https://www.patreon.com/Makbadgam[/url]
 
 - The Rats graphics are part of "Rodents - Animated Pixel Characters"
-   by ͼ00FFFFFFPixelmiaͼFFFFFFFF https://pixelmia.itch.io/
+   by [color=#00FFFFFF]Pixelmia[/color] [url=https://pixelmia.itch.io/]https://pixelmia.itch.io/[/url]
 
 - The Music is part of "16-Bit Starter Pack"
-   composed by ͼ00FFFFFFBert ColeͼFFFFFFFF https://bitbybitsound.com
+   composed by [color=#00FFFFFF]Bert Cole[/color] [url=https://bitbybitsound.com]https://bitbybitsound.com[/url]
 
 - Other graphics and sounds are part of "Kenney Game Assets All-in-1"
-   by ͼ00FFFFFFKenneyͼFFFFFFFF https://www.kenney.nl/
+   by [color=#00FFFFFF]Kenney[/color] [url=https://www.kenney.nl/]https://www.kenney.nl/[/url]
 
-- The font used is Pixeloid by ͼ00FFFFFFBotͼFFFFFFFF https://ggbot.net/fonts
+- The font used is Pixeloid by [color=#00FFFFFF]Bot[/color] [url=https://ggbot.net/fonts]https://ggbot.net/fonts[/url]
 
-- This game is powered by ͼ00FFFFFFEbitengineͼFFFFFFFF https://ebitengine.org/
+- This game is powered by [color=#00FFFFFF]Ebitengine[/color] [url=https://ebitengine.org/]https://ebitengine.org/[/url]

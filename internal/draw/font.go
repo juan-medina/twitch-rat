@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/juan-medina/twitch-rat/internal/colors"
 )
 
 type FontDef struct {
@@ -191,28 +190,16 @@ func (f *fontImpl) processChars() {
 }
 
 func (f *fontImpl) Draw(screen *ebiten.Image, text string, x, y float64, size float64, color color.Color) {
-	_, _, _, originalAlpha := color.RGBA()
-	originalAlpha = originalAlpha >> 8
 	currentPosX := x
 	currentPosY := y
 	scale := size / float64(f.fontDef.Common.LineHeight)
 	var currentChar runeDef
-	skip := 0
-	for i, r := range text {
-		if skip > 0 {
-			skip--
-			continue
-		}
+
+	for _, r := range text {
 		if r == '\n' {
 			currentPosX = x
 			currentPosY += float64(f.fontDef.Common.LineHeight) * scale
 			currentPosY += f.spacingY * scale
-			continue
-		}
-		if r == colors.TEXT_TAG {
-			colorStr := text[i+2 : i+10]
-			color = colors.FromHtml(colorStr).NewWithAlpha(uint8(originalAlpha))
-			skip = 8
 			continue
 		} else if char, ok := f.runes[r]; ok {
 			currentChar = char
@@ -226,7 +213,6 @@ func (f *fontImpl) Draw(screen *ebiten.Image, text string, x, y float64, size fl
 		currentChar.sprite.Draw(screen, destX, destY, false, false)
 		currentPosX += float64(currentChar.xAdvance) * scale
 		currentPosX += f.spacingX * scale
-
 	}
 }
 func (f fontImpl) Measure(text string, size float64) (float64, float64) {
@@ -239,20 +225,11 @@ func (f fontImpl) Measure(text string, size float64) (float64, float64) {
 	currentPosY := y
 	scale := size / float64(f.fontDef.Common.LineHeight)
 	var currentChar runeDef
-	skip := 0
 	for _, r := range text {
-		if skip > 0 {
-			skip--
-			continue
-		}
 		if r == '\n' {
 			currentPosX = x
 			currentPosY += float64(f.fontDef.Common.LineHeight) * scale
 			currentPosY += f.spacingY * scale
-			continue
-		}
-		if r == colors.TEXT_TAG {
-			skip = 8
 			continue
 		} else if char, ok := f.runes[r]; ok {
 			currentChar = char

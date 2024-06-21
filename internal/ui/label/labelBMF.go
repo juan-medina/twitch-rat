@@ -28,6 +28,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/draw"
 	"github.com/juan-medina/twitch-rat/internal/keys"
+	"github.com/prgra/bbcode"
 )
 
 const (
@@ -38,7 +39,8 @@ const (
 type linkState int
 
 const (
-	Enabled linkState = iota
+	None linkState = iota
+	Enabled
 	Hover
 	Pressed
 )
@@ -49,17 +51,18 @@ var (
 	linkPressedColor = colors.Violet
 )
 
-type linkInfo struct {
-	start           int
-	end             int
-	url             string
-	x, y, w, h      float64
-	state           linkState
+type linePart struct {
+	text            string
+	color           colors.CustomColor
+	link            string
+	w, h            float64
+	linkState       linkState
 	timeToSendClick int
+	hasAlpha        bool
 }
 
-func (l linkInfo) Hit(x, y float64) bool {
-	return x >= l.x && x <= l.x+l.w && y >= l.y && y <= l.y+l.h
+type line struct {
+	parts []linePart
 }
 
 type labelBMPF struct {
@@ -75,8 +78,8 @@ type labelBMPF struct {
 	bgX, bgY         float64
 	bgW, bgH         float64
 	expandBackground float64
-	links            []linkInfo
 	audio            audio.Player
+	lines            []line
 }
 
 func (l labelBMPF) GetId() Id {
@@ -88,18 +91,29 @@ func (l *labelBMPF) Draw(screen *ebiten.Image) {
 		if l.hasBackground {
 			vector.DrawFilledRect(screen, float32(l.bgX), float32(l.bgY), float32(l.bgW), float32(l.bgH), l.backgroundColor, false)
 		}
-		l.font.Draw(screen, l.text, l.x, l.y, l.lineHeight, l.color)
-		for _, link := range l.links {
-			var color colors.CustomColor
-			switch link.state {
-			case Enabled:
-				color = linkEnabledColor
-			case Hover:
-				color = linkHoverColor
-			case Pressed:
-				color = linkPressedColor
+		var currentX float64
+		currentY := l.y
+		lineHeight := l.font.GetLineHeight()
+		_, _, _, a := l.color.RGBA()
+		originalAlpha := uint8(a >> 8)
+		for _, line := range l.lines {
+			var color color.Color
+			currentX = l.x
+			for _, part := range line.parts {
+				if part.color != nil {
+					if part.hasAlpha {
+						color = part.color
+					} else {
+						color = part.color.NewWithAlpha(originalAlpha)
+					}
+
+				} else {
+					color = l.color
+				}
+				l.font.Draw(screen, part.text, currentX, currentY, l.lineHeight, color)
+				currentX += part.w
 			}
-			l.font.Draw(screen, link.url, link.x+l.x, link.y+l.y, l.lineHeight, color)
+			currentY += lineHeight
 		}
 	}
 }
@@ -112,7 +126,75 @@ func (l *labelBMPF) Move(x float64, y float64) {
 
 func (l *labelBMPF) SetText(text string) {
 	l.text = text
+	l.parse()
 	l.calculateBackground()
+}
+
+type parseElements struct {
+	text  string
+	code  string
+	param string
+}
+
+func (l labelBMPF) parseBBCode(text string) []parseElements {
+	var result []parseElements
+
+	decoded := bbcode.Parse(text)
+	lastStart := 0
+	for _, code := range decoded.BBCodes {
+		begin := code.Pos - 1
+		end := code.Pos + code.Len - 1
+		if (code.Pos - 1) > lastStart {
+			result = append(result, parseElements{text: decoded.NewString[lastStart:begin]})
+		}
+		if code.Len > 0 {
+			lastStart = end
+			result = append(result, parseElements{text: code.Text, code: code.Name, param: code.Param})
+		}
+	}
+	if lastStart < len(decoded.NewString) {
+		result = append(result, parseElements{text: decoded.NewString[lastStart:]})
+	}
+
+	return result
+}
+
+func (l *labelBMPF) parse() {
+	l.lines = make([]line, 0)
+	newLines := strings.Split(l.text, "\n")
+	var currentColor colors.CustomColor
+	for _, nl := range newLines {
+		newParts := make([]linePart, 0)
+		for _, e := range l.parseBBCode(nl) {
+			link := ""
+			linkState := None
+			hasAlpha := false
+			currentColor = nil
+			if e.code == "color" {
+				colorLen := len(e.param)
+				if colorLen > 7 {
+					hasAlpha = true
+				}
+				currentColor = colors.FromHtml(e.param)
+			} else if e.code == "url" {
+				link = e.param
+				linkState = Enabled
+			}
+			w, h := l.font.Measure(e.text, l.lineHeight)
+			part := linePart{
+				text:      e.text,
+				w:         w,
+				h:         h,
+				hasAlpha:  hasAlpha,
+				color:     currentColor,
+				link:      link,
+				linkState: linkState,
+			}
+			newParts = append(newParts, part)
+		}
+
+		l.lines = append(l.lines, line{parts: newParts})
+	}
 }
 
 func (l labelBMPF) GetText() string {
@@ -120,9 +202,29 @@ func (l labelBMPF) GetText() string {
 }
 
 func (l labelBMPF) Measure() (width float64, height float64) {
-	width, height = l.font.Measure(l.text, l.lineHeight)
+	width, height = l.measureWithoutBackground()
+
 	width += l.expandBackground * 2
 	height += l.expandBackground * 2
+	return
+}
+
+func (l labelBMPF) measureWithoutBackground() (width float64, height float64) {
+	var currentX float64
+	currentY := 0.0
+	lineHeight := l.font.GetLineHeight()
+	for _, line := range l.lines {
+		currentX = 0.0
+		for _, part := range line.parts {
+			currentX += part.w
+		}
+		currentY += lineHeight
+		if currentX > width {
+			width = currentX
+		}
+	}
+	height = currentY
+
 	return
 }
 
@@ -151,7 +253,7 @@ func (l *labelBMPF) SetBackgroundColor(color color.Color, expand float64) {
 
 func (l *labelBMPF) calculateBackground() {
 	if l.hasBackground {
-		w, h := l.font.Measure(l.text, l.lineHeight)
+		w, h := l.measureWithoutBackground()
 		l.bgX = l.x - l.expandBackground
 		l.bgY = l.y - l.expandBackground
 		l.bgW = w + l.expandBackground*2
@@ -159,99 +261,65 @@ func (l *labelBMPF) calculateBackground() {
 	}
 }
 
-func (l *labelBMPF) ParseLinks() {
-	text := l.stripColorTags()
-	currentY := 0.0
-	for _, link := range strings.Split(text, "\n") {
-		start := strings.Index(link, "https://")
-		if start != -1 {
-			end := strings.Index(link[start:], " ")
-			if end == -1 {
-				end = len(link)
-			} else {
-				end += start
-			}
-			found := link[start:end]
-			preLink := link[:start]
-			preLinkWidth, _ := l.font.Measure(preLink, l.lineHeight)
-			linkWidth, _ := l.font.Measure(found, l.lineHeight)
-
-			l.links = append(l.links, linkInfo{
-				start: start,
-				end:   end,
-				url:   found,
-				x:     preLinkWidth,
-				y:     currentY,
-				w:     linkWidth,
-				h:     l.font.GetLineHeight(),
-			})
-		}
-
-		currentY += l.font.GetLineHeight()
-	}
-}
-func (l labelBMPF) stripColorTags() string {
-	result := make([]rune, 0, len(l.text))
-	skip := 0
-	for _, rune := range l.text {
-		if rune == colors.TEXT_TAG {
-			skip = 8
-		} else {
-			if skip > 0 {
-				skip--
-			} else {
-				result = append(result, rune)
-			}
-		}
-	}
-
-	return string(result)
-}
-
 func (l *labelBMPF) Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys) {
 	if !l.visible {
 		return
 	}
-	for i, link := range l.links {
-		if link.Hit(mouseX-l.x, mouseY-l.y) {
-			if l.links[i].state == Hover {
-				ebiten.SetCursorShape(ebiten.CursorShapePointer)
-				if leftJustPressed {
-					if l.links[i].timeToSendClick == 0 && l.links[i].state != Pressed {
-						l.links[i].state = Pressed
-						l.links[i].timeToSendClick = CLICK_SENT_DELAY
-						return
+
+	var currentX float64
+	currentY := l.y
+	lineHeight := l.font.GetLineHeight()
+	for i := range l.lines {
+		currentX = l.x
+		for j := range l.lines[i].parts {
+			if l.lines[i].parts[j].link != "" {
+				if mouseX >= currentX &&
+					mouseX <= currentX+l.lines[i].parts[j].w &&
+					mouseY >= currentY &&
+					mouseY <= currentY+l.lines[i].parts[j].h {
+					ebiten.SetCursorShape(ebiten.CursorShapePointer)
+					if leftJustPressed {
+						if l.lines[i].parts[j].timeToSendClick == 0 && l.lines[i].parts[j].linkState != Pressed {
+							l.lines[i].parts[j].linkState = Pressed
+							l.lines[i].parts[j].timeToSendClick = CLICK_SENT_DELAY
+							l.lines[i].parts[j].color = linkPressedColor
+							return
+						}
+					} else {
+						l.lines[i].parts[j].linkState = Hover
+						l.lines[i].parts[j].color = linkHoverColor
 					}
 				} else {
-					l.links[i].state = Hover
+					l.lines[i].parts[j].linkState = Enabled
+					l.lines[i].parts[j].color = linkEnabledColor
 				}
-			} else {
-				l.links[i].state = Hover
+				if l.lines[i].parts[j].timeToSendClick != 0 {
+					l.lines[i].parts[j].timeToSendClick -= elapsedTime
+					if l.lines[i].parts[j].timeToSendClick <= 0 {
+						l.lines[i].parts[j].timeToSendClick = 0
+						l.lines[i].parts[j].linkState = Enabled
+						l.lines[i].parts[j].color = linkEnabledColor
+						l.audio.PlaySound(CLICK_SOUND)
+						l.newTab(l.lines[i].parts[j].link)
+					}
+				}
 			}
-		} else {
-			l.links[i].state = Enabled
+			currentX += l.lines[i].parts[j].w
 		}
-		if l.links[i].timeToSendClick != 0 {
-			l.links[i].timeToSendClick -= elapsedTime
-			if l.links[i].timeToSendClick <= 0 {
-				l.links[i].timeToSendClick = 0
-				l.links[i].state = Enabled
-				l.audio.PlaySound(CLICK_SOUND)
-				l.newTab(l.links[i].url)
-			}
-		}
+		currentY += lineHeight
 	}
 }
 
 func NewLabel(id Id, text string, font draw.Font, lineHeight float64, color color.Color, audio audio.Player) Label {
-	return &labelBMPF{
+	l := labelBMPF{
 		id:         id,
-		text:       text,
+		text:       "",
 		visible:    false,
 		lineHeight: lineHeight,
 		font:       font,
 		color:      color,
-		links:      make([]linkInfo, 0, 10),
 		audio:      audio,
 	}
+	l.SetText(text)
+	return &l
 }

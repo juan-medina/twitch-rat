@@ -148,19 +148,6 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 				p.audioPlayer.PlaySound(GO_SOUND)
 				p.audioPlayer.PlaySound(START_SOUND)
 				p.ui.SetLabelVisible(ui.LABEL_INSTRUCTIONS, false)
-				p.ui.SetStatusMessage("Game "+
-					colors.Blue.Tag()+"started."+
-					colors.Yellow.Tag()+" Attack any rat with"+
-					colors.Red.Tag()+" !attack"+
-					colors.Yellow.Tag()+" or heal yourself or any rat with"+
-					colors.Green.Tag()+" !heal",
-					colors.Yellow)
-				p.ui.SetStatusMessage("If you"+
-					colors.Red.Tag()+" die"+
-					colors.Yellow.Tag()+" you can re-spawn using"+
-					colors.Red.Tag()+" !rat"+
-					colors.Yellow.Tag()+" again",
-					colors.Yellow)
 				p.status = endCountdown
 				p.countdown = GO_VANISH
 				p.ui.StartsCore()
@@ -188,17 +175,11 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 	case event := <-p.eventsChan:
 		switch event.Type_ {
 		case chat.Connect:
-			p.ui.SetStatusMessage("Connected to "+colors.Green.Tag()+p.channel, colors.White)
+			p.ui.SetStatusMessage("Connected to "+colors.Green.BBCoded(p.channel), colors.Yellow)
 			p.countdown = COUNTDOWN_LENGTH
 			p.status = counting
-			p.ui.SetStatusMessage("Game starting in"+
-				colors.Green.Tag()+" "+strconv.FormatInt(COUNTDOWN_LENGTH/SECOND, 10)+
-				colors.Yellow.Tag()+" seconds."+
-				colors.Yellow.Tag()+" Join at any time with"+
-				colors.Red.Tag()+" !rat",
-				colors.Yellow)
 		case chat.Disconnect:
-			p.ui.SetStatusMessage("Disconnected", colors.White)
+			p.ui.SetStatusMessage("Disconnected", colors.Yellow)
 		case chat.Message:
 			if event.Message != "" {
 				if event.Message[0] == '!' {
@@ -338,14 +319,14 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 			rat.SetX(RAT_SPAWN_POINT)
 			rat.SetCenter((p.currentWidth / 2))
 			p.herd = append(p.herd, rat)
-			p.ui.SetStatusMessage(fmt.Sprintf("%s%s%s join the fight!", userColor.Tag(), user, colors.White.Tag()), colors.White)
+			p.ui.SetStatusMessage(userColor.BBCoded(user)+" join the fight!", colors.White)
 			p.ui.AddScoreEntry(rat)
 		} else {
 			if !findRat.IsAlive() {
 				findRat.SetX(RAT_SPAWN_POINT)
 				findRat.ReSpawn(userColor)
 				findRat.SetCenter((p.currentWidth / 2))
-				p.ui.SetStatusMessage(fmt.Sprintf("%s%s%s rejoin", userColor.Tag(), user, colors.White.Tag()), colors.White)
+				p.ui.SetStatusMessage(userColor.BBCoded(user)+" rejoin!", colors.White)
 			}
 		}
 	} else if command == ATTACK_COMMAND && p.status == fighting {

@@ -1,3 +1,5 @@
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/ebitengine/gomobile v0.0.0-20240518074828-e86332849895 h1:48bCqKTuD7Z0UovDfvpCn7wZ0GUZ+yosIteNDthn3FU=
 github.com/ebitengine/gomobile v0.0.0-20240518074828-e86332849895/go.mod h1:XZdLv05c5hOZm3fM2NlJ92FyEZjnslcMcNRrhxs8+8M=
 github.com/ebitengine/hideconsole v1.0.0 h1:5J4U0kXF+pv/DhiXt5/lTz0eO5ogJ1iXb8Yj1yReDqE=
@@ -20,6 +22,8 @@ github.com/jfreymuth/vorbis v1.0.2 h1:m1xH6+ZI4thH927pgKD8JOH4eaGRm18rEE9/0WKjvN
 github.com/jfreymuth/vorbis v1.0.2/go.mod h1:DoftRo4AznKnShRl1GxiTFCseHr4zR9BN3TWXyuzrqQ=
 github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f h1:dKccXx7xA56UNqOcFIbuqFjAWPVtP688j5QMgmo6OHU=
 github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f/go.mod h1:4rEELDSfUAlBSyUjPG0JnaNGjf13JySHFeRdD/3dLP0=
+github.com/prgra/bbcode v0.0.0-20211201071652-b104e932de6e h1:hQ7RibbOflZP3nmqALYuETqEcSYRBi4szZa3CY1QhT4=
+github.com/prgra/bbcode v0.0.0-20211201071652-b104e932de6e/go.mod h1:QXwZ5/DXWukeC6LRkZnwwADbKYYBpn56vyzTpZwHiYc=
 github.com/solarlune/ldtkgo v0.9.4-0.20240506142612-af45cb805cde h1:vcXsIAkf4w0gh2oCy+OH2hopu4M/MkzSgQjq7Zv3gqg=
 github.com/solarlune/ldtkgo v0.9.4-0.20240506142612-af45cb805cde/go.mod h1:LCgvSKEw4xi/kTO56z+ODRMIHIO0biEAPEIEAzvn0YI=
 github.com/tidwall/gjson v1.9.3/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
