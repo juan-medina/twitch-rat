@@ -45,7 +45,7 @@ GOARCH=$(shell $(GOCMD) env GOARCH)
 default: build
 
 build: clean
-	$(GOBUILD) -o $(BINARY_NAME) -v $(APP_PATH)
+	$(GOBUILD) -ldflags="-s -w" -o $(BINARY_NAME) -v $(APP_PATH)
 vet:
 	$(GOVET) "./internal/..."
 clean:
@@ -69,6 +69,7 @@ ifeq ($(OS),Windows_NT)
 	copy web\*.* build\web\\
 	copy web\js\*.* build\web\js\\
 	copy web\css\*.* build\web\css\\
+	copy internal\app\embed\version.txt build\web\\
 else
 	mkdir -p build/web/js
 	mkdir -p build/web/css
@@ -76,10 +77,11 @@ else
 	cp web/*.* build/web/
 	cp web/js/*.* build/web/js/
 	cp web/css/*.* build/web/css/
+	cp internal/app/embed/version.txt build/web/
 endif
 #set GOOS & GOARCH to wasm
 	$(GOCMD) env -w GOOS=js GOARCH=wasm
-	$(GOBUILD) -o build/web/twitch_rat.wasm $(APP_PATH)	
+	$(GOBUILD) -ldflags="-s -w" -o build/web/twitch_rat.wasm $(APP_PATH)
 #restore the original GOOS & GOARCH
 	$(GOCMD) env -w GOOS=$(GOOS) GOARCH=$(GOARCH)
 
