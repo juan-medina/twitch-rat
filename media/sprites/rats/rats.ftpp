@@ -238,6 +238,106 @@
       "name": "rat_normal_walk_08.png",
       "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_08.png",
       "folder": ""
+    },
+    {
+      "name": "water_01_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_01.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_02.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_03.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_04.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_05.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_06.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_06.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_07.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_07.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_08.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_08.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_09.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_09.png",
+      "folder": ""
+    },
+    {
+      "name": "water_01_10.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_01_10.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_01.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_01.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_02.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_02.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_03.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_03.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_04.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_04.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_05.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_05.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_06.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_06.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_07.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_07.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_08.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_08.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_09.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_09.png",
+      "folder": ""
+    },
+    {
+      "name": "water_02_10.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/water_02_10.png",
+      "folder": ""
     }
   ],
   "folders": [],

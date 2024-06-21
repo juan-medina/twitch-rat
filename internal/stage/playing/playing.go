@@ -33,26 +33,29 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/settings"
 	"github.com/juan-medina/twitch-rat/internal/stage"
 	"github.com/juan-medina/twitch-rat/internal/stage/playing/rat"
+	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
 const (
-	GAME_MUSIC       = "embed/music/game.ogg"
-	COUNTDOWN_SOUND  = "embed/sounds/%d.ogg"
-	GO_SOUND         = "embed/sounds/go.ogg"
-	TICK_SOUND       = "embed/sounds/tick.ogg"
-	START_SOUND      = "embed/sounds/start.ogg"
-	RAT_SPAWN_POINT  = -64
-	MAX_RATS         = 40
-	SPAWN_COMMAND    = "rat"
-	ATTACK_COMMAND   = "attack"
-	HEAL_COMMAND     = "heal"
-	SECOND           = 1000
-	COUNTDOWN_LENGTH = 30 * SECOND
-	GO_VANISH        = 0.5 * SECOND
-	TIME_TO_AUTO     = 30 * SECOND
+	GAME_MUSIC         = "embed/music/game.ogg"
+	COUNTDOWN_SOUND    = "embed/sounds/%d.ogg"
+	GO_SOUND           = "embed/sounds/go.ogg"
+	TICK_SOUND         = "embed/sounds/tick.ogg"
+	START_SOUND        = "embed/sounds/start.ogg"
+	RAT_SPAWN_POINT    = -64
+	MAX_RATS           = 40
+	SPAWN_COMMAND      = "rat"
+	ATTACK_COMMAND     = "attack"
+	HEAL_COMMAND       = "heal"
+	SECOND             = 1000
+	COUNTDOWN_LENGTH   = 30 * SECOND
+	GO_VANISH          = 0.5 * SECOND
+	TIME_TO_AUTO       = 30 * SECOND
+	CONST_WATER_SPRITE = "water_%02d_%02d"
+	WATER_SPEED        = 800
 )
 
 func (p *playing) Init() {
@@ -81,6 +84,7 @@ func (p *playing) Init() {
 	p.searchSlice = p.searchSlice[:0]
 	p.status = connecting
 	p.ui.SetScoreVisible(true)
+	p.waterFrame.Reset()
 }
 
 func (p *playing) End() {
@@ -135,6 +139,8 @@ type playing struct {
 	countdown      int
 	status         status
 	optionsVisible bool
+	waterSprite    []draw.Sprite
+	waterFrame     step.Value
 }
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {
@@ -227,6 +233,15 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 			}
 		}
 	}
+
+	if p.waterFrame.Update(elapsedTime) {
+		current := int(p.waterFrame.GetValue())
+		for i := 1; i <= 2; i++ {
+			p.waterSprite[i-1] = p.rats.Sprite(fmt.Sprintf(CONST_WATER_SPRITE, i, current))
+			p.waterSprite[i-1].SetScale(2)
+		}
+	}
+
 }
 
 func (p *playing) ResetTimeSinceLastCommand() {
@@ -381,7 +396,24 @@ func (p *playing) Draw(screen *ebiten.Image) {
 	for i := range p.herd {
 		p.herd[i].Draw(screen)
 	}
+
+	waterWidth, _ := p.waterSprite[0].Size()
+	centerPoint := p.currentWidth / 2
+	rightPoint := centerPoint
+	leftPoint := centerPoint - waterWidth
+
+	for rightPoint < (p.currentWidth + waterWidth) {
+		for i := 1; i <= 2; i++ {
+			gap := float64(3 * (i - 1))
+			p.waterSprite[i-1].Draw(screen, rightPoint, p.currentHeight-90-gap, false, false)
+			p.waterSprite[i-1].Draw(screen, leftPoint, p.currentHeight-90-gap, false, false)
+		}
+		rightPoint += waterWidth
+		leftPoint -= waterWidth
+	}
+
 	p.ui.Draw(screen)
+
 }
 
 func (p *playing) OnLayoutChange(width, height float64) {
@@ -494,6 +526,7 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 	audioPlayer.LoadSound(GO_SOUND)
 	audioPlayer.LoadSound(TICK_SOUND)
 	audioPlayer.LoadSound(START_SOUND)
+
 	for i := 1; i <= 10; i++ {
 		audioPlayer.LoadSound(fmt.Sprintf(COUNTDOWN_SOUND, i))
 	}
@@ -516,6 +549,14 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 		searchSlice:   make([]rat.Rat, 0, MAX_RATS),
 		fontVerySmall: fontVerySmall,
 		fontSmall:     fontSmall,
+		waterFrame:    step.NewLoopValue(1, 10, WATER_SPEED),
+		waterSprite:   make([]draw.Sprite, 2),
 	}
+
+	for i := 1; i <= 2; i++ {
+		p.waterSprite[i-1] = p.rats.Sprite(fmt.Sprintf(CONST_WATER_SPRITE, i, 1))
+		p.waterSprite[i-1].SetScale(2)
+	}
+
 	return &p
 }
