@@ -56,6 +56,7 @@ const (
 	MAIN_MENU subMenu = iota
 	OPTIONS_MENU
 	ABOUT_MENU
+	GAME_MODE_SETTINGS
 )
 
 func (m *menu) Init() {
@@ -81,6 +82,9 @@ func (m *menu) End() {
 	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, false)
 	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, false)
 	m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, false)
+	m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, false)
+	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, false)
+	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, false)
 
 	if runtime.GOOS != "js" {
 		m.ui.SetButtonVisible(ui.BACK_BUTTON, false)
@@ -135,12 +139,19 @@ func (m *menu) Update(elapsedTime int, keys keys.Keys) {
 			}
 		}
 	} else {
+		if m.currentSubMenu == GAME_MODE_SETTINGS {
+			if keys.IsDownNoRepeat(ebiten.KeyEnter) || keys.IsDownNoRepeat(ebiten.KeyNumpadEnter) {
+				m.ui.ClickButton(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON)
+			}
+		}
 		if keys.IsDownNoRepeat(ebiten.KeyEscape) {
 			switch m.currentSubMenu {
 			case OPTIONS_MENU:
 				m.ui.ClickButton(ui.SUBMENU_OPTION_BACK_BUTTON)
 			case ABOUT_MENU:
 				m.ui.ClickButton(ui.SUBMENU_ABOUT_BACK_BUTTON)
+			case GAME_MODE_SETTINGS:
+				m.ui.ClickButton(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON)
 			}
 		}
 	}
@@ -189,10 +200,7 @@ func (m *menu) onButtonClick(id button.Id) {
 		}
 		m.settings.SetValue("channel", channel)
 		m.settings.Save()
-
-		m.ui.SetButtonClickCallback(nil)
-		m.ui.SetSliderChangeCallback(nil)
-		m.changer.ChangeStage(stage.PLAYING)
+		m.changeSubMenu(GAME_MODE_SETTINGS)
 	case ui.BACK_BUTTON:
 		m.changer.ChangeStage(stage.EXIT)
 	case ui.OPTIONS_BUTTON:
@@ -203,6 +211,12 @@ func (m *menu) onButtonClick(id button.Id) {
 		m.changeSubMenu(MAIN_MENU)
 	case ui.SUBMENU_OPTION_BACK_BUTTON:
 		m.changeSubMenu(MAIN_MENU)
+	case ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON:
+		m.changeSubMenu(MAIN_MENU)
+	case ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON:
+		m.ui.SetButtonClickCallback(nil)
+		m.ui.SetSliderChangeCallback(nil)
+		m.changer.ChangeStage(stage.PLAYING)
 	}
 }
 
@@ -221,6 +235,9 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 	m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, false)
 	m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, false)
 	m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, false)
+	m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, false)
+	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, false)
+	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, false)
 
 	switch m.currentSubMenu {
 	case MAIN_MENU:
@@ -246,6 +263,11 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 		m.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
 		sound := m.settings.GetFloatValue("sound_volume", 0.5)
 		m.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
+	case GAME_MODE_SETTINGS:
+		m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, true)
+		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, true)
+		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, true)
+		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, 0)
 	}
 }
 

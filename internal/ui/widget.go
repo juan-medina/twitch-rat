@@ -33,6 +33,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 	"github.com/juan-medina/twitch-rat/internal/ui/panel"
+	"github.com/juan-medina/twitch-rat/internal/ui/radiogroup"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
@@ -53,6 +54,8 @@ const (
 	IN_GAME_OPTIONS_BUTTON
 	DOWNLOAD_LATEST_BUTTON
 	CONTINUE_BUTTON
+	SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON
+	SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON
 )
 
 const (
@@ -89,12 +92,17 @@ var (
 	normalLabelColor = colors.White
 )
 
+const (
+	GAME_MODE_RADIO_GROUP radiogroup.Id = iota
+)
+
 func (u *uiImpl) createWidgets() {
 	u.createMainComponents()
 
 	u.createMainMenuUI()
 	u.createAboutMenuUI()
 	u.createOptionsMenuUI()
+	u.createMatchSettingsMenuUI()
 
 	u.createLicenseStageUI()
 	u.createUpdateStageUI()
@@ -446,4 +454,43 @@ func (u *uiImpl) SetStatusMessage(message string, textColor color.Color) {
 
 	u.SetLabelText(LABEL_LAST_MESSAGE, message)
 	u.SetLabelColor(LABEL_LAST_MESSAGE, textColor)
+}
+
+func (u *uiImpl) addRadioGroup(id radiogroup.Id, w, h float64, font draw.Font, options ...string) {
+	rg := radiogroup.New(id, w, h, font, u.audioPlayer, options...)
+	u.radioGroups = append(u.radioGroups, rg)
+	u.widgets = append(u.widgets, rg)
+}
+
+func (u *uiImpl) getRadioGroup(id radiogroup.Id) radiogroup.RadioGroup {
+	for i := range u.radioGroups {
+		if u.radioGroups[i].GetId() == id {
+			return u.radioGroups[i]
+		}
+	}
+	return nil
+}
+
+func (u *uiImpl) SetRadioGroupVisible(id radiogroup.Id, visible bool) {
+	if rg := u.getRadioGroup(id); rg != nil {
+		rg.SetVisible(visible)
+	}
+}
+
+func (u *uiImpl) SelectRadioGroup(id radiogroup.Id, index int) {
+	if rg := u.getRadioGroup(id); rg != nil {
+		rg.SetSelected(index)
+	}
+}
+
+func (u *uiImpl) moveRadioGroup(id radiogroup.Id, x, y float64) {
+	if rg := u.getRadioGroup(id); rg != nil {
+		rg.Move(x, y)
+	}
+}
+
+func (u *uiImpl) createMatchSettingsMenuUI() {
+	u.addRadioGroup(GAME_MODE_RADIO_GROUP, BUTTON_WIDTH*3, BUTTON_HEIGHT, u.fontNormal, "AFK", "Battle", "Custom")
+	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Back", button.Enabled)
+	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Go!", button.Enabled)
 }

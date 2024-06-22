@@ -47,4 +47,5 @@ const (
 	OPTION_PANEL_WIDTH           = 450
 	OPTION_PANEL_HEIGHT          = 220
 	VERSION_OUTDATED_STRING      = "There is a new version available: %s"
+	MAX_RADIO_GROUPS             = 10
 )

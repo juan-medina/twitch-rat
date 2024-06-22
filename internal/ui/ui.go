@@ -31,6 +31,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 	"github.com/juan-medina/twitch-rat/internal/ui/panel"
+	"github.com/juan-medina/twitch-rat/internal/ui/radiogroup"
 	"github.com/juan-medina/twitch-rat/internal/ui/scores"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 	"github.com/juan-medina/twitch-rat/internal/version"
@@ -73,6 +74,8 @@ type UI interface {
 	StartsCore()
 
 	SetPanelVisible(id panel.Id, visible bool)
+	SetRadioGroupVisible(id radiogroup.Id, visible bool)
+	SelectRadioGroup(id radiogroup.Id, index int)
 }
 
 func New(version version.Version, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {

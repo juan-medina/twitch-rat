@@ -159,3 +159,19 @@ func (u *uiImpl) layoutOptionsSubMenuElements(cx, cy float64) {
 	py = py + SLIDER_HEIGHT + BUTTON_GAP
 	u.moveButton(SUBMENU_OPTION_BACK_BUTTON, px, py)
 }
+
+func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
+	rw, _ := u.getRadioGroup(GAME_MODE_RADIO_GROUP).Measure()
+	px := cx - (rw / 2)
+	py := cy + BUTTON_GAP*3
+
+	u.moveRadioGroup(GAME_MODE_RADIO_GROUP, px, py)
+
+	py = py + BUTTON_HEIGHT + BUTTON_GAP
+
+	px = cx - BUTTON_WIDTH - BUTTON_GAP
+	u.moveButton(SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, px, py)
+
+	px = cx + (BUTTON_GAP)
+	u.moveButton(SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, px, py)
+}

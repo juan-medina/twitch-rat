@@ -30,6 +30,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/ui/input"
 	"github.com/juan-medina/twitch-rat/internal/ui/label"
 	"github.com/juan-medina/twitch-rat/internal/ui/panel"
+	"github.com/juan-medina/twitch-rat/internal/ui/radiogroup"
 	"github.com/juan-medina/twitch-rat/internal/ui/scores"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 	"github.com/juan-medina/twitch-rat/internal/version"
@@ -44,6 +45,7 @@ type uiImpl struct {
 	labels        []label.Label
 	sliders       []slider.Slider
 	panels        []panel.Panel
+	radioGroups   []radiogroup.RadioGroup
 	keys          keys.Keys
 	audioPlayer   audio.Player
 	fontVerySmall draw.Font
@@ -67,6 +69,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.buttons = make([]button.Button, 0, MAX_BUTTONS)
 	u.inputs = make([]input.Input, 0, MAX_INPUTS)
 	u.panels = make([]panel.Panel, 0, MAX_PANELS)
+	u.radioGroups = make([]radiogroup.RadioGroup, 0, MAX_RADIO_GROUPS)
 	u.widgets = append(u.widgets, u.scores)
 
 	u.scores.Init()
@@ -105,6 +108,8 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	u.layoutMainMenuElements(cx, cy)
 	u.layoutAboutSubMenuElements(cx, cy)
 	u.layoutOptionsSubMenuElements(cx, cy)
+	u.layoutGameModeSettingsSubMenuElements(cx, cy)
+
 	u.layoutLicenseElements(cx, cy)
 	u.layoutUpdate(cx, cy)
 	u.layoutCounter()
