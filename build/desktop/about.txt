@@ -1,0 +1,27 @@
+Welcome
+
+  Twitch Rat is a small game that was developed
+   to be used as a AFK/intro screen for any streamer.
+
+  I hope you enjoy it and feel free to share with your
+    friends & community.
+
+  Juan Medina (AKA Cecile Valdelius) https://juan-medina.com
+
+Resources:
+
+- The Background graphics are part of "Sewer Asset Pack"
+   by MakBadGam https://www.patreon.com/Makbadgam
+
+- The Rats graphics are part of "Rodents - Animated Pixel Characters"
+   by Pixelmia https://pixelmia.itch.io
+
+- The Music is part of "16-Bit Starter Pack"
+   composed by Bert Cole https://bitbybitsound.com
+
+- Other graphics and sounds are part of "Kenney Game Assets All-in-1"
+   by Kenney https://www.kenney.nl/
+
+- The font used is Pixeloid by Bot https://ggbot.net/fonts
+
+- This game is powered by Ebitengine https://ebitengine.org

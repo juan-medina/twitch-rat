@@ -80,6 +80,7 @@ func (m *menu) End() {
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, false)
 	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, false)
 	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, false)
+	m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, false)
 
 	if runtime.GOOS != "js" {
 		m.ui.SetButtonVisible(ui.BACK_BUTTON, false)
@@ -219,6 +220,7 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 	m.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, false)
 	m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, false)
 	m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, false)
+	m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, false)
 
 	switch m.currentSubMenu {
 	case MAIN_MENU:
@@ -228,6 +230,8 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 		m.ui.SetButtonVisible(ui.ABOUT_BUTTON, true)
 		if runtime.GOOS != "js" {
 			m.ui.SetButtonVisible(ui.BACK_BUTTON, true)
+		} else {
+			m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, true)
 		}
 	case ABOUT_MENU:
 		m.ui.SetLabelVisible(ui.LABEL_ABOUT_MESSAGE, true)

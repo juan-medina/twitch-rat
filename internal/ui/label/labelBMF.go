@@ -46,9 +46,10 @@ const (
 )
 
 var (
-	linkEnabledColor = colors.Yellow
-	linkHoverColor   = colors.Purple
-	linkPressedColor = colors.Violet
+	linkEnabledColor     = colors.Yellow
+	linkHoverColor       = colors.Purple
+	linkPressedColor     = colors.Violet
+	linkUnderliningColor = colors.Violet
 )
 
 type linePart struct {
@@ -111,6 +112,9 @@ func (l *labelBMPF) Draw(screen *ebiten.Image) {
 					color = l.color
 				}
 				l.font.Draw(screen, part.text, currentX, currentY, l.lineHeight, color)
+				if part.link != "" {
+					vector.StrokeLine(screen, float32(currentX), float32(currentY+l.font.DefaultSize()), float32(currentX+part.w), float32(currentY+l.font.DefaultSize()), 2, linkUnderliningColor, false)
+				}
 				currentX += part.w
 			}
 			currentY += lineHeight

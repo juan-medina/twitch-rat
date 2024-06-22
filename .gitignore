@@ -5,5 +5,6 @@ build/*
 !build/desktop
 build/desktop/*
 !build/desktop/license.txt
+!build/desktop/about.txt
 *.exe
 .vscode/settings.json

@@ -174,6 +174,7 @@ const (
 	LABEL_OPTIONS_AUDIO_VOLUME
 	LABEL_COUNTDOWN
 	LABEL_INSTRUCTIONS
+	LABEL_DOWNLOAD
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
 )
@@ -227,6 +228,9 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
 	u.addTextButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
 	u.addImageButton(BACK_BUTTON, "exitLeft", button.Enabled)
+
+	u.addLabel(LABEL_DOWNLOAD, "[url=https://juan-medina.com/twitch-rat/twitch-rat.zip]Download Desktop Version[/url]", u.fontSmall, normalLabelColor)
+
 	u.addImageButton(IN_GAME_OPTIONS_BUTTON, "gear", button.Enabled)
 
 	u.addTextButton(OPTIONS_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Options", button.Enabled)
@@ -413,6 +417,11 @@ func (u *uiImpl) layoutMainMenuElements(cx, cy float64) {
 
 	px = px + (BUTTON_WIDTH - SMALL_BUTTON_WIDTH)
 	u.moveButton(ABOUT_BUTTON, px, py)
+
+	lw, _ := u.getLabel(LABEL_DOWNLOAD).Measure()
+	py = py + BUTTON_HEIGHT + BUTTON_GAP
+	px = cx - (lw / 2)
+	u.moveLabel(LABEL_DOWNLOAD, px, py)
 }
 
 func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
