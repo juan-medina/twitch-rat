@@ -16,9 +16,11 @@
  *   DEALINGS IN THE SOFTWARE.
  */
 
-package license
+package update
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/juan-medina/twitch-rat/internal/colors"
 	"github.com/juan-medina/twitch-rat/internal/keys"
@@ -28,64 +30,64 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/version"
 )
 
-func (l *license) Init() {
-	l.ui.SetButtonClickCallback(l.onButtonClick)
+func (u *update) Init() {
+	u.ui.SetButtonClickCallback(u.onButtonClick)
 
-	l.ui.SetLabelVisible(ui.LABEL_TITLE, true)
-	l.ui.SetButtonVisible(ui.ACCEPT_LICENSE_BUTTON, true)
-	l.ui.SetLabelVisible(ui.LABEL_LICENSE, true)
-	l.ui.SetButtonVisible(ui.BACK_BUTTON, true)
+	u.ui.SetLabelVisible(ui.LABEL_TITLE, true)
+	u.ui.SetLabelVisible(ui.LABEL_VERSION_UPDATE, true)
+	u.ui.SetButtonVisible(ui.DOWNLOAD_LATEST_BUTTON, true)
+	u.ui.SetButtonVisible(ui.CONTINUE_BUTTON, true)
+	u.ui.SetButtonVisible(ui.BACK_BUTTON, true)
 
-	l.ui.SetStatusMessage("Showing license..", colors.LightYellow)
+	u.ui.SetStatusMessage("Showing update..", colors.LightYellow)
+	u.ui.SetLabelText(ui.LABEL_VERSION_UPDATE, fmt.Sprintf(ui.VERSION_OUTDATED_STRING, u.version.Latest().Bbcode))
 }
 
-func (l *license) End() {
-	l.ui.SetButtonClickCallback(nil)
+func (u *update) End() {
+	u.ui.SetButtonClickCallback(nil)
+	u.ui.SetLabelVisible(ui.LABEL_TITLE, false)
 
-	l.ui.SetButtonVisible(ui.BACK_BUTTON, false)
-	l.ui.SetLabelVisible(ui.LABEL_TITLE, false)
-	l.ui.SetButtonVisible(ui.ACCEPT_LICENSE_BUTTON, false)
-	l.ui.SetLabelVisible(ui.LABEL_LICENSE, false)
+	u.ui.SetLabelVisible(ui.LABEL_VERSION_UPDATE, false)
+	u.ui.SetButtonVisible(ui.DOWNLOAD_LATEST_BUTTON, false)
+	u.ui.SetButtonVisible(ui.CONTINUE_BUTTON, false)
+	u.ui.SetButtonVisible(ui.BACK_BUTTON, false)
 }
 
-type license struct {
+type update struct {
 	changer stage.Changer
 	ui      ui.UI
 	version version.Version
 }
 
-func (l *license) Update(elapsedTime int, keys keys.Keys) {
-	l.ui.Update(elapsedTime)
+func (u *update) Update(elapsedTime int, keys keys.Keys) {
+	u.ui.Update(elapsedTime)
 	if keys.IsDownNoRepeat(ebiten.KeyEnter) || keys.IsDownNoRepeat(ebiten.KeyNumpadEnter) {
-		l.ui.ClickButton(ui.ACCEPT_LICENSE_BUTTON)
+		u.ui.ClickButton(ui.CONTINUE_BUTTON)
+	} else if keys.IsDownNoRepeat(ebiten.KeyEscape) {
+		u.ui.ClickButton(ui.BACK_BUTTON)
 	}
-	if keys.IsDownNoRepeat(ebiten.KeyEscape) {
-		l.ui.ClickButton(ui.BACK_BUTTON)
-	}
 }
 
-func (l *license) Draw(screen *ebiten.Image) {
-	l.ui.Draw(screen)
+func (u *update) Draw(screen *ebiten.Image) {
+	u.ui.Draw(screen)
 }
 
-func (l *license) OnLayoutChange(width, height float64) {
+func (u *update) OnLayoutChange(width, height float64) {
 }
 
-func (l *license) onButtonClick(id button.Id) {
+func (u *update) onButtonClick(id button.Id) {
 	switch id {
-	case ui.ACCEPT_LICENSE_BUTTON:
-		if l.version.Outdated() {
-			l.changer.ChangeStage(stage.UPDATE)
-		} else {
-			l.changer.ChangeStage(stage.MENU)
-		}
+	case ui.CONTINUE_BUTTON:
+		u.changer.ChangeStage(stage.MENU)
+	case ui.DOWNLOAD_LATEST_BUTTON:
+		u.download()
 	case ui.BACK_BUTTON:
-		l.changer.ChangeStage(stage.EXIT)
+		u.changer.ChangeStage(stage.EXIT)
 	}
 }
 
-func New(version version.Version, changer stage.Changer, ui ui.UI) stage.Stage {
-	m := license{
+func New(changer stage.Changer, ui ui.UI, version version.Version) stage.Stage {
+	m := update{
 		changer: changer,
 		ui:      ui,
 		version: version,

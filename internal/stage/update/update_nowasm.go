@@ -1,3 +1,5 @@
+//go:build !wasm
+
 /*
  *  Copyright (c) 2024 Juan Medina
  *
@@ -16,31 +18,36 @@
  *   DEALINGS IN THE SOFTWARE.
  */
 
-package stage
+package update
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/juan-medina/twitch-rat/internal/keys"
+	"log"
+	"os/exec"
+	"runtime"
 )
 
-type Stage interface {
-	Init()
-	Draw(screen *ebiten.Image)
-	Update(elapsedTime int, keys keys.Keys)
-	OnLayoutChange(width, height float64)
-	End()
-}
-type Id int
+func (u update) download() {
+	url := "https://juan-medina.com/twitch-rat/twitch-rat.zip"
+	var cmd string
+	var args []string
 
-const (
-	NONE Id = iota
-	LICENSE
-	UPDATE
-	MENU
-	PLAYING
-	EXIT
-)
+	switch os := runtime.GOOS; os {
+	case "linux":
+		cmd = "xdg-open"
+		args = []string{url}
+	case "windows":
+		cmd = "cmd"
+		args = []string{"/c", "start", url}
+	case "darwin":
+		cmd = "open"
+		args = []string{url}
+	default:
+		log.Fatalf("Unsupported operating system: %s", os)
+	}
 
-type Changer interface {
-	ChangeStage(id Id)
+	// Execute the command to open the URL
+	err := exec.Command(cmd, args...).Start()
+	if err != nil {
+		log.Fatalf("Failed to open URL: %v", err)
+	}
 }

@@ -37,8 +37,10 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/stage/license"
 	"github.com/juan-medina/twitch-rat/internal/stage/menu"
 	"github.com/juan-medina/twitch-rat/internal/stage/playing"
+	"github.com/juan-medina/twitch-rat/internal/stage/update"
 	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui"
+	"github.com/juan-medina/twitch-rat/internal/version"
 )
 
 const (
@@ -76,6 +78,7 @@ type game struct {
 	fontSmall      draw.Font
 	fontNormal     draw.Font
 	fontBig        draw.Font
+	version        version.Version
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -103,6 +106,7 @@ func (g *game) onLayoutChange(width, height float64) {
 }
 
 func (g *game) init() {
+	g.version.Init()
 	g.settings.Init()
 	g.keys.Init()
 	g.fontVerySmall.Init(g.fileSystem, "embed/fonts/pixeloid/pixeloid_very_small.fnt")
@@ -122,7 +126,8 @@ func (g *game) init() {
 
 	g.lastUpdateTime = time.Now()
 
-	g.addStage(stage.LICENSE, license.New(g, g.ui))
+	g.addStage(stage.LICENSE, license.New(g.version, g, g.ui))
+	g.addStage(stage.UPDATE, update.New(g, g.ui, g.version))
 	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.audioPlayer))
 	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, rats, g.audioPlayer, g.fontVerySmall, g.fontSmall))
 
@@ -240,10 +245,11 @@ func New(er embed.FS) *game {
 	fontSmall := draw.NewFont()
 	fontNormal := draw.NewFont()
 	fontBig := draw.NewFont()
+	version := version.New(er)
 	g := game{
 		fileSystem:    er,
 		state:         LOADING,
-		ui:            ui.New(audioPlayer, fontVerySmall, fontSmall, fontNormal, fontBig),
+		ui:            ui.New(version, audioPlayer, fontVerySmall, fontSmall, fontNormal, fontBig),
 		keys:          keys.New(),
 		settings:      settings.New(APPLICATION),
 		stages:        make(map[stage.Id]stage.Stage),
@@ -254,6 +260,7 @@ func New(er embed.FS) *game {
 		fontSmall:     fontSmall,
 		fontNormal:    fontNormal,
 		fontBig:       fontBig,
+		version:       version,
 	}
 
 	return &g

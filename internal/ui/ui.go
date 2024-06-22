@@ -20,8 +20,9 @@ package ui
 
 import (
 	"embed"
+	"fmt"
 	"image/color"
-	"strings"
+	"runtime"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -38,6 +39,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/ui/panel"
 	"github.com/juan-medina/twitch-rat/internal/ui/scores"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
+	"github.com/juan-medina/twitch-rat/internal/version"
 )
 
 type Widget interface {
@@ -115,6 +117,7 @@ type uiImpl struct {
 	scores        scores.Scores
 	sheet         draw.Sheet
 	widgets       []Widget
+	version       version.Version
 }
 
 const (
@@ -145,6 +148,7 @@ const (
 	MAX_PANELS                   = 5
 	OPTION_PANEL_WIDTH           = 450
 	OPTION_PANEL_HEIGHT          = 220
+	VERSION_OUTDATED_STRING      = "There is a new version available: %s"
 )
 
 const (
@@ -157,6 +161,8 @@ const (
 	ACCEPT_LICENSE_BUTTON
 	DEBUG_BUTTON
 	IN_GAME_OPTIONS_BUTTON
+	DOWNLOAD_LATEST_BUTTON
+	CONTINUE_BUTTON
 )
 
 const (
@@ -175,6 +181,7 @@ const (
 	LABEL_COUNTDOWN
 	LABEL_INSTRUCTIONS
 	LABEL_DOWNLOAD
+	LABEL_VERSION_UPDATE
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
 )
@@ -213,17 +220,7 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 
 	u.addLabel(LABEL_TITLE, "Twitch Rat", u.fontBig, normalLabelColor)
 
-	versionStr := "0.0.0.0"
-	if data, err := fileSystem.ReadFile("embed/version.txt"); err == nil {
-		versionStr = string(data)
-	}
-	parts := strings.Split(versionStr, ".")
-	versionStr = colors.Blue.BBCoded("v") +
-		colors.Green.BBCoded(parts[0]) + "." +
-		colors.Yellow.BBCoded(parts[1]) + "." +
-		colors.Orange.BBCoded(parts[2]) + "." +
-		colors.Red.BBCoded(parts[3])
-	u.addLabel(LABEL_VERSION, versionStr, u.fontSmall, normalLabelColor)
+	u.addLabel(LABEL_VERSION, u.version.Current().Bbcode, u.fontSmall, normalLabelColor)
 
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
 	u.addTextButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
@@ -248,6 +245,16 @@ func (u *uiImpl) Init(fileSystem embed.FS, keys keys.Keys, sheet draw.Sheet) {
 	u.addInput(INPUT_DEBUG_USER, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "User", u.fontNormal)
 	u.addInput(INPUT_DEBUG_MESSAGE, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Message", u.fontNormal)
 	u.addTextButton(DEBUG_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Debug", button.Enabled)
+
+	u.addLabel(LABEL_VERSION_UPDATE, fmt.Sprintf(VERSION_OUTDATED_STRING, u.version.Current().Bbcode), u.fontNormal, normalLabelColor)
+	var downloadText string
+	if runtime.GOOS == "js" {
+		downloadText = "Refresh"
+	} else {
+		downloadText = "Download"
+	}
+	u.addTextButton(DOWNLOAD_LATEST_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, downloadText, button.Enabled)
+	u.addTextButton(CONTINUE_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Continue", button.Enabled)
 
 	for i := 0; i < TOTAL_LAST_MESSAGES; i++ {
 		id := LABEL_LAST_MESSAGE + label.Id(i)
@@ -434,6 +441,19 @@ func (u *uiImpl) layoutLicenseElements(cx, cy float64) {
 	u.moveButton(ACCEPT_LICENSE_BUTTON, px, py)
 }
 
+func (u *uiImpl) layoutUpdate(cx, cy float64) {
+	py := cy + BUTTON_GAP*6
+	w, h := u.getLabel(LABEL_VERSION_UPDATE).Measure()
+	u.moveLabel(LABEL_VERSION_UPDATE, cx-(w/2), py)
+
+	px := cx + BUTTON_GAP
+	py = py + h + BUTTON_GAP*4
+	u.moveButton(CONTINUE_BUTTON, px, py)
+
+	px = cx - (BUTTON_WIDTH) - BUTTON_GAP
+	u.moveButton(DOWNLOAD_LATEST_BUTTON, px, py)
+}
+
 func (u *uiImpl) layoutAboutSubMenuElements(cx, cy float64) {
 	py := cy + BUTTON_GAP*3
 	w, h := u.getLabel(LABEL_ABOUT_MESSAGE).Measure()
@@ -478,6 +498,7 @@ func (u *uiImpl) OnLayoutChange(width, height float64) {
 	u.layoutAboutSubMenuElements(cx, cy)
 	u.layoutOptionsSubMenuElements(cx, cy)
 	u.layoutLicenseElements(cx, cy)
+	u.layoutUpdate(cx, cy)
 	u.layoutCounter()
 
 	u.scores.Move(SCORE_X, SCORE_Y)
@@ -756,7 +777,7 @@ func (u *uiImpl) movePanel(id panel.Id, x, y float64) {
 	}
 }
 
-func New(audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {
+func New(version version.Version, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {
 	return &uiImpl{
 		audioPlayer:   audioPlayer,
 		fontVerySmall: fontVerySmall,
@@ -765,5 +786,6 @@ func New(audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font,
 		fontBig:       fontBig,
 		flyingTexts:   make([]flyingText, 0, MAX_FLYING_TEXTS),
 		scores:        scores.New(fontSmall, fontNormal),
+		version:       version,
 	}
 }

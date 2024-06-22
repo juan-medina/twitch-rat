@@ -1,3 +1,5 @@
+//go:build wasm
+
 /*
  *  Copyright (c) 2024 Juan Medina
  *
@@ -16,31 +18,10 @@
  *   DEALINGS IN THE SOFTWARE.
  */
 
-package stage
+package update
 
-import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/juan-medina/twitch-rat/internal/keys"
-)
+import "syscall/js"
 
-type Stage interface {
-	Init()
-	Draw(screen *ebiten.Image)
-	Update(elapsedTime int, keys keys.Keys)
-	OnLayoutChange(width, height float64)
-	End()
-}
-type Id int
-
-const (
-	NONE Id = iota
-	LICENSE
-	UPDATE
-	MENU
-	PLAYING
-	EXIT
-)
-
-type Changer interface {
-	ChangeStage(id Id)
+func (u update) download() {
+	js.Global().Get("refresh").Invoke()
 }

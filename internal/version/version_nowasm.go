@@ -1,3 +1,5 @@
+//go:build !wasm
+
 /*
  *  Copyright (c) 2024 Juan Medina
  *
@@ -16,31 +18,26 @@
  *   DEALINGS IN THE SOFTWARE.
  */
 
-package stage
+package version
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/juan-medina/twitch-rat/internal/keys"
+	"io"
+	"net/http"
 )
 
-type Stage interface {
-	Init()
-	Draw(screen *ebiten.Image)
-	Update(elapsedTime int, keys keys.Keys)
-	OnLayoutChange(width, height float64)
-	End()
-}
-type Id int
+func (v *versionImpl) fetchLatest(url string) {
+	go func() {
+		resp, err := http.Get(url)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
 
-const (
-	NONE Id = iota
-	LICENSE
-	UPDATE
-	MENU
-	PLAYING
-	EXIT
-)
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			panic(err)
+		}
 
-type Changer interface {
-	ChangeStage(id Id)
+		v.updateLatestCallback(string(data))
+	}()
 }

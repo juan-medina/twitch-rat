@@ -3,7 +3,7 @@
   Twitch Rat is a small game that was developed
    to be used as a AFK/intro screen for any streamer.
 
-  I hope you enjoy it and feel free to share with your
+  I hope you enjoy it feel free to share with your
     friends & community.
 
 [color=#00FFFFFF]  Juan Medina[/color][color=#FF7F50FF] (AKA Cecile Valdelius)[/color] [url=https://juan-medina.com]https://juan-medina.com[/url]
