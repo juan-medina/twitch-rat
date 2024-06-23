@@ -60,7 +60,7 @@ const (
 )
 
 func (m *menu) Init() {
-	channel := m.settings.GetValue("channel", "")
+	channel := m.settings.GetValue(settings.CHANNEL_NAME, settings.DEFAULT_CHANNEL_NAME)
 	m.ui.SetInputText(ui.INPUT_CHANNEL, channel)
 
 	m.ui.SetButtonClickCallback(m.onButtonClick)
@@ -187,7 +187,7 @@ func (m *menu) onButtonClick(id button.Id) {
 				return
 			}
 		}
-		m.settings.SetValue("channel", channel)
+		m.settings.SetValue(settings.CHANNEL_NAME, channel)
 		m.settings.Save()
 		m.changeSubMenu(GAME_MODE_SETTINGS)
 	case ui.BACK_BUTTON:
@@ -221,12 +221,12 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 func (m *menu) initSubMenu(subMenu subMenu) {
 	switch subMenu {
 	case OPTIONS_MENU:
-		song := m.settings.GetFloatValue("song_volume", 0.2)
-		sound := m.settings.GetFloatValue("sound_volume", 0.5)
+		song := m.settings.GetFloatValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
+		sound := m.settings.GetFloatValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
 		m.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
 		m.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
 	case GAME_MODE_SETTINGS:
-		mode := m.settings.GetIntValue("game_mode", 0)
+		mode := m.settings.GetIntValue(settings.GAME_MODE, settings.GAME_MODE_AFK)
 		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, mode)
 	}
 }
@@ -234,7 +234,8 @@ func (m *menu) endSubMenu(subMenu subMenu) {
 	switch subMenu {
 	case GAME_MODE_SETTINGS:
 		mode := m.ui.GetRadioGroupSelection(ui.GAME_MODE_RADIO_GROUP)
-		m.settings.SetIntValue("game_mode", mode)
+		m.settings.SetIntValue(settings.GAME_MODE, mode)
+		m.settings.Save()
 	}
 }
 
@@ -277,11 +278,11 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 func (m *menu) onSliderChange(id slider.Id, value float64) {
 	switch id {
 	case ui.MUSIC_VOLUME_SLIDER:
-		m.settings.SetFloatValue("song_volume", value)
+		m.settings.SetFloatValue(settings.SONG_VOLUME, value)
 		m.settings.Save()
 		m.audioPlayer.ChangeSongVolume(value)
 	case ui.AUDIO_VOLUME_SLIDER:
-		m.settings.SetFloatValue("sound_volume", value)
+		m.settings.SetFloatValue(settings.SOUND_VOLUME, value)
 		m.settings.Save()
 		m.audioPlayer.ChangeSoundVolume(value)
 	}

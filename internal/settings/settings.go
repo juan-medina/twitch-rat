@@ -23,6 +23,25 @@ import (
 	"strconv"
 )
 
+const (
+	// MAIN MENU
+	CHANNEL_NAME         = "channel"
+	DEFAULT_CHANNEL_NAME = ""
+	//OPTIONS
+	SONG_VOLUME          = "song_volume"
+	DEFAULT_SONG_VOLUME  = 0.5
+	SOUND_VOLUME         = "sound_volume"
+	DEFAULT_SOUND_VOLUME = 0.5
+	//DEBUG
+	DEBUG         = "debug"
+	DEFAULT_DEBUG = false
+	//MATCH SETTINGS
+	GAME_MODE        = "game_mode"
+	GAME_MODE_AFK    = 0
+	GAME_MODE_BATTLE = 1
+	GAME_MODE_CUSTOM = 2
+)
+
 type Settings interface {
 	Init()
 

@@ -119,8 +119,8 @@ func (g *game) init() {
 	g.ui.Init(g.fileSystem, g.keys, rats)
 	g.ui.OnLayoutChange(g.currentWidth, g.currentHeight)
 
-	song := g.settings.GetFloatValue("song_volume", 0.5)
-	sound := g.settings.GetFloatValue("sound_volume", 0.5)
+	song := g.settings.GetFloatValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
+	sound := g.settings.GetFloatValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
 	g.audioPlayer.ChangeSongVolume(song)
 	g.audioPlayer.ChangeSoundVolume(sound)
 
@@ -131,7 +131,7 @@ func (g *game) init() {
 	g.addStage(stage.MENU, menu.New(g, g.ui, g.settings, rats, sewerMap, g.audioPlayer))
 	g.addStage(stage.PLAYING, playing.New(g, g.ui, g.settings, sewerMap, rats, g.audioPlayer, g.fontVerySmall, g.fontSmall))
 
-	if debug := g.settings.GetBoolValue("debug", false); !debug {
+	if debug := g.settings.GetBoolValue(settings.DEBUG, settings.DEFAULT_DEBUG); !debug {
 		g.changeStage(stage.LICENSE)
 	} else {
 		g.changeStage(stage.PLAYING)

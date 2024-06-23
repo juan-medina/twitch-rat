@@ -67,12 +67,12 @@ func (p *playing) Init() {
 
 	p.ui.SetStatusMessage("Connecting..", colors.White)
 
-	p.channel = p.settings.GetValue("channel", "")
+	p.channel = p.settings.GetValue(settings.CHANNEL_NAME, settings.DEFAULT_CHANNEL_NAME)
 	p.chat.OnEvent(p.onChatEvent)
 	p.chat.Connect(p.channel)
 	p.sewerMap.SetLevel(0)
 	p.audioPlayer.PlaySong(GAME_MUSIC)
-	if debug := p.settings.GetBoolValue("debug", false); debug {
+	if debug := p.settings.GetBoolValue(settings.DEBUG, settings.DEFAULT_DEBUG); debug {
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_USER, true)
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, true)
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, true)
@@ -94,7 +94,7 @@ func (p *playing) End() {
 	p.ui.SetStatusMessage("Disconnected", colors.White)
 	p.audioPlayer.Stop()
 
-	if debug := p.settings.GetBoolValue("debug", false); debug {
+	if debug := p.settings.GetBoolValue(settings.DEBUG, settings.DEFAULT_DEBUG); debug {
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_USER, false)
 		p.ui.SetInputVisible(ui.INPUT_DEBUG_MESSAGE, false)
 		p.ui.SetButtonVisible(ui.DEBUG_BUTTON, false)
@@ -459,7 +459,7 @@ func (p *playing) onButtonClick(id button.Id) {
 	case ui.BACK_BUTTON:
 		p.ui.SetButtonClickCallback(nil)
 		p.ui.SetSliderChangeCallback(nil)
-		if debug := p.settings.GetBoolValue("debug", false); !debug {
+		if debug := p.settings.GetBoolValue(settings.DEBUG, settings.DEFAULT_DEBUG); !debug {
 			p.changer.ChangeStage(stage.MENU)
 		} else {
 			p.changer.ChangeStage(stage.EXIT)
@@ -483,9 +483,9 @@ func (p *playing) optionsMenu(enable bool) {
 	p.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, p.optionsVisible)
 	p.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, p.optionsVisible)
 	p.ui.SetPanelVisible(ui.OPTIONS_PANEL, p.optionsVisible)
-	song := p.settings.GetFloatValue("song_volume", 0.2)
+	song := p.settings.GetFloatValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
+	sound := p.settings.GetFloatValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
 	p.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
-	sound := p.settings.GetFloatValue("sound_volume", 0.5)
 	p.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
 	if p.optionsVisible {
 		p.ui.DisableButton(ui.BACK_BUTTON)
@@ -508,17 +508,17 @@ func (p *playing) onChatEvent(e chat.Event) {
 func (p *playing) onSliderChange(id slider.Id, value float64) {
 	switch id {
 	case ui.MUSIC_VOLUME_SLIDER:
-		p.settings.SetFloatValue("song_volume", value)
+		p.settings.SetFloatValue(settings.SONG_VOLUME, value)
 		p.settings.Save()
 		p.audioPlayer.ChangeSongVolume(value)
 	case ui.AUDIO_VOLUME_SLIDER:
-		p.settings.SetFloatValue("sound_volume", value)
+		p.settings.SetFloatValue(settings.SOUND_VOLUME, value)
 		p.settings.Save()
 		p.audioPlayer.ChangeSoundVolume(value)
 	}
 }
 
-func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font) stage.Stage {
+func New(changer stage.Changer, ui ui.UI, sett settings.Settings, sewerMap draw.Map, rats draw.Sheet, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font) stage.Stage {
 	audioPlayer.LoadSong(GAME_MUSIC)
 	audioPlayer.LoadSound(rat.HIT_SOUND)
 	audioPlayer.LoadSound(rat.DEAD_SOUND)
@@ -531,14 +531,14 @@ func New(changer stage.Changer, ui ui.UI, settings settings.Settings, sewerMap d
 		audioPlayer.LoadSound(fmt.Sprintf(COUNTDOWN_SOUND, i))
 	}
 	var chatInterface chat.Chat
-	if debug := settings.GetBoolValue("debug", false); !debug {
+	if debug := sett.GetBoolValue(settings.DEBUG, settings.DEFAULT_DEBUG); !debug {
 		chatInterface = chat.New()
 	} else {
 		chatInterface = chat.NewDebug()
 	}
 	p := playing{
 		changer:       changer,
-		settings:      settings,
+		settings:      sett,
 		ui:            ui,
 		eventsChan:    make(chan chat.Event, 10),
 		chat:          chatInterface,
