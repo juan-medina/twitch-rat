@@ -482,6 +482,18 @@ func (u *uiImpl) SelectRadioGroup(id radiogroup.Id, index int) {
 		rg.SetSelected(index)
 	}
 }
+func (u *uiImpl) GetRadioGroupSelection(id radiogroup.Id) int {
+	if rg := u.getRadioGroup(id); rg != nil {
+		return rg.GetSelected()
+	}
+	return -1
+}
+
+func (u *uiImpl) GelectRadioGroup(id radiogroup.Id, index int) {
+	if rg := u.getRadioGroup(id); rg != nil {
+		rg.SetSelected(index)
+	}
+}
 
 func (u *uiImpl) moveRadioGroup(id radiogroup.Id, x, y float64) {
 	if rg := u.getRadioGroup(id); rg != nil {

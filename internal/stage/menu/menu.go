@@ -76,20 +76,9 @@ func (m *menu) Init() {
 }
 
 func (m *menu) End() {
-	m.ui.SetButtonVisible(ui.PLAY_BUTTON, false)
-	m.ui.SetInputVisible(ui.INPUT_CHANNEL, false)
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, false)
-	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, false)
-	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, false)
-	m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, false)
-	m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, false)
-	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, false)
-	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, false)
-
-	if runtime.GOOS != "js" {
-		m.ui.SetButtonVisible(ui.BACK_BUTTON, false)
-	}
-
+	m.hideAllSubmenus()
+	m.endSubMenu(m.currentSubMenu)
 	m.settings.Save()
 	m.audioPlayer.Stop()
 }
@@ -221,53 +210,66 @@ func (m *menu) onButtonClick(id button.Id) {
 }
 
 func (m *menu) changeSubMenu(subMenu subMenu) {
+	m.hideAllSubmenus()
+	m.endSubMenu(m.currentSubMenu)
 	m.currentSubMenu = subMenu
 
-	m.ui.SetInputVisible(ui.INPUT_CHANNEL, false)
-	m.ui.SetButtonVisible(ui.PLAY_BUTTON, false)
-	m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, false)
-	m.ui.SetButtonVisible(ui.ABOUT_BUTTON, false)
-	m.ui.SetLabelVisible(ui.LABEL_ABOUT_MESSAGE, false)
-	m.ui.SetButtonVisible(ui.SUBMENU_ABOUT_BACK_BUTTON, false)
-	m.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, false)
-	m.ui.SetSliderVisible(ui.MUSIC_VOLUME_SLIDER, false)
-	m.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, false)
-	m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, false)
-	m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, false)
-	m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, false)
-	m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, false)
-	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, false)
-	m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, false)
+	m.changeSubMenuVisibility(m.currentSubMenu, true)
+	m.initSubMenu(m.currentSubMenu)
+}
 
-	switch m.currentSubMenu {
-	case MAIN_MENU:
-		m.ui.SetInputVisible(ui.INPUT_CHANNEL, true)
-		m.ui.SetButtonVisible(ui.PLAY_BUTTON, true)
-		m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, true)
-		m.ui.SetButtonVisible(ui.ABOUT_BUTTON, true)
-		if runtime.GOOS != "js" {
-			m.ui.SetButtonVisible(ui.BACK_BUTTON, true)
-		} else {
-			m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, true)
-		}
-	case ABOUT_MENU:
-		m.ui.SetLabelVisible(ui.LABEL_ABOUT_MESSAGE, true)
-		m.ui.SetButtonVisible(ui.SUBMENU_ABOUT_BACK_BUTTON, true)
+func (m *menu) initSubMenu(subMenu subMenu) {
+	switch subMenu {
 	case OPTIONS_MENU:
-		m.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, true)
-		m.ui.SetSliderVisible(ui.MUSIC_VOLUME_SLIDER, true)
-		m.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, true)
-		m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, true)
-		m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, true)
 		song := m.settings.GetFloatValue("song_volume", 0.2)
-		m.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
 		sound := m.settings.GetFloatValue("sound_volume", 0.5)
+		m.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
 		m.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
 	case GAME_MODE_SETTINGS:
-		m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, true)
-		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, true)
-		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, true)
-		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, 0)
+		mode := m.settings.GetIntValue("game_mode", 0)
+		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, mode)
+	}
+}
+func (m *menu) endSubMenu(subMenu subMenu) {
+	switch subMenu {
+	case GAME_MODE_SETTINGS:
+		mode := m.ui.GetRadioGroupSelection(ui.GAME_MODE_RADIO_GROUP)
+		m.settings.SetIntValue("game_mode", mode)
+	}
+}
+
+func (m *menu) hideAllSubmenus() {
+	m.changeSubMenuVisibility(MAIN_MENU, false)
+	m.changeSubMenuVisibility(OPTIONS_MENU, false)
+	m.changeSubMenuVisibility(ABOUT_MENU, false)
+	m.changeSubMenuVisibility(GAME_MODE_SETTINGS, false)
+}
+
+func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
+	switch subMenu {
+	case MAIN_MENU:
+		m.ui.SetInputVisible(ui.INPUT_CHANNEL, visible)
+		m.ui.SetButtonVisible(ui.PLAY_BUTTON, visible)
+		m.ui.SetButtonVisible(ui.OPTIONS_BUTTON, visible)
+		m.ui.SetButtonVisible(ui.ABOUT_BUTTON, visible)
+		if runtime.GOOS != "js" {
+			m.ui.SetButtonVisible(ui.BACK_BUTTON, visible)
+		} else {
+			m.ui.SetLabelVisible(ui.LABEL_DOWNLOAD, visible)
+		}
+	case ABOUT_MENU:
+		m.ui.SetLabelVisible(ui.LABEL_ABOUT_MESSAGE, visible)
+		m.ui.SetButtonVisible(ui.SUBMENU_ABOUT_BACK_BUTTON, visible)
+	case OPTIONS_MENU:
+		m.ui.SetButtonVisible(ui.SUBMENU_OPTION_BACK_BUTTON, visible)
+		m.ui.SetSliderVisible(ui.MUSIC_VOLUME_SLIDER, visible)
+		m.ui.SetLabelVisible(ui.LABEL_OPTIONS_MUSIC_VOLUME, visible)
+		m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, visible)
+		m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, visible)
+	case GAME_MODE_SETTINGS:
+		m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, visible)
+		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, visible)
+		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, visible)
 	}
 }
 

@@ -54,6 +54,7 @@ type RadioGroup interface {
 	SetVisible(visible bool)
 	Measure() (float64, float64)
 	SetSelected(index int)
+	GetSelected() int
 }
 
 type radioState int
@@ -162,6 +163,10 @@ func (r *radioGroupImpl) SetSelected(index int) {
 		}
 	}
 	r.selected = index
+}
+
+func (r *radioGroupImpl) GetSelected() int {
+	return r.selected
 }
 
 func (r radioGroupImpl) Measure() (float64, float64) {

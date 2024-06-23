@@ -35,6 +35,9 @@ type Settings interface {
 	GetBoolValue(key string, defaultValue bool) bool
 	SetBoolValue(key string, value bool)
 
+	GetIntValue(key string, defaultValue int) int
+	SetIntValue(key string, value int)
+
 	Save()
 }
 
@@ -105,9 +108,12 @@ func (s *settingsImpl) GetValue(key string, defaultValue string) string {
 func (s *settingsImpl) GetFloatValue(key string, defaultValue float64) float64 {
 	strDefaultValue := strconv.FormatFloat(defaultValue, 'f', -1, 64)
 	valueStr := s.GetValue(key, strDefaultValue)
-	value, _ := strconv.ParseFloat(valueStr, 64)
-	return value
-
+	if value, err := strconv.ParseFloat(valueStr, 64); err != nil {
+		s.settings[key] = strDefaultValue
+		return defaultValue
+	} else {
+		return value
+	}
 }
 
 func (s *settingsImpl) SetValue(key string, value string) {
@@ -118,11 +124,15 @@ func (s *settingsImpl) SetFloatValue(key string, value float64) {
 	s.SetValue(key, strconv.FormatFloat(value, 'f', -1, 64))
 }
 
-func (s settingsImpl) GetBoolValue(key string, defaultValue bool) bool {
+func (s *settingsImpl) GetBoolValue(key string, defaultValue bool) bool {
 	strDefaultValue := strconv.FormatBool(defaultValue)
 	valueStr := s.GetValue(key, strDefaultValue)
-	value, _ := strconv.ParseBool(valueStr)
-	return value
+	if value, err := strconv.ParseBool(valueStr); err != nil {
+		s.settings[key] = strDefaultValue
+		return defaultValue
+	} else {
+		return value
+	}
 }
 
 func (s *settingsImpl) SetBoolValue(key string, value bool) {
@@ -131,6 +141,21 @@ func (s *settingsImpl) SetBoolValue(key string, value bool) {
 
 func registerImpl(impl func(application string) Storage) {
 	registeredStorage = impl
+}
+
+func (s *settingsImpl) SetIntValue(key string, value int) {
+	s.SetValue(key, strconv.FormatInt(int64(value), 10))
+}
+
+func (s *settingsImpl) GetIntValue(key string, defaultValue int) int {
+	strDefaultValue := strconv.FormatInt(int64(defaultValue), 10)
+	valueStr := s.GetValue(key, strDefaultValue)
+	if value, err := strconv.ParseInt(valueStr, 10, 64); err != nil {
+		s.settings[key] = strDefaultValue
+		return defaultValue
+	} else {
+		return int(value)
+	}
 }
 
 func New(application string) Settings {
