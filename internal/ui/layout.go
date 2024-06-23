@@ -161,14 +161,22 @@ func (u *uiImpl) layoutOptionsSubMenuElements(cx, cy float64) {
 }
 
 func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
-	rw, _ := u.getRadioGroup(GAME_MODE_RADIO_GROUP).Measure()
-	px := cx - (rw / 2)
 	py := cy + BUTTON_GAP*3
 
+	// CENTER LABEL AND RADIO GROUP
+	lw, lh := u.getLabel(LABEL_GAME_MODE).Measure()
+	rw, _ := u.getRadioGroup(GAME_MODE_RADIO_GROUP).Measure()
+
+	tw := lw + BUTTON_GAP + rw
+	px := cx - (tw / 2)
+	gy := (BUTTON_HEIGHT - lh) / 2
+	u.moveLabel(LABEL_GAME_MODE, px, py+gy)
+
+	px = px + lw + BUTTON_GAP
 	u.moveRadioGroup(GAME_MODE_RADIO_GROUP, px, py)
 
+	// BUTTONS
 	py = py + BUTTON_HEIGHT + BUTTON_GAP
-
 	px = cx - BUTTON_WIDTH - BUTTON_GAP
 	u.moveButton(SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, px, py)
 

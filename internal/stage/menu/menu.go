@@ -267,6 +267,7 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 		m.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, visible)
 		m.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, visible)
 	case GAME_MODE_SETTINGS:
+		m.ui.SetLabelVisible(ui.LABEL_GAME_MODE, visible)
 		m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, visible)
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, visible)
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, visible)
