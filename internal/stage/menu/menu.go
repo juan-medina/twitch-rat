@@ -235,6 +235,9 @@ func (m *menu) initSubMenu(subMenu subMenu) {
 		mode = m.settings.GetIntValue(settings.JOIN_MODE, settings.JOIN_MODE_WITH_COMMAND)
 		m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, mode)
 
+		mode = m.settings.GetIntValue(settings.REJOIN_MODE, settings.REJOIN_MODE_YES)
+		m.ui.SelectRadioGroup(ui.REJOIN_MODE_RADIO_GROUP, mode)
+
 		mode = m.settings.GetIntValue(settings.ATTACK_MODE, settings.ATTACK_MODE_RANDOM)
 		m.ui.SelectRadioGroup(ui.ATTACK_MODE_RADIO_GROUP, mode)
 
@@ -258,6 +261,9 @@ func (m *menu) endSubMenu(subMenu subMenu) {
 
 		mode = m.ui.GetRadioGroupSelection(ui.JOIN_MODE_RADIO_GROUP)
 		m.settings.SetIntValue(settings.JOIN_MODE, mode)
+
+		mode = m.ui.GetRadioGroupSelection(ui.REJOIN_MODE_RADIO_GROUP)
+		m.settings.SetIntValue(settings.REJOIN_MODE, mode)
 
 		mode = m.ui.GetRadioGroupSelection(ui.ATTACK_MODE_RADIO_GROUP)
 		m.settings.SetIntValue(settings.ATTACK_MODE, mode)
@@ -309,6 +315,9 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 
 		m.ui.SetLabelVisible(ui.LABEL_JOIN_MODE, visible)
 		m.ui.SetRadioGroupVisible(ui.JOIN_MODE_RADIO_GROUP, visible)
+
+		m.ui.SetLabelVisible(ui.LABEL_REJOIN_MODE, visible)
+		m.ui.SetRadioGroupVisible(ui.REJOIN_MODE_RADIO_GROUP, visible)
 
 		m.ui.SetLabelVisible(ui.LABEL_ATTACK_MODE, visible)
 		m.ui.SetRadioGroupVisible(ui.ATTACK_MODE_RADIO_GROUP, visible)
@@ -372,6 +381,7 @@ type gameModeValue struct {
 var (
 	afkModeValues []gameModeValue = []gameModeValue{
 		{radioGroupType, int(ui.JOIN_MODE_RADIO_GROUP), settings.JOIN_MODE_CHATTER},
+		{radioGroupType, int(ui.REJOIN_MODE_RADIO_GROUP), settings.REJOIN_MODE_YES},
 		{radioGroupType, int(ui.ATTACK_MODE_RADIO_GROUP), settings.ATTACK_MODE_RANDOM},
 		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_RANDOM},
 		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_ANYONE},
@@ -380,6 +390,7 @@ var (
 
 	battleModeValues []gameModeValue = []gameModeValue{
 		{radioGroupType, int(ui.JOIN_MODE_RADIO_GROUP), settings.JOIN_MODE_WITH_COMMAND},
+		{radioGroupType, int(ui.REJOIN_MODE_RADIO_GROUP), settings.REJOIN_MODE_NO},
 		{radioGroupType, int(ui.ATTACK_MODE_RADIO_GROUP), settings.ATTACK_MODE_WITH_COMMAND},
 		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_WITH_COMMAND},
 		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_SELF},

@@ -77,6 +77,7 @@ const (
 	LABEL_VERSION_UPDATE
 	LABEL_GAME_MODE
 	LABEL_JOIN_MODE
+	LABEL_REJOIN_MODE
 	LABEL_ATTACK_MODE
 	LABEL_HEAL_MODE
 	LABEL_HEALING_TO
@@ -102,6 +103,7 @@ var (
 const (
 	GAME_MODE_RADIO_GROUP radiogroup.Id = iota
 	JOIN_MODE_RADIO_GROUP
+	REJOIN_MODE_RADIO_GROUP
 	ATTACK_MODE_RADIO_GROUP
 	HEAL_MODE_RADIO_GROUP
 	HEALING_TO_RADIO_GROUP
@@ -525,6 +527,9 @@ func (u *uiImpl) createMatchSettingsMenuUI() {
 
 	u.addLabel(LABEL_JOIN_MODE, "Joining Mode:", u.fontSmall, normalLabelColor)
 	u.addRadioGroup(JOIN_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Any Chatter", "With !rat")
+
+	u.addLabel(LABEL_REJOIN_MODE, "Allow Re-join:", u.fontSmall, normalLabelColor)
+	u.addRadioGroup(REJOIN_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Yes", "No")
 
 	u.addLabel(LABEL_ATTACK_MODE, "Attack Mode:", u.fontSmall, normalLabelColor)
 	u.addRadioGroup(ATTACK_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Auto", "With !attack")

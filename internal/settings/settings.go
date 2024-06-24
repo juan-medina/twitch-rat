@@ -39,6 +39,9 @@ const (
 	JOIN_MODE                = "join_mode"
 	JOIN_MODE_CHATTER        = 0
 	JOIN_MODE_WITH_COMMAND   = 1
+	REJOIN_MODE              = "rejoin_mode"
+	REJOIN_MODE_YES          = 0
+	REJOIN_MODE_NO           = 1
 	ATTACK_MODE              = "attack_mode"
 	ATTACK_MODE_RANDOM       = 0
 	ATTACK_MODE_WITH_COMMAND = 1

@@ -182,6 +182,11 @@ func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
 	u.moveLabel(LABEL_JOIN_MODE, px, py+sgy)
 	u.moveRadioGroup(JOIN_MODE_RADIO_GROUP, rx, py)
 
+	//REJOIN MODE
+	py = py + SMALL_BUTTON_HEIGHT + BUTTON_GAP
+	u.moveLabel(LABEL_REJOIN_MODE, px, py+sgy)
+	u.moveRadioGroup(REJOIN_MODE_RADIO_GROUP, rx, py)
+
 	//ATTACK MODE
 	py = py + SMALL_BUTTON_HEIGHT + BUTTON_GAP
 	u.moveLabel(LABEL_ATTACK_MODE, px, py+sgy)
