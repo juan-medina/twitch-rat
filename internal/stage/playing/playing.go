@@ -483,8 +483,8 @@ func (p *playing) optionsMenu(enable bool) {
 	p.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, p.optionsVisible)
 	p.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, p.optionsVisible)
 	p.ui.SetPanelVisible(ui.OPTIONS_PANEL, p.optionsVisible)
-	song := p.settings.GetFloatValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
-	sound := p.settings.GetFloatValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
+	song := p.settings.GetIntValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
+	sound := p.settings.GetIntValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
 	p.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
 	p.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
 	if p.optionsVisible {
@@ -505,14 +505,14 @@ func (p *playing) onChatEvent(e chat.Event) {
 	p.eventsChan <- e
 }
 
-func (p *playing) onSliderChange(id slider.Id, value float64) {
+func (p *playing) onSliderChange(id slider.Id, value int) {
 	switch id {
 	case ui.MUSIC_VOLUME_SLIDER:
-		p.settings.SetFloatValue(settings.SONG_VOLUME, value)
+		p.settings.SetIntValue(settings.SONG_VOLUME, value)
 		p.settings.Save()
 		p.audioPlayer.ChangeSongVolume(value)
 	case ui.AUDIO_VOLUME_SLIDER:
-		p.settings.SetFloatValue(settings.SOUND_VOLUME, value)
+		p.settings.SetIntValue(settings.SOUND_VOLUME, value)
 		p.settings.Save()
 		p.audioPlayer.ChangeSoundVolume(value)
 	}

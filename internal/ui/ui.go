@@ -65,8 +65,10 @@ type UI interface {
 	SetLabelBackgroundColor(id label.Id, color color.Color, expand float64)
 
 	SetSliderVisible(id slider.Id, visible bool)
-	SetSliderValue(id slider.Id, value float64)
-	SetSliderChangeCallback(callback func(id slider.Id, value float64))
+	SetSliderValue(id slider.Id, value int)
+	SetSliderChangeCallback(callback func(id slider.Id, value int))
+	GetSliderValue(id slider.Id) int
+
 	AddFlyingText(text string, color colors.CustomColor, x, y float64)
 
 	SetScoreVisible(visible bool)

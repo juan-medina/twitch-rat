@@ -30,12 +30,12 @@ type Player interface {
 	LoadSong(song string)
 	PlaySong(song string)
 	StopCurrentSong()
-	ChangeSongVolume(volume float64)
+	ChangeSongVolume(volume int)
 
 	LoadSound(sound string)
 	PlaySound(sound string)
 	StopAllSounds()
-	ChangeSoundVolume(volume float64)
+	ChangeSoundVolume(volume int)
 
 	Stop()
 
@@ -149,17 +149,17 @@ func (p *playerImpl) Stop() {
 	p.StopAllSounds()
 }
 
-func (p *playerImpl) ChangeSongVolume(volume float64) {
-	p.songVolume = volume
+func (p *playerImpl) ChangeSongVolume(volume int) {
+	p.songVolume = float64(volume) / 100
 	if p.musicPlayer != nil {
-		p.musicPlayer.SetVolume(volume)
+		p.musicPlayer.SetVolume(p.songVolume)
 	}
 }
 
-func (p *playerImpl) ChangeSoundVolume(volume float64) {
-	p.soundVolume = volume
+func (p *playerImpl) ChangeSoundVolume(volume int) {
+	p.soundVolume = float64(volume) / 100
 	for _, player := range p.sounds {
-		player.SetVolume(volume)
+		player.SetVolume(p.soundVolume)
 	}
 }
 

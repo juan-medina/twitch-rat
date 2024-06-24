@@ -38,8 +38,9 @@ type Slider interface {
 	Update(elapsedTime int, mouseX, mouseY float64, leftJustPressed bool, leftPressed bool, keys keys.Keys)
 	Draw(screen *ebiten.Image)
 	Move(x, y float64)
-	SetValue(value float64)
-	OnValueChangeCallback(onValueChange func(id Id, value float64))
+	SetValue(value int)
+	OnValueChangeCallback(onValueChange func(id Id, value int))
+	GetValue() int
 }
 
 var (
@@ -62,17 +63,18 @@ type sliderImpl struct {
 	color               color.Color
 	x, y, w, h          float64
 	valueLabel          label.Label
-	value               float64
+	value               int
 	markerWidth         float64
 	markerHeight        float64
 	markerX             float64
 	markerY             float64
 	markerColor         color.Color
 	status              status
-	valueChangeCallback func(id Id, value float64)
+	valueChangeCallback func(id Id, value int)
+	min, max            int
 }
 
-func dummyValueChangeCallback(id Id, value float64) {}
+func dummyValueChangeCallback(id Id, value int) {}
 
 func (s *sliderImpl) GetId() Id {
 	return s.id
@@ -127,20 +129,19 @@ func (s *sliderImpl) Update(elapsedTime int, mouseX, mouseY float64, leftJustPre
 		}
 	}
 	if s.status == pressed {
-		value := float64(mouseX-s.x) / float64(s.w)
-		if value < 0 {
-			value = 0
+		percent := float64(mouseX-s.x) / float64(s.w)
+		if percent < 0 {
+			percent = 0
 		}
-		if value > 1 {
-			value = 1
+		if percent > 1 {
+			percent = 1
 		}
-		s.value = value
+		value := s.percentToValue(percent)
 		if currentValue != value {
-			s.valueChangeCallback(s.id, value)
 			s.SetValue(value)
+			s.valueChangeCallback(s.id, value)
 		}
 	}
-
 }
 
 func (s sliderImpl) isMakerHit(x, y float64) bool {
@@ -174,13 +175,34 @@ func (s *sliderImpl) Move(x, y float64) {
 	s.SetValue(s.value)
 }
 
-func (s *sliderImpl) SetValue(value float64) {
-	s.value = value
-	s.valueLabel.SetText(fmt.Sprintf("  %d%%", int(value*100)))
-	s.markerX = s.x + s.w*value - (s.markerWidth / 2)
+func (s sliderImpl) valueToPercent(current int) (percent float64) {
+	diff := float64(s.max - s.min)
+	percent = 1 - ((diff - float64(current-s.min)) / diff)
+	percent = float64(int(percent*100)) / 100
+	return
 }
 
-func (s *sliderImpl) OnValueChangeCallback(onValueChange func(id Id, value float64)) {
+func (s sliderImpl) percentToValue(percent float64) (value int) {
+	diff := float64(s.max - s.min)
+	adding := int(diff * percent)
+	value = s.min + adding
+	return
+}
+
+func (s *sliderImpl) SetValue(value int) {
+	s.value = value
+	if s.value < s.min {
+		s.value = s.min
+	} else if value > s.max {
+		s.value = s.max
+	}
+
+	percent := s.valueToPercent(s.value)
+	s.markerX = s.x + s.w*percent - (s.markerWidth / 2)
+	s.valueLabel.SetText(fmt.Sprintf("  %d", s.value))
+}
+
+func (s *sliderImpl) OnValueChangeCallback(onValueChange func(id Id, value int)) {
 	if onValueChange == nil {
 		s.valueChangeCallback = dummyValueChangeCallback
 	} else {
@@ -188,8 +210,11 @@ func (s *sliderImpl) OnValueChangeCallback(onValueChange func(id Id, value float
 	}
 
 }
+func (s sliderImpl) GetValue() int {
+	return s.value
+}
 
-func New(id Id, w, h float64, font draw.Font, lineHeight float64, labelColor color.Color) Slider {
+func New(id Id, min, max int, w, h float64, font draw.Font, lineHeight float64, labelColor color.Color) Slider {
 	markerWidth := w * 0.05
 	markerHeight := h + (h * 0.40)
 
@@ -198,11 +223,13 @@ func New(id Id, w, h float64, font draw.Font, lineHeight float64, labelColor col
 		w:                   w,
 		h:                   h,
 		color:               sliderColor,
-		valueLabel:          label.NewLabel(0, " 100%", font, lineHeight, labelColor, nil),
+		valueLabel:          label.NewLabel(0, " ", font, lineHeight, labelColor, nil),
 		markerWidth:         markerWidth,
 		markerHeight:        markerHeight,
 		markerColor:         markerNormalColor,
 		status:              released,
 		valueChangeCallback: dummyValueChangeCallback,
+		min:                 min,
+		max:                 max,
 	}
 }

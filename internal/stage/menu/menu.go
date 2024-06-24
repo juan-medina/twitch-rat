@@ -224,8 +224,8 @@ func (m *menu) changeSubMenu(subMenu subMenu) {
 func (m *menu) initSubMenu(subMenu subMenu) {
 	switch subMenu {
 	case OPTIONS_MENU:
-		song := m.settings.GetFloatValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
-		sound := m.settings.GetFloatValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
+		song := m.settings.GetIntValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
+		sound := m.settings.GetIntValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
 		m.ui.SetSliderValue(ui.MUSIC_VOLUME_SLIDER, song)
 		m.ui.SetSliderValue(ui.AUDIO_VOLUME_SLIDER, sound)
 	case GAME_MODE_SETTINGS:
@@ -243,6 +243,10 @@ func (m *menu) initSubMenu(subMenu subMenu) {
 
 		mode = m.settings.GetIntValue(settings.HEAL_TO, settings.HEAL_TO_ANYONE)
 		m.ui.SelectRadioGroup(ui.HEALING_TO_RADIO_GROUP, mode)
+
+		health := m.settings.GetIntValue(settings.RAT_HEALTH, settings.DEFAULT_HEALTH_AFK)
+		m.ui.SetSliderValue(ui.RAT_HEALTH_SLIDER, health)
+
 		m.checkIfCustomMode()
 	}
 }
@@ -263,6 +267,9 @@ func (m *menu) endSubMenu(subMenu subMenu) {
 
 		mode = m.ui.GetRadioGroupSelection(ui.HEALING_TO_RADIO_GROUP)
 		m.settings.SetIntValue(settings.HEAL_TO, mode)
+
+		health := m.ui.GetSliderValue(ui.RAT_HEALTH_SLIDER)
+		m.settings.SetIntValue(settings.RAT_HEALTH, health)
 
 		m.settings.Save()
 	}
@@ -312,21 +319,26 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 		m.ui.SetLabelVisible(ui.LABEL_HEALING_TO, visible)
 		m.ui.SetRadioGroupVisible(ui.HEALING_TO_RADIO_GROUP, visible)
 
+		m.ui.SetLabelVisible(ui.LABEL_RAT_HEALTH, visible)
+		m.ui.SetSliderVisible(ui.RAT_HEALTH_SLIDER, visible)
+
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, visible)
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, visible)
 	}
 }
 
-func (m *menu) onSliderChange(id slider.Id, value float64) {
+func (m *menu) onSliderChange(id slider.Id, value int) {
 	switch id {
 	case ui.MUSIC_VOLUME_SLIDER:
-		m.settings.SetFloatValue(settings.SONG_VOLUME, value)
+		m.settings.SetIntValue(settings.SONG_VOLUME, value)
 		m.settings.Save()
 		m.audioPlayer.ChangeSongVolume(value)
 	case ui.AUDIO_VOLUME_SLIDER:
-		m.settings.SetFloatValue(settings.SOUND_VOLUME, value)
+		m.settings.SetIntValue(settings.SOUND_VOLUME, value)
 		m.settings.Save()
 		m.audioPlayer.ChangeSoundVolume(value)
+	case ui.RAT_HEALTH_SLIDER:
+		m.checkIfCustomMode()
 	}
 }
 
@@ -363,6 +375,7 @@ var (
 		{radioGroupType, int(ui.ATTACK_MODE_RADIO_GROUP), settings.ATTACK_MODE_RANDOM},
 		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_RANDOM},
 		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_ANYONE},
+		{sliderType, int(ui.RAT_HEALTH_SLIDER), settings.DEFAULT_HEALTH_AFK},
 	}
 
 	battleModeValues []gameModeValue = []gameModeValue{
@@ -370,6 +383,7 @@ var (
 		{radioGroupType, int(ui.ATTACK_MODE_RADIO_GROUP), settings.ATTACK_MODE_WITH_COMMAND},
 		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_WITH_COMMAND},
 		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_SELF},
+		{sliderType, int(ui.RAT_HEALTH_SLIDER), settings.DEFAULT_HEALTH_BATTLE},
 	}
 	gameModes [][]gameModeValue = [][]gameModeValue{
 		afkModeValues,
@@ -387,6 +401,8 @@ func (m *menu) setMode(mode int) {
 		switch item.valueType {
 		case radioGroupType:
 			m.ui.SelectRadioGroup(radiogroup.Id(item.id), item.value)
+		case sliderType:
+			m.ui.SetSliderValue(slider.Id(item.id), item.value)
 		}
 	}
 }
@@ -399,6 +415,12 @@ func (m *menu) checkIfCustomMode() {
 			switch item.valueType {
 			case radioGroupType:
 				if m.ui.GetRadioGroupSelection(radiogroup.Id(item.id)) != item.value {
+					matchMode = false
+					//lint:ignore SA4011 We indeed want to break the inner loop, ignoring lint error
+					break
+				}
+			case sliderType:
+				if m.ui.GetSliderValue(slider.Id(item.id)) != item.value {
 					matchMode = false
 					//lint:ignore SA4011 We indeed want to break the inner loop, ignoring lint error
 					break

@@ -27,9 +27,9 @@ const (
 	CHANNEL_NAME             = "channel"
 	DEFAULT_CHANNEL_NAME     = ""
 	SONG_VOLUME              = "song_volume"
-	DEFAULT_SONG_VOLUME      = 0.5
+	DEFAULT_SONG_VOLUME      = 50
 	SOUND_VOLUME             = "sound_volume"
-	DEFAULT_SOUND_VOLUME     = 0.5
+	DEFAULT_SOUND_VOLUME     = 50
 	DEBUG                    = "debug"
 	DEFAULT_DEBUG            = false
 	GAME_MODE                = "game_mode"
@@ -49,6 +49,9 @@ const (
 	HEAL_TO_ANYONE           = 0
 	HEAL_TO_SELF             = 1
 	HEAL_TO_OTHERS           = 2
+	RAT_HEALTH               = "rat_health"
+	DEFAULT_HEALTH_AFK       = 50
+	DEFAULT_HEALTH_BATTLE    = 100
 )
 
 type Settings interface {

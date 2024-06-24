@@ -119,8 +119,8 @@ func (g *game) init() {
 	g.ui.Init(g.fileSystem, g.keys, rats)
 	g.ui.OnLayoutChange(g.currentWidth, g.currentHeight)
 
-	song := g.settings.GetFloatValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
-	sound := g.settings.GetFloatValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
+	song := g.settings.GetIntValue(settings.SONG_VOLUME, settings.DEFAULT_SONG_VOLUME)
+	sound := g.settings.GetIntValue(settings.SOUND_VOLUME, settings.DEFAULT_SOUND_VOLUME)
 	g.audioPlayer.ChangeSongVolume(song)
 	g.audioPlayer.ChangeSoundVolume(sound)
 

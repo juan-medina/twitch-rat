@@ -80,6 +80,7 @@ const (
 	LABEL_ATTACK_MODE
 	LABEL_HEAL_MODE
 	LABEL_HEALING_TO
+	LABEL_RAT_HEALTH
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
 )
@@ -87,6 +88,7 @@ const (
 const (
 	MUSIC_VOLUME_SLIDER slider.Id = iota
 	AUDIO_VOLUME_SLIDER
+	RAT_HEALTH_SLIDER
 )
 
 const (
@@ -135,10 +137,10 @@ func (u *uiImpl) createOptionsMenuUI() {
 	u.addPanel(OPTIONS_PANEL, OPTION_PANEL_WIDTH, OPTION_PANEL_HEIGHT, colors.Black.NewWithAlpha(50))
 	u.addTextButton(SUBMENU_OPTION_BACK_BUTTON, SMALL_BUTTON_WIDTH, SMALL_BUTTON_HEIGHT, u.fontSmall, "Back", button.Enabled)
 	u.addLabel(LABEL_OPTIONS_MUSIC_VOLUME, "Music Volume", u.fontNormal, normalLabelColor)
-	u.addSlider(MUSIC_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
+	u.addSlider(MUSIC_VOLUME_SLIDER, 0, 100, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
 
 	u.addLabel(LABEL_OPTIONS_AUDIO_VOLUME, "Audio Volume", u.fontNormal, normalLabelColor)
-	u.addSlider(AUDIO_VOLUME_SLIDER, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
+	u.addSlider(AUDIO_VOLUME_SLIDER, 0, 100, SLIDER_WITH, SLIDER_HEIGHT, u.fontSmall, normalLabelColor)
 }
 
 func (u *uiImpl) createDebugUI() {
@@ -228,8 +230,8 @@ func (u *uiImpl) addLabel(id label.Id, text string, font draw.Font, color color.
 	u.widgets = append(u.widgets, l)
 }
 
-func (ui *uiImpl) addSlider(id slider.Id, w, h float64, font draw.Font, labelColor color.Color) {
-	s := slider.New(id, w, h, font, font.DefaultSize(), labelColor)
+func (ui *uiImpl) addSlider(id slider.Id, min, max int, w, h float64, font draw.Font, labelColor color.Color) {
+	s := slider.New(id, min, max, w, h, font, font.DefaultSize(), labelColor)
 	ui.sliders = append(ui.sliders, s)
 	ui.widgets = append(ui.widgets, s)
 }
@@ -401,13 +403,20 @@ func (ui *uiImpl) SetSliderVisible(id slider.Id, visible bool) {
 		s.SetVisible(visible)
 	}
 }
-func (ui *uiImpl) SetSliderValue(id slider.Id, value float64) {
+func (ui *uiImpl) SetSliderValue(id slider.Id, value int) {
 	if s := ui.getSlider(id); s != nil {
 		s.SetValue(value)
 	}
 }
 
-func (u *uiImpl) SetSliderChangeCallback(callback func(id slider.Id, value float64)) {
+func (ui uiImpl) GetSliderValue(id slider.Id) int {
+	if s := ui.getSlider(id); s != nil {
+		return s.GetValue()
+	}
+	return 0
+}
+
+func (u *uiImpl) SetSliderChangeCallback(callback func(id slider.Id, value int)) {
 	for i := range u.sliders {
 		u.sliders[i].OnValueChangeCallback(callback)
 	}
@@ -525,6 +534,9 @@ func (u *uiImpl) createMatchSettingsMenuUI() {
 
 	u.addLabel(LABEL_HEALING_TO, "Healing To:", u.fontSmall, normalLabelColor)
 	u.addRadioGroup(HEALING_TO_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*3, SMALL_BUTTON_HEIGHT, u.fontSmall, "Anyone", "Self", "Others")
+
+	u.addLabel(LABEL_RAT_HEALTH, "Rat Health:", u.fontSmall, normalLabelColor)
+	u.addSlider(RAT_HEALTH_SLIDER, 25, 200, SMALL_RADIO_OPTION_SIZE*3, SMALL_BUTTON_HEIGHT, u.fontSmall, normalLabelColor)
 
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Back", button.Enabled)
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Go!", button.Enabled)
