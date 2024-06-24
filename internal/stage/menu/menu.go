@@ -244,7 +244,7 @@ func (m *menu) initSubMenu(subMenu subMenu) {
 		mode := m.settings.GetIntValue(settings.GAME_MODE, settings.GAME_MODE_AFK)
 		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, mode)
 
-		mode = m.settings.GetIntValue(settings.JOIN_MODE, settings.JOIN_MODE_WITH_COMMAND)
+		mode = m.settings.GetIntValue(settings.JOIN_MODE, settings.JOIN_MODE_CHATTER)
 		m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, mode)
 
 		mode = m.settings.GetIntValue(settings.REJOIN_MODE, settings.REJOIN_MODE_YES)
