@@ -24,21 +24,24 @@ import (
 )
 
 const (
-	CHANNEL_NAME           = "channel"
-	DEFAULT_CHANNEL_NAME   = ""
-	SONG_VOLUME            = "song_volume"
-	DEFAULT_SONG_VOLUME    = 0.5
-	SOUND_VOLUME           = "sound_volume"
-	DEFAULT_SOUND_VOLUME   = 0.5
-	DEBUG                  = "debug"
-	DEFAULT_DEBUG          = false
-	GAME_MODE              = "game_mode"
-	GAME_MODE_AFK          = 0
-	GAME_MODE_BATTLE       = 1
-	GAME_MODE_CUSTOM       = 2
-	JOIN_MODE              = "join_mode"
-	JOIN_MODE_CHATTER      = 0
-	JOIN_MODE_WITH_COMMAND = 1
+	CHANNEL_NAME             = "channel"
+	DEFAULT_CHANNEL_NAME     = ""
+	SONG_VOLUME              = "song_volume"
+	DEFAULT_SONG_VOLUME      = 0.5
+	SOUND_VOLUME             = "sound_volume"
+	DEFAULT_SOUND_VOLUME     = 0.5
+	DEBUG                    = "debug"
+	DEFAULT_DEBUG            = false
+	GAME_MODE                = "game_mode"
+	GAME_MODE_AFK            = 0
+	GAME_MODE_BATTLE         = 1
+	GAME_MODE_CUSTOM         = 2
+	JOIN_MODE                = "join_mode"
+	JOIN_MODE_CHATTER        = 0
+	JOIN_MODE_WITH_COMMAND   = 1
+	ATTACK_MODE              = "attack_mode"
+	ATTACK_MODE_RANDOM       = 0
+	ATTACK_MODE_WITH_COMMAND = 1
 )
 
 type Settings interface {

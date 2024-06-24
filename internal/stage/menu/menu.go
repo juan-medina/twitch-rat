@@ -234,6 +234,9 @@ func (m *menu) initSubMenu(subMenu subMenu) {
 
 		mode = m.settings.GetIntValue(settings.JOIN_MODE, settings.JOIN_MODE_WITH_COMMAND)
 		m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, mode)
+
+		mode = m.settings.GetIntValue(settings.ATTACK_MODE, settings.ATTACK_MODE_RANDOM)
+		m.ui.SelectRadioGroup(ui.ATTACK_MODE_RADIO_GROUP, mode)
 	}
 }
 func (m *menu) endSubMenu(subMenu subMenu) {
@@ -244,6 +247,9 @@ func (m *menu) endSubMenu(subMenu subMenu) {
 
 		mode = m.ui.GetRadioGroupSelection(ui.JOIN_MODE_RADIO_GROUP)
 		m.settings.SetIntValue(settings.JOIN_MODE, mode)
+
+		mode = m.ui.GetRadioGroupSelection(ui.ATTACK_MODE_RADIO_GROUP)
+		m.settings.SetIntValue(settings.ATTACK_MODE, mode)
 
 		m.settings.Save()
 	}
@@ -284,6 +290,9 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 		m.ui.SetLabelVisible(ui.LABEL_JOIN_MODE, visible)
 		m.ui.SetRadioGroupVisible(ui.JOIN_MODE_RADIO_GROUP, visible)
 
+		m.ui.SetLabelVisible(ui.LABEL_ATTACK_MODE, visible)
+		m.ui.SetRadioGroupVisible(ui.ATTACK_MODE_RADIO_GROUP, visible)
+
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, visible)
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, visible)
 	}
@@ -308,10 +317,12 @@ func (m *menu) onRadioChange(id radiogroup.Id, value int) {
 		switch value {
 		case settings.GAME_MODE_AFK:
 			m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, settings.JOIN_MODE_CHATTER)
+			m.ui.SelectRadioGroup(ui.ATTACK_MODE_RADIO_GROUP, settings.ATTACK_MODE_RANDOM)
 		case settings.GAME_MODE_BATTLE:
 			m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, settings.JOIN_MODE_WITH_COMMAND)
+			m.ui.SelectRadioGroup(ui.ATTACK_MODE_RADIO_GROUP, settings.ATTACK_MODE_WITH_COMMAND)
 		}
-	case ui.JOIN_MODE_RADIO_GROUP:
+	case ui.JOIN_MODE_RADIO_GROUP, ui.ATTACK_MODE_RADIO_GROUP:
 		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, settings.GAME_MODE_CUSTOM)
 	}
 }
