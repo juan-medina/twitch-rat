@@ -42,6 +42,10 @@ const (
 	ATTACK_MODE              = "attack_mode"
 	ATTACK_MODE_RANDOM       = 0
 	ATTACK_MODE_WITH_COMMAND = 1
+	HEAL_TO                  = "heal_to"
+	HEAL_TO_ANYONE           = 0
+	HEAL_TO_SELF             = 1
+	HEAL_TO_OTHERS           = 2
 )
 
 type Settings interface {

@@ -48,4 +48,5 @@ const (
 	OPTION_PANEL_HEIGHT          = 220
 	VERSION_OUTDATED_STRING      = "There is a new version available: %s"
 	MAX_RADIO_GROUPS             = 10
+	SMALL_RADIO_OPTION_SIZE      = SMALL_BUTTON_WIDTH * 1.5
 )

@@ -78,6 +78,7 @@ const (
 	LABEL_GAME_MODE
 	LABEL_JOIN_MODE
 	LABEL_ATTACK_MODE
+	LABEL_HEALING_TO
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
 )
@@ -99,6 +100,7 @@ const (
 	GAME_MODE_RADIO_GROUP radiogroup.Id = iota
 	JOIN_MODE_RADIO_GROUP
 	ATTACK_MODE_RADIO_GROUP
+	HEALING_TO_RADIO_GROUP
 )
 
 func (u *uiImpl) createWidgets() {
@@ -511,10 +513,13 @@ func (u *uiImpl) createMatchSettingsMenuUI() {
 	u.addRadioGroup(GAME_MODE_RADIO_GROUP, BUTTON_WIDTH*3, BUTTON_HEIGHT, u.fontNormal, "AFK", "Battle", "Custom")
 
 	u.addLabel(LABEL_JOIN_MODE, "Joining Mode:", u.fontSmall, normalLabelColor)
-	u.addRadioGroup(JOIN_MODE_RADIO_GROUP, SMALL_BUTTON_WIDTH*3.5, SMALL_BUTTON_HEIGHT, u.fontSmall, "Any Chatter", "With !rat")
+	u.addRadioGroup(JOIN_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Any Chatter", "With !rat")
 
 	u.addLabel(LABEL_ATTACK_MODE, "Attack Mode:", u.fontSmall, normalLabelColor)
-	u.addRadioGroup(ATTACK_MODE_RADIO_GROUP, SMALL_BUTTON_WIDTH*3.5, SMALL_BUTTON_HEIGHT, u.fontSmall, "Auto", "With !attack")
+	u.addRadioGroup(ATTACK_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Auto", "With !attack")
+
+	u.addLabel(LABEL_HEALING_TO, "Healing To:", u.fontSmall, normalLabelColor)
+	u.addRadioGroup(HEALING_TO_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*3, SMALL_BUTTON_HEIGHT, u.fontSmall, "Anyone", "Self", "Others")
 
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Back", button.Enabled)
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Go!", button.Enabled)

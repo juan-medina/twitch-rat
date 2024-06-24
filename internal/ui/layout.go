@@ -187,6 +187,11 @@ func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
 	u.moveLabel(LABEL_ATTACK_MODE, px, py+sgy)
 	u.moveRadioGroup(ATTACK_MODE_RADIO_GROUP, rx, py)
 
+	//HEAL TO
+	py = py + SMALL_BUTTON_HEIGHT + BUTTON_GAP
+	u.moveLabel(LABEL_HEALING_TO, px, py+sgy)
+	u.moveRadioGroup(HEALING_TO_RADIO_GROUP, rx, py)
+
 	// BUTTONS
 	py = py + BUTTON_HEIGHT + BUTTON_GAP
 	px = cx - BUTTON_WIDTH - BUTTON_GAP
