@@ -78,6 +78,7 @@ const (
 	LABEL_GAME_MODE
 	LABEL_JOIN_MODE
 	LABEL_ATTACK_MODE
+	LABEL_HEAL_MODE
 	LABEL_HEALING_TO
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
@@ -100,6 +101,7 @@ const (
 	GAME_MODE_RADIO_GROUP radiogroup.Id = iota
 	JOIN_MODE_RADIO_GROUP
 	ATTACK_MODE_RADIO_GROUP
+	HEAL_MODE_RADIO_GROUP
 	HEALING_TO_RADIO_GROUP
 )
 
@@ -517,6 +519,9 @@ func (u *uiImpl) createMatchSettingsMenuUI() {
 
 	u.addLabel(LABEL_ATTACK_MODE, "Attack Mode:", u.fontSmall, normalLabelColor)
 	u.addRadioGroup(ATTACK_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Auto", "With !attack")
+
+	u.addLabel(LABEL_HEAL_MODE, "Heal Mode:", u.fontSmall, normalLabelColor)
+	u.addRadioGroup(HEAL_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Auto", "With !heal")
 
 	u.addLabel(LABEL_HEALING_TO, "Healing To:", u.fontSmall, normalLabelColor)
 	u.addRadioGroup(HEALING_TO_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*3, SMALL_BUTTON_HEIGHT, u.fontSmall, "Anyone", "Self", "Others")
