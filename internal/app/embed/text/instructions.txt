@@ -1,5 +1,0 @@
-The game will [color=CFCF00FF]start shortly[/color], you can join at anytime, even after dying, using: [color=C87AFFFF]!rat[/color]
-
-You can attack any other rat using: [color=FF0000FF]!attack[/color]
-You can Heal yourself or any other rat using [color=00FF00FF]!heal[/color]
-

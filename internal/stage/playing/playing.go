@@ -94,6 +94,10 @@ func (p *playing) Init() {
 	p.canHealSelf = healTo == settings.HEAL_TO_SELF || healTo == settings.HEAL_TO_ANYONE
 	p.canHealOthers = healTo == settings.HEAL_TO_OTHERS || healTo == settings.HEAL_TO_ANYONE
 
+	p.ratHealth = p.settings.GetIntValue(settings.RAT_HEALTH, settings.DEFAULT_HEALTH_AFK)
+	p.ratDamage = p.settings.GetIntValue(settings.RAT_DAMAGE, settings.RAT_DAMAGE_AFK)
+	p.ratHealing = p.settings.GetIntValue(settings.RAT_HEALING, settings.RAT_HEALING_AFK)
+
 	instructions := "The game will [color=CFCF00FF]start shortly[/color], you can join at anytime,"
 	if p.canRejoin {
 		instructions += " even after dying,"
@@ -110,7 +114,7 @@ func (p *playing) Init() {
 	if p.attackAuto {
 		instructions += " You rat will [color=FF0000FF]attack[/color] other rats [color=FF0000FF]automatically[/color]."
 	} else {
-		instructions += " You rat attack any other rat using: [color=FF0000FF]!attack[/color]."
+		instructions += " You rat can attack any other rat using: [color=FF0000FF]!attack[/color]."
 	}
 
 	instructions += "\n\n"
@@ -211,6 +215,9 @@ type playing struct {
 	healAuto       bool
 	canHealSelf    bool
 	canHealOthers  bool
+	ratHealth      int
+	ratDamage      int
+	ratHealing     int
 }
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {
@@ -472,7 +479,7 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 func (p *playing) ratJoin(user string, userColor colors.CustomColor) {
 	findRat := p.getRat(user)
 	if findRat == nil {
-		rat := rat.New(p.audioPlayer, p.rats, p.ui, p.fontVerySmall, p.fontSmall, user, userColor)
+		rat := rat.New(p.audioPlayer, p.rats, p.ui, p.fontVerySmall, p.fontSmall, user, userColor, p.ratHealth, p.ratDamage, p.ratHealing)
 		rat.RandomWalk()
 		rat.SetX(RAT_SPAWN_POINT)
 		rat.SetCenter((p.currentWidth / 2))

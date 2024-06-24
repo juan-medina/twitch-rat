@@ -52,11 +52,9 @@ const (
 	HEALTH_BAR_GAP         = 22
 	HEALTH_BAR_WIDTH       = 110
 	HEALTH_BAR_HEIGHT      = 20
-	CRIT_CHANGE            = 0.25
+	CRIT_CHANCE            = 0.25
 	MOD_VALUE              = 0.25
-	HEALTH_MAX             = 50
-	RAT_DAMAGE             = 15
-	RAT_HEAL               = 15
+	CRIT_MULTIPLIER        = 2
 )
 
 type Rat interface {
@@ -146,6 +144,9 @@ type ratImpl struct {
 	health               int
 	flyingTextY          float64
 	timeSinceLastCommand int
+	maxHealth            int
+	damage               int
+	heal                 int
 }
 
 func (r ratImpl) IsVisible() bool {
@@ -172,7 +173,7 @@ func (r *ratImpl) Draw(screen *ebiten.Image) {
 }
 
 func (r *ratImpl) calculateRedHPBar() {
-	greenWidth := float64(HEALTH_BAR_WIDTH) * (float64(r.health) / HEALTH_MAX)
+	greenWidth := float64(HEALTH_BAR_WIDTH) * (float64(r.health) / float64(r.maxHealth))
 	r.redWidth = HEALTH_BAR_WIDTH - greenWidth
 	r.redStart = r.barX + greenWidth
 }
@@ -237,7 +238,7 @@ func (r *ratImpl) Update(elapsedTime int) {
 					r.SetAnimation(FIGHT_ANIM)
 					r.waitingTime = WAIT_AFTER_HIT
 					targetWasAttacking := r.target.IsAttacking()
-					damage, over, crit := r.target.Hurt(RAT_DAMAGE)
+					damage, over, crit := r.target.Hurt(r.damage)
 					r.logDamage(damage, over, crit)
 					if targetWasAttacking {
 						r.ui.SetStatusMessage(r.target.GetColor().BBCoded(r.target.GetName())+" was interrupted", colors.Yellow)
@@ -261,7 +262,7 @@ func (r *ratImpl) Update(elapsedTime int) {
 				r.updateDestinationToTarget()
 				r.vx = 0
 				if r.animationStatus.end {
-					heal, over, crit := r.target.Cure(RAT_HEAL)
+					heal, over, crit := r.target.Cure(r.heal)
 					r.logHeal(heal, over, crit)
 					r.target = nil
 					r.idle()
@@ -407,7 +408,7 @@ func (r *ratImpl) Heal(otherRat Rat) {
 }
 
 func (r ratImpl) IsFullHealth() bool {
-	return r.health == HEALTH_MAX
+	return r.health == r.maxHealth
 }
 
 func (r *ratImpl) updateDestinationToTarget() {
@@ -435,7 +436,7 @@ func (r *ratImpl) ReSpawn(color colors.CustomColor) {
 	r.timeSinceLastCommand = 0
 	r.nameLabel.SetColor(color)
 	r.color = color
-	r.health = HEALTH_MAX
+	r.health = r.maxHealth
 	r.updateHP()
 	r.x = 0
 	r.RandomWalk()
@@ -450,11 +451,11 @@ func (r *ratImpl) Cure(heal int) (amount int, over int, crit bool) {
 	amount, crit = r.Modify(heal)
 	original := r.health
 	r.health += amount
-	if r.health >= HEALTH_MAX {
-		r.health = HEALTH_MAX
+	if r.health >= r.maxHealth {
+		r.health = r.maxHealth
 	}
 	r.hpLabel.SetText(strconv.Itoa(r.health))
-	over = heal - (r.health - original)
+	over = amount - (r.health - original)
 	return
 }
 
@@ -534,8 +535,8 @@ func (r ratImpl) Modify(points int) (value int, crit bool) {
 	randomAmount := rand.Float64() * MOD_VALUE
 	value += int(randomAmount * float64(points))
 
-	if rand.Float64() < CRIT_CHANGE {
-		value *= 2
+	if rand.Float64() < CRIT_CHANCE {
+		value *= CRIT_MULTIPLIER
 		crit = true
 	}
 	return
@@ -560,12 +561,12 @@ func (r ratImpl) GetHealth() int {
 	return r.health
 }
 
-func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, fontVerySmall draw.Font, fontSmall draw.Font, name string, ratColor colors.CustomColor) Rat {
+func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, fontVerySmall draw.Font, fontSmall draw.Font, name string, ratColor colors.CustomColor, maxHealth int, damage int, heal int) Rat {
 	nameLabel := label.NewLabel(0, name, fontSmall, fontSmall.DefaultSize(), ratColor, nil)
 	labelWidth, _ := nameLabel.Measure()
 	nameLabel.SetVisible(true)
 
-	hpLabel := label.NewLabel(0, strconv.Itoa(HEALTH_MAX), fontVerySmall, fontVerySmall.DefaultSize(), colors.White, nil)
+	hpLabel := label.NewLabel(0, strconv.Itoa(maxHealth), fontVerySmall, fontVerySmall.DefaultSize(), colors.White, nil)
 	hpLabelWidth, hpLabelHeight := hpLabel.Measure()
 	hpLabel.SetVisible(true)
 
@@ -585,6 +586,9 @@ func New(audioPlayer audio.Player, sheet draw.Sheet, ui ui.UI, fontVerySmall dra
 		facing:        right,
 		ui:            ui,
 		color:         ratColor,
-		health:        HEALTH_MAX,
+		health:        maxHealth,
+		maxHealth:     maxHealth,
+		damage:        damage,
+		heal:          heal,
 	}
 }
