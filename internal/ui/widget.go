@@ -76,6 +76,7 @@ const (
 	LABEL_DOWNLOAD
 	LABEL_VERSION_UPDATE
 	LABEL_GAME_MODE
+	LABEL_GAME_MODE_DESCRIPTION
 	LABEL_JOIN_MODE
 	LABEL_REJOIN_MODE
 	LABEL_ATTACK_MODE
@@ -528,6 +529,9 @@ func (u *uiImpl) moveRadioGroup(id radiogroup.Id, x, y float64) {
 func (u *uiImpl) createMatchSettingsMenuUI() {
 	u.addLabel(LABEL_GAME_MODE, "Game Mode:", u.fontNormal, normalLabelColor)
 	u.addRadioGroup(GAME_MODE_RADIO_GROUP, BUTTON_WIDTH*3, BUTTON_HEIGHT, u.fontNormal, "AFK", "Battle", "Custom")
+
+	u.addLabel(LABEL_GAME_MODE_DESCRIPTION, "AA", u.fontSmall, normalLabelColor)
+	u.SetLabelBackgroundColor(LABEL_GAME_MODE_DESCRIPTION, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 
 	u.addLabel(LABEL_JOIN_MODE, "Joining Mode:", u.fontSmall, normalLabelColor)
 	u.addRadioGroup(JOIN_MODE_RADIO_GROUP, SMALL_RADIO_OPTION_SIZE*2, SMALL_BUTTON_HEIGHT, u.fontSmall, "Any Chatter", "With !rat")

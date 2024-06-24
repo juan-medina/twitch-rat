@@ -38,17 +38,28 @@ import (
 )
 
 const (
-	RAT_SPEED         = 400
-	SCROLL_SPEED      = 250
-	MENU_MUSIC        = "embed/music/menu.ogg"
-	RAT_FRAME         = "rat_normal_run_%02d"
-	INITIAL_FRAME     = 1
-	END_FRAME         = 8
-	RAT_SCALE         = 4
-	RAT_Y_POS         = 768
-	CHANNEL_REGEXP    = `^[a-zA-Z][a-zA-Z0-9\-_]*$`
-	CHANNEL_NOT_EMPTY = "Please enter a channel name!"
-	CHANNEL_NOT_VALID = "Channel name is invalid!"
+	RAT_SPEED                 = 400
+	SCROLL_SPEED              = 250
+	MENU_MUSIC                = "embed/music/menu.ogg"
+	RAT_FRAME                 = "rat_normal_run_%02d"
+	INITIAL_FRAME             = 1
+	END_FRAME                 = 8
+	RAT_SCALE                 = 4
+	RAT_Y_POS                 = 768
+	CHANNEL_REGEXP            = `^[a-zA-Z][a-zA-Z0-9\-_]*$`
+	CHANNEL_NOT_EMPTY         = "Please enter a channel name!"
+	CHANNEL_NOT_VALID         = "Channel name is invalid!"
+	GAME_MODE_AFK_DESCRIPTION = `This is a [color=#CFCF00]AFK mode[/color] where there is [color=#CFCF00]no spam in the chat[/color].
+Rats will [color=#CFCF00]join[/color] the fight [color=#CFCF00]automatically[/color], just typing anything.
+People [color=#CFCF00]can rejoin[/color] after they died.
+[color=#CFCF00]Attacks and heals[/color] will be happen [color=#CFCF00]automatically[/color] after some time.
+Rats will heal [color=#CFCF00]themselves or others[/color].`
+	GAME_MODE_BATTLE_DESCRIPTION = `This is a [color=#CFCF00]battle mode[/color] where there is going to be [color=#CFCF00]spam in the chat[/color].
+For [color=#CFCF00]joining[/color] the fight people will need to type [color=#CFCF00]!rat[/color].
+For [color=#CFCF00]attacking[/color] or [color=#CFCF00]healing[/color] people will need to type [color=#CFCF00]!attack[/color] or [color=#CFCF00]!heal[/color].
+People [color=#CFCF00]can't rejoin[/color] after they died.
+Rats can [color=#CFCF00]heal only themselves[/color].`
+	GAME_MODE_CUSTOM_DESCRIPTION = "In this mode you can Play as you like with [color=#CFCF00]your own rules[/color]!"
 )
 
 type subMenu int
@@ -324,6 +335,7 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 	case GAME_MODE_SETTINGS:
 		m.ui.SetLabelVisible(ui.LABEL_GAME_MODE, visible)
 		m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, visible)
+		m.ui.SetLabelVisible(ui.LABEL_GAME_MODE_DESCRIPTION, visible)
 
 		m.ui.SetLabelVisible(ui.LABEL_JOIN_MODE, visible)
 		m.ui.SetRadioGroupVisible(ui.JOIN_MODE_RADIO_GROUP, visible)
@@ -377,6 +389,8 @@ func (m *menu) onRadioChange(id radiogroup.Id, value int) {
 			m.setMode(settings.GAME_MODE_AFK)
 		case settings.GAME_MODE_BATTLE:
 			m.setMode(settings.GAME_MODE_BATTLE)
+		case settings.GAME_MODE_CUSTOM:
+			m.ui.SetLabelText(ui.LABEL_GAME_MODE_DESCRIPTION, GAME_MODE_CUSTOM_DESCRIPTION)
 		}
 	default:
 		m.checkIfCustomMode()
@@ -426,10 +440,10 @@ var (
 
 func (m *menu) setMode(mode int) {
 	if mode == settings.GAME_MODE_CUSTOM {
+		m.ui.SetLabelText(ui.LABEL_GAME_MODE_DESCRIPTION, GAME_MODE_CUSTOM_DESCRIPTION)
 		return
 	}
 	values := gameModes[mode]
-
 	for _, item := range values {
 		switch item.valueType {
 		case radioGroupType:
@@ -437,6 +451,12 @@ func (m *menu) setMode(mode int) {
 		case sliderType:
 			m.ui.SetSliderValue(slider.Id(item.id), item.value)
 		}
+	}
+
+	if mode == settings.GAME_MODE_AFK {
+		m.ui.SetLabelText(ui.LABEL_GAME_MODE_DESCRIPTION, GAME_MODE_AFK_DESCRIPTION)
+	} else if mode == settings.GAME_MODE_BATTLE {
+		m.ui.SetLabelText(ui.LABEL_GAME_MODE_DESCRIPTION, GAME_MODE_BATTLE_DESCRIPTION)
 	}
 }
 
@@ -469,6 +489,7 @@ func (m *menu) checkIfCustomMode() {
 	}
 	m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, settings.GAME_MODE_CUSTOM)
 	m.settings.SetIntValue(settings.GAME_MODE, settings.GAME_MODE_CUSTOM)
+	m.ui.SetLabelText(ui.LABEL_GAME_MODE_DESCRIPTION, GAME_MODE_CUSTOM_DESCRIPTION)
 }
 
 func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.Sheet, sewerMap draw.Map, audioPlayer audio.Player) stage.Stage {

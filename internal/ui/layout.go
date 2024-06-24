@@ -163,7 +163,7 @@ func (u *uiImpl) layoutOptionsSubMenuElements(cx, cy float64) {
 func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
 	py := cy + BUTTON_GAP*3
 
-	// GAME MODO
+	// GAME MODE
 	lw, _ := u.getLabel(LABEL_GAME_MODE).Measure()
 	rw, _ := u.getRadioGroup(GAME_MODE_RADIO_GROUP).Measure()
 
@@ -175,8 +175,12 @@ func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
 	rx := px + lw + BUTTON_GAP
 	u.moveRadioGroup(GAME_MODE_RADIO_GROUP, rx, py)
 
-	// JOIN MODE
+	// GAME MODE DESCRIPTION
 	py = py + BUTTON_HEIGHT + BUTTON_GAP
+	u.getLabel(LABEL_GAME_MODE_DESCRIPTION).Move(rx, py)
+
+	// JOIN MODE
+	py = py + u.fontSmall.DefaultSize()*6
 	sgy := (SMALL_BUTTON_HEIGHT - u.fontSmall.DefaultSize()) / 2
 
 	u.moveLabel(LABEL_JOIN_MODE, px, py+sgy)
