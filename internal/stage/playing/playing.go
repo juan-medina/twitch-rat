@@ -257,9 +257,18 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 		case chat.Disconnect:
 			p.ui.SetStatusMessage("Disconnected", colors.Yellow)
 		case chat.Message:
+			var userColor colors.CustomColor = event.UserColor
+			if userColor.BBCoded("") == noColor {
+				userColor = labelColors[nextLabelColor]
+				nextLabelColor = (nextLabelColor + 1) % len(labelColors)
+			}
+			if p.joinModeAuto {
+				p.ratJoin(event.Sender, userColor)
+				fmt.Printf("Joining %s, color %v\n", event.Sender, userColor)
+			}
 			if event.Message != "" {
 				if event.Message[0] == '!' {
-					p.processCommand(event.Message, event.Sender, event.UserColor)
+					p.processCommand(event.Message, event.Sender, userColor)
 				}
 			}
 		}
@@ -283,22 +292,33 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 			timeSinceLastCommand := p.herd[i].TimeSinceLastCommand()
 			if p.herd[i].CanDoAction() {
 				origin := p.herd[i]
-				if timeSinceLastCommand > TIME_TO_AUTO {
+				if timeSinceLastCommand > TIME_TO_AUTO && (p.attackAuto || p.healAuto) {
 					var target rat.Rat
-					if rand.Intn(100) < 30 {
-						if target = p.findTargetToHeal(); target != nil {
-							p.herd[i].Heal(target)
+					// attack and heal are auto
+					if p.attackAuto && p.healAuto {
+						// 30 percent change to do a heal
+						if rand.Intn(100) < 30 {
+							if target = p.findTargetToHeal(origin); target != nil {
+								p.herd[i].Heal(target)
+							} else {
+								if target = p.findTargetToAttack(origin); target != nil {
+									p.herd[i].Attack(target)
+								}
+							}
 						} else {
 							if target = p.findTargetToAttack(origin); target != nil {
 								p.herd[i].Attack(target)
 							}
 						}
-					} else {
+					} else if p.healAuto { // if we heal auto
+						if target = p.findTargetToHeal(origin); target != nil {
+							p.herd[i].Heal(target)
+						}
+					} else { // if we attack auto
 						if target = p.findTargetToAttack(origin); target != nil {
 							p.herd[i].Attack(target)
 						}
 					}
-
 				}
 			}
 		}
@@ -337,20 +357,32 @@ func (p playing) findTargetToAttack(origin rat.Rat) rat.Rat {
 	return p.searchSlice[r]
 }
 
-func (p playing) findTargetToHeal() rat.Rat {
-	p.searchSlice = p.searchSlice[:0]
-	for i := range p.herd {
-		if p.herd[i].IsAlive() && !p.herd[i].IsFullHealth() {
-			p.searchSlice = append(p.searchSlice, p.herd[i])
+func (p playing) findTargetToHeal(origin rat.Rat) rat.Rat {
+	if p.canHealOthers {
+		p.searchSlice = p.searchSlice[:0]
+		for i := range p.herd {
+			if p.canHealSelf {
+				if origin == p.herd[i] {
+					continue
+				}
+			}
+			if p.herd[i].IsAlive() && !p.herd[i].IsFullHealth() {
+				p.searchSlice = append(p.searchSlice, p.herd[i])
+			}
+		}
+
+		if len(p.searchSlice) == 0 {
+			return nil
+		}
+
+		r := rand.Intn(len(p.searchSlice))
+		return p.searchSlice[r]
+	} else {
+		if p.canHealSelf {
+			return origin
 		}
 	}
-
-	if len(p.searchSlice) == 0 {
-		return nil
-	}
-
-	r := rand.Intn(len(p.searchSlice))
-	return p.searchSlice[r]
+	return nil
 }
 
 var lastRandomName = 0
@@ -370,12 +402,11 @@ func (p playing) getRandomRatName() (name string) {
 	return
 }
 
-func (p *playing) processCommand(message string, user string, userColor colors.CustomColor) {
-	if userColor == colors.Black {
-		userColor = labelColors[nextLabelColor]
-		nextLabelColor = (nextLabelColor + 1) % len(labelColors)
-	}
+var (
+	noColor = colors.Black.BBCoded("")
+)
 
+func (p *playing) processCommand(message string, user string, userColor colors.CustomColor) {
 	if user == "" {
 		user = p.getRandomRatName()
 	}
@@ -396,25 +427,9 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 		args = message[firstSpace+1:]
 	}
 
-	if command == SPAWN_COMMAND {
-		findRat := p.getRat(user)
-		if findRat == nil {
-			rat := rat.New(p.audioPlayer, p.rats, p.ui, p.fontVerySmall, p.fontSmall, user, userColor)
-			rat.RandomWalk()
-			rat.SetX(RAT_SPAWN_POINT)
-			rat.SetCenter((p.currentWidth / 2))
-			p.herd = append(p.herd, rat)
-			p.ui.SetStatusMessage(userColor.BBCoded(user)+" join the fight!", colors.White)
-			p.ui.AddScoreEntry(rat)
-		} else {
-			if !findRat.IsAlive() {
-				findRat.SetX(RAT_SPAWN_POINT)
-				findRat.ReSpawn(userColor)
-				findRat.SetCenter((p.currentWidth / 2))
-				p.ui.SetStatusMessage(userColor.BBCoded(user)+" rejoin!", colors.White)
-			}
-		}
-	} else if command == ATTACK_COMMAND && p.status == fighting {
+	if command == SPAWN_COMMAND && !p.joinModeAuto {
+		p.ratJoin(user, userColor)
+	} else if command == ATTACK_COMMAND && p.status == fighting && !p.attackAuto {
 		if userRat := p.getRat(user); userRat != nil {
 			if userRat.CanDoAction() {
 				if targetRat := p.getRat(args); targetRat != nil {
@@ -428,7 +443,7 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 				}
 			}
 		}
-	} else if command == HEAL_COMMAND && p.status == fighting {
+	} else if command == HEAL_COMMAND && p.status == fighting && !p.healAuto {
 		if userRat := p.getRat(user); userRat != nil {
 			if userRat.CanDoAction() {
 				targetRat := userRat
@@ -437,10 +452,39 @@ func (p *playing) processCommand(message string, user string, userColor colors.C
 				}
 				if targetRat != nil {
 					if targetRat.IsAlive() {
+						if userRat.GetName() == targetRat.GetName() {
+							if !p.canHealSelf {
+								return
+							}
+						} else {
+							if !p.canHealOthers {
+								return
+							}
+						}
 						userRat.Heal(targetRat)
 					}
 				}
 			}
+		}
+	}
+}
+
+func (p *playing) ratJoin(user string, userColor colors.CustomColor) {
+	findRat := p.getRat(user)
+	if findRat == nil {
+		rat := rat.New(p.audioPlayer, p.rats, p.ui, p.fontVerySmall, p.fontSmall, user, userColor)
+		rat.RandomWalk()
+		rat.SetX(RAT_SPAWN_POINT)
+		rat.SetCenter((p.currentWidth / 2))
+		p.herd = append(p.herd, rat)
+		p.ui.SetStatusMessage(userColor.BBCoded(user)+" join the fight!", colors.White)
+		p.ui.AddScoreEntry(rat)
+	} else {
+		if !findRat.IsAlive() && p.canRejoin {
+			findRat.SetX(RAT_SPAWN_POINT)
+			findRat.ReSpawn(userColor)
+			findRat.SetCenter((p.currentWidth / 2))
+			p.ui.SetStatusMessage(userColor.BBCoded(user)+" rejoin!", colors.White)
 		}
 	}
 }

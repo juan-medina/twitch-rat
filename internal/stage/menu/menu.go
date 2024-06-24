@@ -176,6 +176,7 @@ func (m *menu) Draw(screen *ebiten.Image) {
 		m.sewerMap.Draw(screen)
 	}
 
+	m.rat.SetColor(colors.White)
 	m.rat.Draw(screen, m.ratX, m.ratY, false, false)
 
 	m.ui.Draw(screen)
