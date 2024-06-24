@@ -132,11 +132,11 @@ func (u *uiImpl) createWidgets() {
 }
 
 func (u *uiImpl) createPlayingStageUI() {
-	data, _ := u.fileSystem.ReadFile("embed/text/instructions.txt")
-	instructions := string(data)
+	/*data, _ := u.fileSystem.ReadFile("embed/text/instructions.txt")
+	instructions := string(data)*/
 
 	u.addLabel(LABEL_COUNTDOWN, "30", u.fontBig, normalLabelColor)
-	u.addLabel(LABEL_INSTRUCTIONS, instructions, u.fontNormal, normalLabelColor)
+	u.addLabel(LABEL_INSTRUCTIONS, "instructions", u.fontNormal, normalLabelColor)
 	u.SetLabelBackgroundColor(LABEL_INSTRUCTIONS, colors.Black.NewWithAlpha(50), BACKGROUND_EXPAND)
 }
 

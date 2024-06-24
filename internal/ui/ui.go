@@ -80,6 +80,8 @@ type UI interface {
 	SelectRadioGroup(id radiogroup.Id, index int)
 	GetRadioGroupSelection(id radiogroup.Id) int
 	SetRadioChangeCallback(callback func(id radiogroup.Id, index int))
+
+	ForceReLayout()
 }
 
 func New(version version.Version, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {

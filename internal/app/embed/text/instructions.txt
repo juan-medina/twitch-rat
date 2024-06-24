@@ -3,8 +3,3 @@ The game will [color=CFCF00FF]start shortly[/color], you can join at anytime, ev
 You can attack any other rat using: [color=FF0000FF]!attack[/color]
 You can Heal yourself or any other rat using [color=00FF00FF]!heal[/color]
 
-If you rat don't get a command in [color=CFCF00FF]30s[/color] it will auto attack or heal [color=C87AFFFF]random[/color] rats.
-
-Every [color=CFCF00FF]10s[/color] all rats alive will get [color=C87AFFFF]5 points per each heal points[/color] they have!
-
-By twitch limitations [color=CFCF00FF]repeated text[/color] may not reach the game, [color=C87AFFFF]type something else[/color].

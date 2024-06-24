@@ -85,6 +85,70 @@ func (p *playing) Init() {
 	p.status = connecting
 	p.ui.SetScoreVisible(true)
 	p.waterFrame.Reset()
+
+	p.joinModeAuto = p.settings.GetIntValue(settings.JOIN_MODE, settings.JOIN_MODE_CHATTER) == settings.JOIN_MODE_CHATTER
+	p.canRejoin = p.settings.GetIntValue(settings.REJOIN_MODE, settings.REJOIN_MODE_YES) == settings.REJOIN_MODE_YES
+	p.attackAuto = p.settings.GetIntValue(settings.ATTACK_MODE, settings.ATTACK_MODE_RANDOM) == settings.ATTACK_MODE_RANDOM
+	p.healAuto = p.settings.GetIntValue(settings.HEAL_MODE, settings.HEAL_MODE_RANDOM) == settings.HEAL_MODE_RANDOM
+	healTo := p.settings.GetIntValue(settings.HEAL_TO, settings.HEAL_TO_SELF)
+	p.canHealSelf = healTo == settings.HEAL_TO_SELF || healTo == settings.HEAL_TO_ANYONE
+	p.canHealOthers = healTo == settings.HEAL_TO_OTHERS || healTo == settings.HEAL_TO_ANYONE
+
+	instructions := "The game will [color=CFCF00FF]start shortly[/color], you can join at anytime,"
+	if p.canRejoin {
+		instructions += " even after dying,"
+	}
+
+	if p.joinModeAuto {
+		instructions += " [color=C87AFFFF]typing anything[/color] in the chat."
+	} else {
+		instructions += " using: [color=C87AFFFF]!rat[/color]"
+	}
+
+	instructions += "\n\n"
+
+	if p.attackAuto {
+		instructions += " You rat will [color=FF0000FF]attack[/color] other rats [color=FF0000FF]automatically[/color]."
+	} else {
+		instructions += " You rat attack any other rat using: [color=FF0000FF]!attack[/color]."
+	}
+
+	instructions += "\n\n"
+
+	if p.healAuto {
+		instructions += " You rat will [color=00FF00FF]heal[/color]"
+	} else {
+		instructions += " You rat can heal"
+	}
+
+	if p.canHealSelf {
+		if p.canHealOthers {
+			instructions += " herself or any other rat"
+		} else {
+			instructions += " herself"
+		}
+	} else {
+		if p.canHealOthers {
+			instructions += " any other rat"
+		}
+	}
+
+	if p.healAuto {
+		instructions += " [color=00FF00FF]automatically[/color]."
+	} else {
+		instructions += " using: [color=00FF00FF]!heal[/color]."
+	}
+
+	instructions += "\n\n"
+
+	instructions += "Every [color=CFCF00FF]10s[/color] all rats alive will get [color=C87AFFFF]5 points per each heal points[/color] they have!"
+
+	instructions += "\n\n"
+
+	instructions += "By twitch limitations [color=CFCF00FF]repeated text[/color] may not reach the game, [color=C87AFFFF]type something else[/color]."
+
+	p.ui.SetLabelText(ui.LABEL_INSTRUCTIONS, instructions)
+	p.ui.ForceReLayout()
 }
 
 func (p *playing) End() {
@@ -141,6 +205,12 @@ type playing struct {
 	optionsVisible bool
 	waterSprite    []draw.Sprite
 	waterFrame     step.Value
+	joinModeAuto   bool
+	canRejoin      bool
+	attackAuto     bool
+	healAuto       bool
+	canHealSelf    bool
+	canHealOthers  bool
 }
 
 func (p *playing) Update(elapsedTime int, keys keys.Keys) {

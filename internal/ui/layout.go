@@ -229,3 +229,7 @@ func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
 	px = cx + (BUTTON_GAP)
 	u.moveButton(SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, px, py)
 }
+
+func (u *uiImpl) ForceReLayout() {
+	u.OnLayoutChange(u.screenWidth, u.screenHeight)
+}
