@@ -25,7 +25,7 @@ const (
 	BUTTON_WIDTH                 = 180.0
 	BUTTON_HEIGHT                = 50.0
 	SMALL_BUTTON_WIDTH           = 85.0
-	SMALL_BUTTON_HEIGHT          = 25.0
+	SMALL_BUTTON_HEIGHT          = 30.0
 	BUTTON_GAP                   = 20.0
 	TITLE_TO_ELEMENTS_SEPARATION = 50.0
 	MAX_INPUTS                   = 1

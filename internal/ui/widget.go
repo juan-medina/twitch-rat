@@ -76,6 +76,7 @@ const (
 	LABEL_DOWNLOAD
 	LABEL_VERSION_UPDATE
 	LABEL_GAME_MODE
+	LABEL_JOIN_MODE
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
 )
@@ -95,6 +96,7 @@ var (
 
 const (
 	GAME_MODE_RADIO_GROUP radiogroup.Id = iota
+	JOIN_MODE_RADIO_GROUP
 )
 
 func (u *uiImpl) createWidgets() {
@@ -490,6 +492,12 @@ func (u *uiImpl) GetRadioGroupSelection(id radiogroup.Id) int {
 	return -1
 }
 
+func (u *uiImpl) SetRadioChangeCallback(callback func(id radiogroup.Id, index int)) {
+	for i := range u.radioGroups {
+		u.radioGroups[i].OnChange(callback)
+	}
+}
+
 func (u *uiImpl) moveRadioGroup(id radiogroup.Id, x, y float64) {
 	if rg := u.getRadioGroup(id); rg != nil {
 		rg.Move(x, y)
@@ -499,6 +507,10 @@ func (u *uiImpl) moveRadioGroup(id radiogroup.Id, x, y float64) {
 func (u *uiImpl) createMatchSettingsMenuUI() {
 	u.addLabel(LABEL_GAME_MODE, "Game Mode:", u.fontNormal, normalLabelColor)
 	u.addRadioGroup(GAME_MODE_RADIO_GROUP, BUTTON_WIDTH*3, BUTTON_HEIGHT, u.fontNormal, "AFK", "Battle", "Custom")
+
+	u.addLabel(LABEL_JOIN_MODE, "Joining Mode:", u.fontSmall, normalLabelColor)
+	u.addRadioGroup(JOIN_MODE_RADIO_GROUP, SMALL_BUTTON_WIDTH*3.5, SMALL_BUTTON_HEIGHT, u.fontSmall, "Any Chatter", "With !rat")
+
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Back", button.Enabled)
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Go!", button.Enabled)
 }

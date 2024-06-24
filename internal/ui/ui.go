@@ -77,6 +77,7 @@ type UI interface {
 	SetRadioGroupVisible(id radiogroup.Id, visible bool)
 	SelectRadioGroup(id radiogroup.Id, index int)
 	GetRadioGroupSelection(id radiogroup.Id) int
+	SetRadioChangeCallback(callback func(id radiogroup.Id, index int))
 }
 
 func New(version version.Version, audioPlayer audio.Player, fontVerySmall draw.Font, fontSmall draw.Font, fontNormal draw.Font, fontBig draw.Font) UI {

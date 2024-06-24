@@ -33,6 +33,7 @@ import (
 	"github.com/juan-medina/twitch-rat/internal/step"
 	"github.com/juan-medina/twitch-rat/internal/ui"
 	"github.com/juan-medina/twitch-rat/internal/ui/button"
+	"github.com/juan-medina/twitch-rat/internal/ui/radiogroup"
 	"github.com/juan-medina/twitch-rat/internal/ui/slider"
 )
 
@@ -65,6 +66,7 @@ func (m *menu) Init() {
 
 	m.ui.SetButtonClickCallback(m.onButtonClick)
 	m.ui.SetSliderChangeCallback(m.onSliderChange)
+	m.ui.SetRadioChangeCallback(m.onRadioChange)
 
 	m.ui.SetLabelVisible(ui.LABEL_TITLE, true)
 
@@ -81,6 +83,9 @@ func (m *menu) End() {
 	m.endSubMenu(m.currentSubMenu)
 	m.settings.Save()
 	m.audioPlayer.Stop()
+	m.ui.SetButtonClickCallback(nil)
+	m.ui.SetSliderChangeCallback(nil)
+	m.ui.SetRadioChangeCallback(nil)
 }
 
 type menu struct {
@@ -203,8 +208,6 @@ func (m *menu) onButtonClick(id button.Id) {
 	case ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON:
 		m.changeSubMenu(MAIN_MENU)
 	case ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON:
-		m.ui.SetButtonClickCallback(nil)
-		m.ui.SetSliderChangeCallback(nil)
 		m.changer.ChangeStage(stage.PLAYING)
 	}
 }
@@ -228,6 +231,9 @@ func (m *menu) initSubMenu(subMenu subMenu) {
 	case GAME_MODE_SETTINGS:
 		mode := m.settings.GetIntValue(settings.GAME_MODE, settings.GAME_MODE_AFK)
 		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, mode)
+
+		mode = m.settings.GetIntValue(settings.JOIN_MODE, settings.JOIN_MODE_WITH_COMMAND)
+		m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, mode)
 	}
 }
 func (m *menu) endSubMenu(subMenu subMenu) {
@@ -235,6 +241,10 @@ func (m *menu) endSubMenu(subMenu subMenu) {
 	case GAME_MODE_SETTINGS:
 		mode := m.ui.GetRadioGroupSelection(ui.GAME_MODE_RADIO_GROUP)
 		m.settings.SetIntValue(settings.GAME_MODE, mode)
+
+		mode = m.ui.GetRadioGroupSelection(ui.JOIN_MODE_RADIO_GROUP)
+		m.settings.SetIntValue(settings.JOIN_MODE, mode)
+
 		m.settings.Save()
 	}
 }
@@ -270,6 +280,10 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 	case GAME_MODE_SETTINGS:
 		m.ui.SetLabelVisible(ui.LABEL_GAME_MODE, visible)
 		m.ui.SetRadioGroupVisible(ui.GAME_MODE_RADIO_GROUP, visible)
+
+		m.ui.SetLabelVisible(ui.LABEL_JOIN_MODE, visible)
+		m.ui.SetRadioGroupVisible(ui.JOIN_MODE_RADIO_GROUP, visible)
+
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, visible)
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, visible)
 	}
@@ -285,6 +299,20 @@ func (m *menu) onSliderChange(id slider.Id, value float64) {
 		m.settings.SetFloatValue(settings.SOUND_VOLUME, value)
 		m.settings.Save()
 		m.audioPlayer.ChangeSoundVolume(value)
+	}
+}
+
+func (m *menu) onRadioChange(id radiogroup.Id, value int) {
+	switch id {
+	case ui.GAME_MODE_RADIO_GROUP:
+		switch value {
+		case settings.GAME_MODE_AFK:
+			m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, settings.JOIN_MODE_CHATTER)
+		case settings.GAME_MODE_BATTLE:
+			m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, settings.JOIN_MODE_WITH_COMMAND)
+		}
+	case ui.JOIN_MODE_RADIO_GROUP:
+		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, settings.GAME_MODE_CUSTOM)
 	}
 }
 

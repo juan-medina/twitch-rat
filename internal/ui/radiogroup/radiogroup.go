@@ -33,7 +33,7 @@ var (
 	radioGroupPressedColor  = colors.DarkGray
 	radioGroupSelectedColor = colors.Violet
 
-	radioGroupTextColor         = colors.Gray
+	radioGroupTextColor         = colors.DarkGold
 	radioGroupSelectedTextColor = colors.LightYellow
 	radioGroupBackground        = colors.DarkPurple
 )
@@ -55,6 +55,7 @@ type RadioGroup interface {
 	Measure() (float64, float64)
 	SetSelected(index int)
 	GetSelected() int
+	OnChange(callback func(Id, int))
 }
 
 type radioState int
@@ -74,13 +75,14 @@ type radio struct {
 }
 
 type radioGroupImpl struct {
-	id          Id
-	x, y, w, h  float64
-	font        draw.Font
-	visible     bool
-	radios      []radio
-	selected    int
-	audioPlayer audio.Player
+	id             Id
+	x, y, w, h     float64
+	font           draw.Font
+	visible        bool
+	radios         []radio
+	selected       int
+	audioPlayer    audio.Player
+	changeCallback func(Id, int)
 }
 
 func (r *radioGroupImpl) Draw(screen *ebiten.Image) {
@@ -124,6 +126,9 @@ func (r *radioGroupImpl) Update(elapsedTime int, mouseX float64, mouseY float64,
 			if leftJustPressed && rad.state != Pressed && !selected {
 				r.audioPlayer.PlaySound(CLICK_SOUND)
 				r.SetSelected(i)
+				if r.changeCallback != nil {
+					r.changeCallback(r.id, i)
+				}
 				return
 			} else {
 				r.radios[i].state = Hover
@@ -171,6 +176,10 @@ func (r *radioGroupImpl) GetSelected() int {
 
 func (r radioGroupImpl) Measure() (float64, float64) {
 	return r.w, r.h
+}
+
+func (r *radioGroupImpl) OnChange(callback func(Id, int)) {
+	r.changeCallback = callback
 }
 
 func New(id Id, w, h float64, font draw.Font, audioPlayer audio.Player, options ...string) RadioGroup {
