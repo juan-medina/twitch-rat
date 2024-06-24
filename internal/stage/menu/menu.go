@@ -243,6 +243,7 @@ func (m *menu) initSubMenu(subMenu subMenu) {
 
 		mode = m.settings.GetIntValue(settings.HEAL_TO, settings.HEAL_TO_ANYONE)
 		m.ui.SelectRadioGroup(ui.HEALING_TO_RADIO_GROUP, mode)
+		m.checkIfCustomMode()
 	}
 }
 func (m *menu) endSubMenu(subMenu subMenu) {
