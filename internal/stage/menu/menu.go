@@ -334,25 +334,89 @@ func (m *menu) onRadioChange(id radiogroup.Id, value int) {
 	case ui.GAME_MODE_RADIO_GROUP:
 		switch value {
 		case settings.GAME_MODE_AFK:
-			m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, settings.JOIN_MODE_CHATTER)
-			m.ui.SelectRadioGroup(ui.ATTACK_MODE_RADIO_GROUP, settings.ATTACK_MODE_RANDOM)
-			m.ui.SelectRadioGroup(ui.HEAL_MODE_RADIO_GROUP, settings.HEAL_MODE_RANDOM)
-			m.ui.SelectRadioGroup(ui.HEALING_TO_RADIO_GROUP, settings.HEAL_TO_ANYONE)
+			m.setMode(settings.GAME_MODE_AFK)
 		case settings.GAME_MODE_BATTLE:
-			m.ui.SelectRadioGroup(ui.JOIN_MODE_RADIO_GROUP, settings.JOIN_MODE_WITH_COMMAND)
-			m.ui.SelectRadioGroup(ui.ATTACK_MODE_RADIO_GROUP, settings.ATTACK_MODE_WITH_COMMAND)
-			m.ui.SelectRadioGroup(ui.HEAL_MODE_RADIO_GROUP, settings.HEAL_MODE_WITH_COMMAND)
-			m.ui.SelectRadioGroup(ui.HEALING_TO_RADIO_GROUP, settings.HEAL_TO_SELF)
+			m.setMode(settings.GAME_MODE_BATTLE)
 		}
-	case ui.JOIN_MODE_RADIO_GROUP,
-		ui.ATTACK_MODE_RADIO_GROUP,
-		ui.HEALING_TO_RADIO_GROUP,
-		ui.HEAL_MODE_RADIO_GROUP:
-		m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, settings.GAME_MODE_CUSTOM)
+	default:
+		m.checkIfCustomMode()
 	}
 }
 
+type gameModeValueType int
+
+const (
+	radioGroupType gameModeValueType = iota
+	sliderType
+)
+
+type gameModeValue struct {
+	valueType gameModeValueType
+	id        int
+	value     int
+}
+
+var (
+	afkModeValues []gameModeValue = []gameModeValue{
+		{radioGroupType, int(ui.JOIN_MODE_RADIO_GROUP), settings.JOIN_MODE_CHATTER},
+		{radioGroupType, int(ui.ATTACK_MODE_RADIO_GROUP), settings.ATTACK_MODE_RANDOM},
+		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_RANDOM},
+		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_ANYONE},
+	}
+
+	battleModeValues []gameModeValue = []gameModeValue{
+		{radioGroupType, int(ui.JOIN_MODE_RADIO_GROUP), settings.JOIN_MODE_WITH_COMMAND},
+		{radioGroupType, int(ui.ATTACK_MODE_RADIO_GROUP), settings.ATTACK_MODE_WITH_COMMAND},
+		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_WITH_COMMAND},
+		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_SELF},
+	}
+	gameModes [][]gameModeValue = [][]gameModeValue{
+		afkModeValues,
+		battleModeValues,
+	}
+)
+
+func (m *menu) setMode(mode int) {
+	if mode == settings.GAME_MODE_CUSTOM {
+		return
+	}
+	values := gameModes[mode]
+
+	for _, item := range values {
+		switch item.valueType {
+		case radioGroupType:
+			m.ui.SelectRadioGroup(radiogroup.Id(item.id), item.value)
+		}
+	}
+}
+
+func (m *menu) checkIfCustomMode() {
+	for mode := range gameModes {
+		values := gameModes[mode]
+		matchMode := true
+		for _, item := range values {
+			switch item.valueType {
+			case radioGroupType:
+				if m.ui.GetRadioGroupSelection(radiogroup.Id(item.id)) != item.value {
+					matchMode = false
+					//lint:ignore SA4011 We indeed want to break the inner loop, ignoring lint error
+					break
+				}
+			}
+		}
+		if matchMode {
+			m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, mode)
+			m.settings.SetIntValue(settings.GAME_MODE, mode)
+			m.setMode(mode)
+			return
+		}
+	}
+	m.ui.SelectRadioGroup(ui.GAME_MODE_RADIO_GROUP, settings.GAME_MODE_CUSTOM)
+	m.settings.SetIntValue(settings.GAME_MODE, settings.GAME_MODE_CUSTOM)
+}
+
 func New(changer stage.Changer, ui ui.UI, settings settings.Settings, rats draw.Sheet, sewerMap draw.Map, audioPlayer audio.Player) stage.Stage {
+
 	audioPlayer.LoadSong(MENU_MUSIC)
 	m := menu{
 		changer:      changer,
