@@ -55,6 +55,12 @@ const (
 	RAT_HEALTH               = "rat_health"
 	DEFAULT_HEALTH_AFK       = 50
 	DEFAULT_HEALTH_BATTLE    = 100
+	RAT_DAMAGE               = "rat_damage"
+	RAT_DAMAGE_AFK           = 20
+	RAT_DAMAGE_BATTLE        = 40
+	RAT_HEALING              = "rat_healing"
+	RAT_HEALING_AFK          = 15
+	RAT_HEALING_BATTLE       = 30
 )
 
 type Settings interface {

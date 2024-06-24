@@ -202,10 +202,20 @@ func (u *uiImpl) layoutGameModeSettingsSubMenuElements(cx, cy float64) {
 	u.moveLabel(LABEL_HEALING_TO, px, py+sgy)
 	u.moveRadioGroup(HEALING_TO_RADIO_GROUP, rx, py)
 
-	//BASE DAMAGE
+	//HEALTH
 	py = py + SMALL_BUTTON_HEIGHT + BUTTON_GAP
 	u.moveLabel(LABEL_RAT_HEALTH, px, py+sgy)
 	u.moveSlider(RAT_HEALTH_SLIDER, rx, py)
+
+	//DAMAGE
+	py = py + SMALL_BUTTON_HEIGHT + BUTTON_GAP
+	u.moveLabel(LABEL_RAT_DAMAGE, px, py+sgy)
+	u.moveSlider(RAT_DAMAGE_SLIDER, rx, py)
+
+	//HEALING
+	py = py + SMALL_BUTTON_HEIGHT + BUTTON_GAP
+	u.moveLabel(LABEL_RAT_HEALING, px, py+sgy)
+	u.moveSlider(RAT_HEALING_SLIDER, rx, py)
 
 	// BUTTONS
 	py = py + BUTTON_HEIGHT + BUTTON_GAP

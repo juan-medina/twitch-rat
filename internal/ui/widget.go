@@ -82,6 +82,8 @@ const (
 	LABEL_HEAL_MODE
 	LABEL_HEALING_TO
 	LABEL_RAT_HEALTH
+	LABEL_RAT_DAMAGE
+	LABEL_RAT_HEALING
 	LABEL_LAST_MESSAGE
 	LABEL_LAST_MESSAGE_LAST = LABEL_LAST_MESSAGE + TOTAL_LAST_MESSAGES
 )
@@ -90,6 +92,8 @@ const (
 	MUSIC_VOLUME_SLIDER slider.Id = iota
 	AUDIO_VOLUME_SLIDER
 	RAT_HEALTH_SLIDER
+	RAT_DAMAGE_SLIDER
+	RAT_HEALING_SLIDER
 )
 
 const (
@@ -542,6 +546,12 @@ func (u *uiImpl) createMatchSettingsMenuUI() {
 
 	u.addLabel(LABEL_RAT_HEALTH, "Rat Health:", u.fontSmall, normalLabelColor)
 	u.addSlider(RAT_HEALTH_SLIDER, 25, 200, SMALL_RADIO_OPTION_SIZE*3, SMALL_BUTTON_HEIGHT, u.fontSmall, normalLabelColor)
+
+	u.addLabel(LABEL_RAT_DAMAGE, "Rat Damage:", u.fontSmall, normalLabelColor)
+	u.addSlider(RAT_DAMAGE_SLIDER, 10, 80, SMALL_RADIO_OPTION_SIZE*3, SMALL_BUTTON_HEIGHT, u.fontSmall, normalLabelColor)
+
+	u.addLabel(LABEL_RAT_HEALING, "Rat Healing:", u.fontSmall, normalLabelColor)
+	u.addSlider(RAT_HEALING_SLIDER, 7, 60, SMALL_RADIO_OPTION_SIZE*3, SMALL_BUTTON_HEIGHT, u.fontSmall, normalLabelColor)
 
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Back", button.Enabled)
 	u.addTextButton(SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Go!", button.Enabled)

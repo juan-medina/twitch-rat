@@ -247,8 +247,14 @@ func (m *menu) initSubMenu(subMenu subMenu) {
 		mode = m.settings.GetIntValue(settings.HEAL_TO, settings.HEAL_TO_ANYONE)
 		m.ui.SelectRadioGroup(ui.HEALING_TO_RADIO_GROUP, mode)
 
-		health := m.settings.GetIntValue(settings.RAT_HEALTH, settings.DEFAULT_HEALTH_AFK)
-		m.ui.SetSliderValue(ui.RAT_HEALTH_SLIDER, health)
+		value := m.settings.GetIntValue(settings.RAT_HEALTH, settings.DEFAULT_HEALTH_AFK)
+		m.ui.SetSliderValue(ui.RAT_HEALTH_SLIDER, value)
+
+		value = m.settings.GetIntValue(settings.RAT_DAMAGE, settings.RAT_DAMAGE_AFK)
+		m.ui.SetSliderValue(ui.RAT_DAMAGE_SLIDER, value)
+
+		value = m.settings.GetIntValue(settings.RAT_HEALING, settings.RAT_HEALING_AFK)
+		m.ui.SetSliderValue(ui.RAT_HEALING_SLIDER, value)
 
 		m.checkIfCustomMode()
 	}
@@ -274,8 +280,14 @@ func (m *menu) endSubMenu(subMenu subMenu) {
 		mode = m.ui.GetRadioGroupSelection(ui.HEALING_TO_RADIO_GROUP)
 		m.settings.SetIntValue(settings.HEAL_TO, mode)
 
-		health := m.ui.GetSliderValue(ui.RAT_HEALTH_SLIDER)
-		m.settings.SetIntValue(settings.RAT_HEALTH, health)
+		value := m.ui.GetSliderValue(ui.RAT_HEALTH_SLIDER)
+		m.settings.SetIntValue(settings.RAT_HEALTH, value)
+
+		value = m.ui.GetSliderValue(ui.RAT_DAMAGE_SLIDER)
+		m.settings.SetIntValue(settings.RAT_DAMAGE, value)
+
+		value = m.ui.GetSliderValue(ui.RAT_HEALING_SLIDER)
+		m.settings.SetIntValue(settings.RAT_HEALING, value)
 
 		m.settings.Save()
 	}
@@ -331,6 +343,12 @@ func (m *menu) changeSubMenuVisibility(subMenu subMenu, visible bool) {
 		m.ui.SetLabelVisible(ui.LABEL_RAT_HEALTH, visible)
 		m.ui.SetSliderVisible(ui.RAT_HEALTH_SLIDER, visible)
 
+		m.ui.SetLabelVisible(ui.LABEL_RAT_DAMAGE, visible)
+		m.ui.SetSliderVisible(ui.RAT_DAMAGE_SLIDER, visible)
+
+		m.ui.SetLabelVisible(ui.LABEL_RAT_HEALING, visible)
+		m.ui.SetSliderVisible(ui.RAT_HEALING_SLIDER, visible)
+
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_BACK_BUTTON, visible)
 		m.ui.SetButtonVisible(ui.SUBMENU_GAME_MODE_SETTINGS_GO_BUTTON, visible)
 	}
@@ -346,7 +364,7 @@ func (m *menu) onSliderChange(id slider.Id, value int) {
 		m.settings.SetIntValue(settings.SOUND_VOLUME, value)
 		m.settings.Save()
 		m.audioPlayer.ChangeSoundVolume(value)
-	case ui.RAT_HEALTH_SLIDER:
+	case ui.RAT_HEALTH_SLIDER, ui.RAT_DAMAGE_SLIDER, ui.RAT_HEALING_SLIDER:
 		m.checkIfCustomMode()
 	}
 }
@@ -386,6 +404,8 @@ var (
 		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_RANDOM},
 		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_ANYONE},
 		{sliderType, int(ui.RAT_HEALTH_SLIDER), settings.DEFAULT_HEALTH_AFK},
+		{sliderType, int(ui.RAT_DAMAGE_SLIDER), settings.RAT_DAMAGE_AFK},
+		{sliderType, int(ui.RAT_HEALING_SLIDER), settings.RAT_HEALING_AFK},
 	}
 
 	battleModeValues []gameModeValue = []gameModeValue{
@@ -395,6 +415,8 @@ var (
 		{radioGroupType, int(ui.HEAL_MODE_RADIO_GROUP), settings.HEAL_MODE_WITH_COMMAND},
 		{radioGroupType, int(ui.HEALING_TO_RADIO_GROUP), settings.HEAL_TO_SELF},
 		{sliderType, int(ui.RAT_HEALTH_SLIDER), settings.DEFAULT_HEALTH_BATTLE},
+		{sliderType, int(ui.RAT_DAMAGE_SLIDER), settings.RAT_DAMAGE_BATTLE},
+		{sliderType, int(ui.RAT_HEALING_SLIDER), settings.RAT_HEALING_BATTLE},
 	}
 	gameModes [][]gameModeValue = [][]gameModeValue{
 		afkModeValues,
