@@ -15,6 +15,11 @@
       "folder": ""
     },
     {
+      "name": "larger.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/larger.png",
+      "folder": ""
+    },
+    {
       "name": "rat_normal_dead_01.png",
       "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_dead_01.png",
       "folder": ""
@@ -237,6 +242,11 @@
     {
       "name": "rat_normal_walk_08.png",
       "path": "D:/Documents/source/twitch-rat/media/sprites/rats/rat_normal_walk_08.png",
+      "folder": ""
+    },
+    {
+      "name": "smaller.png",
+      "path": "D:/Documents/source/twitch-rat/media/sprites/rats/smaller.png",
       "folder": ""
     },
     {

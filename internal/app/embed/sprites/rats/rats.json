@@ -46,14 +46,39 @@
         "h": 32
       },
       "pivot": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    {
+      "filename": "larger",
+      "frame": {
+        "x": 8,
+        "y": 56,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
       }
     },
     {
       "filename": "rat_normal_dead_01",
       "frame": {
-        "x": 8,
+        "x": 56,
         "y": 56,
         "w": 32,
         "h": 32
@@ -78,8 +103,8 @@
     {
       "filename": "rat_normal_dead_02",
       "frame": {
-        "x": 56,
-        "y": 56,
+        "x": 104,
+        "y": 8,
         "w": 32,
         "h": 32
       },
@@ -104,7 +129,7 @@
       "filename": "rat_normal_dead_03",
       "frame": {
         "x": 104,
-        "y": 8,
+        "y": 56,
         "w": 32,
         "h": 32
       },
@@ -128,8 +153,8 @@
     {
       "filename": "rat_normal_dead_04",
       "frame": {
-        "x": 104,
-        "y": 56,
+        "x": 8,
+        "y": 104,
         "w": 32,
         "h": 32
       },
@@ -153,7 +178,7 @@
     {
       "filename": "rat_normal_dead_05",
       "frame": {
-        "x": 8,
+        "x": 56,
         "y": 104,
         "w": 32,
         "h": 32
@@ -178,7 +203,7 @@
     {
       "filename": "rat_normal_dead_06",
       "frame": {
-        "x": 56,
+        "x": 104,
         "y": 104,
         "w": 32,
         "h": 32
@@ -203,8 +228,8 @@
     {
       "filename": "rat_normal_dead_07",
       "frame": {
-        "x": 104,
-        "y": 104,
+        "x": 152,
+        "y": 8,
         "w": 32,
         "h": 32
       },
@@ -229,7 +254,7 @@
       "filename": "rat_normal_dead_08",
       "frame": {
         "x": 152,
-        "y": 8,
+        "y": 56,
         "w": 32,
         "h": 32
       },
@@ -254,7 +279,7 @@
       "filename": "rat_normal_dead_09",
       "frame": {
         "x": 152,
-        "y": 56,
+        "y": 104,
         "w": 32,
         "h": 32
       },
@@ -278,8 +303,8 @@
     {
       "filename": "rat_normal_fight_01",
       "frame": {
-        "x": 152,
-        "y": 104,
+        "x": 8,
+        "y": 152,
         "w": 32,
         "h": 32
       },
@@ -303,7 +328,7 @@
     {
       "filename": "rat_normal_fight_02",
       "frame": {
-        "x": 8,
+        "x": 56,
         "y": 152,
         "w": 32,
         "h": 32
@@ -328,7 +353,7 @@
     {
       "filename": "rat_normal_fight_03",
       "frame": {
-        "x": 56,
+        "x": 104,
         "y": 152,
         "w": 32,
         "h": 32
@@ -353,7 +378,7 @@
     {
       "filename": "rat_normal_fight_04",
       "frame": {
-        "x": 104,
+        "x": 152,
         "y": 152,
         "w": 32,
         "h": 32
@@ -378,8 +403,8 @@
     {
       "filename": "rat_normal_fight_05",
       "frame": {
-        "x": 152,
-        "y": 152,
+        "x": 200,
+        "y": 8,
         "w": 32,
         "h": 32
       },
@@ -404,7 +429,7 @@
       "filename": "rat_normal_fight_06",
       "frame": {
         "x": 200,
-        "y": 8,
+        "y": 56,
         "w": 32,
         "h": 32
       },
@@ -429,7 +454,7 @@
       "filename": "rat_normal_heal_01",
       "frame": {
         "x": 200,
-        "y": 56,
+        "y": 104,
         "w": 32,
         "h": 32
       },
@@ -454,7 +479,7 @@
       "filename": "rat_normal_heal_02",
       "frame": {
         "x": 200,
-        "y": 104,
+        "y": 152,
         "w": 32,
         "h": 32
       },
@@ -478,8 +503,8 @@
     {
       "filename": "rat_normal_heal_03",
       "frame": {
-        "x": 200,
-        "y": 152,
+        "x": 8,
+        "y": 200,
         "w": 32,
         "h": 32
       },
@@ -503,7 +528,7 @@
     {
       "filename": "rat_normal_heal_04",
       "frame": {
-        "x": 8,
+        "x": 56,
         "y": 200,
         "w": 32,
         "h": 32
@@ -528,7 +553,7 @@
     {
       "filename": "rat_normal_heal_05",
       "frame": {
-        "x": 56,
+        "x": 104,
         "y": 200,
         "w": 32,
         "h": 32
@@ -553,7 +578,7 @@
     {
       "filename": "rat_normal_hurt_02",
       "frame": {
-        "x": 104,
+        "x": 152,
         "y": 200,
         "w": 32,
         "h": 32
@@ -578,7 +603,7 @@
     {
       "filename": "rat_normal_hurt_03",
       "frame": {
-        "x": 152,
+        "x": 200,
         "y": 200,
         "w": 32,
         "h": 32
@@ -603,8 +628,8 @@
     {
       "filename": "rat_normal_idle_01",
       "frame": {
-        "x": 200,
-        "y": 200,
+        "x": 248,
+        "y": 8,
         "w": 32,
         "h": 32
       },
@@ -629,7 +654,7 @@
       "filename": "rat_normal_idle_02",
       "frame": {
         "x": 248,
-        "y": 8,
+        "y": 56,
         "w": 32,
         "h": 32
       },
@@ -654,7 +679,7 @@
       "filename": "rat_normal_idle_03",
       "frame": {
         "x": 248,
-        "y": 56,
+        "y": 104,
         "w": 32,
         "h": 32
       },
@@ -679,7 +704,7 @@
       "filename": "rat_normal_idle_04",
       "frame": {
         "x": 248,
-        "y": 104,
+        "y": 152,
         "w": 32,
         "h": 32
       },
@@ -704,7 +729,7 @@
       "filename": "gear",
       "frame": {
         "x": 248,
-        "y": 152,
+        "y": 200,
         "w": 32,
         "h": 32
       },
@@ -721,15 +746,15 @@
         "h": 32
       },
       "pivot": {
-        "x": 0.0,
-        "y": 0.0
+        "x": 0.5,
+        "y": 1.0
       }
     },
     {
       "filename": "rat_normal_idle_06",
       "frame": {
-        "x": 248,
-        "y": 200,
+        "x": 8,
+        "y": 248,
         "w": 32,
         "h": 32
       },
@@ -753,7 +778,7 @@
     {
       "filename": "rat_normal_run_01",
       "frame": {
-        "x": 8,
+        "x": 56,
         "y": 248,
         "w": 32,
         "h": 32
@@ -778,7 +803,7 @@
     {
       "filename": "rat_normal_run_02",
       "frame": {
-        "x": 56,
+        "x": 104,
         "y": 248,
         "w": 32,
         "h": 32
@@ -803,7 +828,7 @@
     {
       "filename": "rat_normal_run_03",
       "frame": {
-        "x": 104,
+        "x": 152,
         "y": 248,
         "w": 32,
         "h": 32
@@ -828,7 +853,7 @@
     {
       "filename": "rat_normal_run_04",
       "frame": {
-        "x": 152,
+        "x": 200,
         "y": 248,
         "w": 32,
         "h": 32
@@ -853,7 +878,7 @@
     {
       "filename": "rat_normal_run_05",
       "frame": {
-        "x": 200,
+        "x": 248,
         "y": 248,
         "w": 32,
         "h": 32
@@ -878,8 +903,8 @@
     {
       "filename": "rat_normal_run_06",
       "frame": {
-        "x": 248,
-        "y": 248,
+        "x": 296,
+        "y": 8,
         "w": 32,
         "h": 32
       },
@@ -904,7 +929,7 @@
       "filename": "rat_normal_run_07",
       "frame": {
         "x": 296,
-        "y": 8,
+        "y": 56,
         "w": 32,
         "h": 32
       },
@@ -929,7 +954,7 @@
       "filename": "rat_normal_run_08",
       "frame": {
         "x": 296,
-        "y": 56,
+        "y": 104,
         "w": 32,
         "h": 32
       },
@@ -954,7 +979,7 @@
       "filename": "rat_normal_walk_01",
       "frame": {
         "x": 296,
-        "y": 104,
+        "y": 152,
         "w": 32,
         "h": 32
       },
@@ -979,7 +1004,7 @@
       "filename": "rat_normal_walk_02",
       "frame": {
         "x": 296,
-        "y": 152,
+        "y": 200,
         "w": 32,
         "h": 32
       },
@@ -1004,31 +1029,6 @@
       "filename": "rat_normal_walk_03",
       "frame": {
         "x": 296,
-        "y": 200,
-        "w": 32,
-        "h": 32
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 32,
-        "h": 32
-      },
-      "sourceSize": {
-        "w": 32,
-        "h": 32
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 1.0
-      }
-    },
-    {
-      "filename": "rat_normal_walk_04",
-      "frame": {
-        "x": 296,
         "y": 248,
         "w": 32,
         "h": 32
@@ -1051,7 +1051,7 @@
       }
     },
     {
-      "filename": "rat_normal_walk_05",
+      "filename": "rat_normal_walk_04",
       "frame": {
         "x": 8,
         "y": 296,
@@ -1076,7 +1076,7 @@
       }
     },
     {
-      "filename": "rat_normal_walk_06",
+      "filename": "rat_normal_walk_05",
       "frame": {
         "x": 56,
         "y": 296,
@@ -1101,7 +1101,7 @@
       }
     },
     {
-      "filename": "rat_normal_walk_07",
+      "filename": "rat_normal_walk_06",
       "frame": {
         "x": 104,
         "y": 296,
@@ -1126,7 +1126,7 @@
       }
     },
     {
-      "filename": "rat_normal_walk_08",
+      "filename": "rat_normal_walk_07",
       "frame": {
         "x": 152,
         "y": 296,
@@ -1151,9 +1151,59 @@
       }
     },
     {
-      "filename": "water_01_01",
+      "filename": "rat_normal_walk_08",
       "frame": {
         "x": 200,
+        "y": 296,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    {
+      "filename": "smaller",
+      "frame": {
+        "x": 248,
+        "y": 296,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    {
+      "filename": "water_01_01",
+      "frame": {
+        "x": 296,
         "y": 296,
         "w": 32,
         "h": 32
@@ -1178,8 +1228,8 @@
     {
       "filename": "water_01_02",
       "frame": {
-        "x": 248,
-        "y": 296,
+        "x": 344,
+        "y": 8,
         "w": 32,
         "h": 32
       },
@@ -1203,8 +1253,8 @@
     {
       "filename": "water_01_03",
       "frame": {
-        "x": 296,
-        "y": 296,
+        "x": 344,
+        "y": 56,
         "w": 32,
         "h": 32
       },
@@ -1229,7 +1279,7 @@
       "filename": "water_01_04",
       "frame": {
         "x": 344,
-        "y": 8,
+        "y": 104,
         "w": 32,
         "h": 32
       },
@@ -1254,7 +1304,7 @@
       "filename": "water_01_05",
       "frame": {
         "x": 344,
-        "y": 56,
+        "y": 152,
         "w": 32,
         "h": 32
       },
@@ -1279,7 +1329,7 @@
       "filename": "water_01_06",
       "frame": {
         "x": 344,
-        "y": 104,
+        "y": 200,
         "w": 32,
         "h": 32
       },
@@ -1304,7 +1354,7 @@
       "filename": "water_01_07",
       "frame": {
         "x": 344,
-        "y": 152,
+        "y": 248,
         "w": 32,
         "h": 32
       },
@@ -1329,7 +1379,7 @@
       "filename": "water_01_08",
       "frame": {
         "x": 344,
-        "y": 200,
+        "y": 296,
         "w": 32,
         "h": 32
       },
@@ -1353,8 +1403,8 @@
     {
       "filename": "water_01_09",
       "frame": {
-        "x": 344,
-        "y": 248,
+        "x": 8,
+        "y": 344,
         "w": 32,
         "h": 32
       },
@@ -1378,8 +1428,8 @@
     {
       "filename": "water_01_10",
       "frame": {
-        "x": 344,
-        "y": 296,
+        "x": 56,
+        "y": 344,
         "w": 32,
         "h": 32
       },
@@ -1403,7 +1453,7 @@
     {
       "filename": "rat_normal_hurt_01",
       "frame": {
-        "x": 8,
+        "x": 56,
         "y": 56,
         "w": 32,
         "h": 32
@@ -1428,7 +1478,7 @@
     {
       "filename": "water_02_06",
       "frame": {
-        "x": 200,
+        "x": 296,
         "y": 296,
         "w": 32,
         "h": 32
@@ -1453,56 +1503,6 @@
     {
       "filename": "water_02_07",
       "frame": {
-        "x": 248,
-        "y": 296,
-        "w": 32,
-        "h": 32
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 32,
-        "h": 32
-      },
-      "sourceSize": {
-        "w": 32,
-        "h": 32
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 1.0
-      }
-    },
-    {
-      "filename": "water_02_08",
-      "frame": {
-        "x": 296,
-        "y": 296,
-        "w": 32,
-        "h": 32
-      },
-      "rotated": false,
-      "trimmed": false,
-      "spriteSourceSize": {
-        "x": 0,
-        "y": 0,
-        "w": 32,
-        "h": 32
-      },
-      "sourceSize": {
-        "w": 32,
-        "h": 32
-      },
-      "pivot": {
-        "x": 0.5,
-        "y": 1.0
-      }
-    },
-    {
-      "filename": "water_02_09",
-      "frame": {
         "x": 344,
         "y": 8,
         "w": 32,
@@ -1526,7 +1526,7 @@
       }
     },
     {
-      "filename": "water_02_10",
+      "filename": "water_02_08",
       "frame": {
         "x": 344,
         "y": 56,
@@ -1551,7 +1551,7 @@
       }
     },
     {
-      "filename": "water_02_01",
+      "filename": "water_02_09",
       "frame": {
         "x": 344,
         "y": 104,
@@ -1576,7 +1576,7 @@
       }
     },
     {
-      "filename": "water_02_02",
+      "filename": "water_02_10",
       "frame": {
         "x": 344,
         "y": 152,
@@ -1601,7 +1601,7 @@
       }
     },
     {
-      "filename": "water_02_03",
+      "filename": "water_02_01",
       "frame": {
         "x": 344,
         "y": 200,
@@ -1626,7 +1626,7 @@
       }
     },
     {
-      "filename": "water_02_04",
+      "filename": "water_02_02",
       "frame": {
         "x": 344,
         "y": 248,
@@ -1651,10 +1651,60 @@
       }
     },
     {
-      "filename": "water_02_05",
+      "filename": "water_02_03",
       "frame": {
         "x": 344,
         "y": 296,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    {
+      "filename": "water_02_04",
+      "frame": {
+        "x": 8,
+        "y": 344,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    },
+    {
+      "filename": "water_02_05",
+      "frame": {
+        "x": 56,
+        "y": 344,
         "w": 32,
         "h": 32
       },
@@ -1683,7 +1733,7 @@
     "format": "RGBA8888",
     "size": {
       "w": 384,
-      "h": 336
+      "h": 384
     },
     "scale": 1
   }

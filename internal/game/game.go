@@ -190,7 +190,6 @@ func (g *game) Update() error {
 	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
-	vector.DrawFilledRect(screen, 0, 0, float32(g.currentWidth), float32(g.currentHeight), colors.Teal, false)
 	if g.currentStage != stage.NONE {
 		g.stages[g.currentStage].Draw(screen)
 	}
@@ -205,6 +204,7 @@ func (g *game) Run() error {
 	ebiten.SetWindowSize(WIDTH, HEIGHT)
 	ebiten.SetWindowTitle(TITLE)
 	ebiten.SetTPS(60)
+	ebiten.SetVsyncEnabled(true)
 	if runtime.GOOS != "js" {
 		if iconData, err := g.fileSystem.ReadFile("embed/icon/rat.png"); err == nil {
 			if img, _, err := image.Decode(bytes.NewReader(iconData)); err == nil {
@@ -215,8 +215,8 @@ func (g *game) Run() error {
 		} else {
 			panic(err)
 		}
-		ebiten.SetFullscreen(true)
-		//ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+		//ebiten.SetFullscreen(true)
+		ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	} else {
 		ebiten.SetFullscreen(false)
 	}
@@ -237,6 +237,13 @@ func (g *game) changeStage(id stage.Id) {
 	g.currentStage = id
 	g.stages[g.currentStage].Init()
 	g.stages[g.currentStage].OnLayoutChange(g.currentWidth, g.currentHeight)
+}
+
+func (g *game) DrawFinalScreen(screen ebiten.FinalScreen, offscreen *ebiten.Image, geoM ebiten.GeoM) {
+	opt := ebiten.DrawImageOptions{GeoM: geoM}
+	opt.Filter = ebiten.FilterNearest
+	screen.Fill(colors.Teal)
+	screen.DrawImage(offscreen, &opt)
 }
 
 func New(er embed.FS) *game {

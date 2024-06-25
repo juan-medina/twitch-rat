@@ -47,17 +47,21 @@ func (u *uiImpl) layoutMainElements(cx, cy float64) {
 	py := cy
 	titleLabel.Move(px, py)
 
-	bb := u.getButton(BACK_BUTTON)
-	bw, _ := bb.Size()
-	px = u.screenWidth - bw
-	py = 0
+	bb := u.getButton(FULL_SCREEN_BUTTON)
+	bw, bh := bb.Size()
+
+	px = u.screenWidth - bw/2
+	py = bh
+	u.moveButton(FULL_SCREEN_BUTTON, px, py)
+	u.moveButton(WINDOWED_BUTTON, px, py)
+
+	px -= bw
 	u.moveButton(BACK_BUTTON, px, py)
 
-	bb = u.getButton(IN_GAME_OPTIONS_BUTTON)
-	bw, _ = bb.Size()
 	px -= bw
 	u.moveButton(IN_GAME_OPTIONS_BUTTON, px, py)
 
+	// LAST MESSAGES
 	gapX := float64(u.fontSmall.DefaultSize()) * 0.5
 	gapY := float64(u.fontSmall.DefaultSize()) * 1.5
 

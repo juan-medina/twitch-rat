@@ -70,6 +70,7 @@ type UI interface {
 	GetSliderValue(id slider.Id) int
 
 	AddFlyingText(text string, color colors.CustomColor, x, y float64)
+	HideFlyingTexts()
 
 	SetScoreVisible(visible bool)
 	AddScoreEntry(data scores.ScoreData)

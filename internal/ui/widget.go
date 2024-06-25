@@ -45,6 +45,8 @@ type Widget interface {
 const (
 	PLAY_BUTTON button.Id = iota
 	BACK_BUTTON
+	FULL_SCREEN_BUTTON
+	WINDOWED_BUTTON
 	OPTIONS_BUTTON
 	ABOUT_BUTTON
 	SUBMENU_ABOUT_BACK_BUTTON
@@ -167,7 +169,6 @@ func (u *uiImpl) createLicenseStageUI() {
 func (u *uiImpl) createMainMenuUI() {
 	u.addInput(INPUT_CHANNEL, INPUT_WIDTH, INPUT_HEIGHT, 24, "", "Twitch Channel", u.fontNormal)
 	u.addTextButton(PLAY_BUTTON, BUTTON_WIDTH, BUTTON_HEIGHT, u.fontNormal, "Play!", button.Enabled)
-	u.addImageButton(BACK_BUTTON, "exitLeft", button.Enabled)
 
 	u.addLabel(LABEL_DOWNLOAD, "[url=https://juan-medina.com/twitch-rat/twitch-rat.zip]Download Desktop Version[/url]", u.fontSmall, normalLabelColor)
 
@@ -211,6 +212,10 @@ func (u *uiImpl) createMainComponents() {
 	u.addLabel(LABEL_TITLE, "Twitch Rat", u.fontBig, normalLabelColor)
 	u.addLabel(LABEL_VERSION, u.version.Current().Bbcode, u.fontSmall, normalLabelColor)
 	u.addImageButton(IN_GAME_OPTIONS_BUTTON, "gear", button.Enabled)
+	u.addImageButton(BACK_BUTTON, "exitLeft", button.Enabled)
+	u.addImageButton(FULL_SCREEN_BUTTON, "larger", button.Enabled)
+	u.addImageButton(WINDOWED_BUTTON, "smaller", button.Enabled)
+	u.SetButtonVisible(FULL_SCREEN_BUTTON, true)
 }
 
 func (u *uiImpl) addTextButton(id button.Id, w, h float64, font draw.Font, label string, state button.State) {
@@ -451,6 +456,14 @@ func (u *uiImpl) SetButtonClickCallback(callback func(id button.Id)) {
 	for i := range u.buttons {
 		u.buttons[i].OnButtonClickCallback(callback)
 	}
+	u.getButton(FULL_SCREEN_BUTTON).OnButtonClickCallback(u.toggleFullScreenClick)
+	u.getButton(WINDOWED_BUTTON).OnButtonClickCallback(u.toggleFullScreenClick)
+}
+func (u *uiImpl) toggleFullScreenClick(id button.Id) {
+	willBeFullScreen := !ebiten.IsFullscreen()
+	ebiten.SetFullscreen(willBeFullScreen)
+	u.SetButtonVisible(FULL_SCREEN_BUTTON, !willBeFullScreen)
+	u.SetButtonVisible(WINDOWED_BUTTON, willBeFullScreen)
 }
 
 func (u *uiImpl) drawWidgets(screen *ebiten.Image) {
