@@ -162,6 +162,9 @@ func (s *scoresImpl) Update(elapsedTime int, mouseX, mouseY float64, leftJustPre
 	mameWidth, _ := s.fontSmall.Measure(maxName, s.fontSmall.DefaultSize())
 	scoreWidth, _ := s.fontSmall.Measure(maxScore, s.fontSmall.DefaultSize())
 	for i := range s.entries {
+		if i >= MAX_SCORES_DISPLAY {
+			break
+		}
 		entryScoreWidth, _ := s.fontSmall.Measure(s.entries[i].text, s.fontSmall.DefaultSize())
 		s.entries[i].pointX = s.x + (mameWidth + ENTRIES_GAP_X) + (scoreWidth - entryScoreWidth)
 		s.entries[i].addX = s.entries[i].pointX + entryScoreWidth + ENTRIES_GAP_X/2
