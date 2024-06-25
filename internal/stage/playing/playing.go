@@ -272,7 +272,6 @@ func (p *playing) Update(elapsedTime int, keys keys.Keys) {
 			}
 			if p.joinModeAuto {
 				p.ratJoin(event.Sender, userColor)
-				fmt.Printf("Joining %s, color %v\n", event.Sender, userColor)
 			}
 			if event.Message != "" {
 				if event.Message[0] == '!' {

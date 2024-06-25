@@ -205,6 +205,7 @@ func (g *game) Run() error {
 	ebiten.SetWindowTitle(TITLE)
 	ebiten.SetTPS(60)
 	ebiten.SetVsyncEnabled(true)
+	ebiten.SetRunnableOnUnfocused(true)
 	if runtime.GOOS != "js" {
 		if iconData, err := g.fileSystem.ReadFile("embed/icon/rat.png"); err == nil {
 			if img, _, err := image.Decode(bytes.NewReader(iconData)); err == nil {
@@ -215,7 +216,6 @@ func (g *game) Run() error {
 		} else {
 			panic(err)
 		}
-		//ebiten.SetFullscreen(true)
 		ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	} else {
 		ebiten.SetFullscreen(false)
