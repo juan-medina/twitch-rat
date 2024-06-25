@@ -80,7 +80,17 @@ func (b *imageButton) SetVisible(visible bool) {
 
 func (b imageButton) hit(x, y float64) bool {
 	w, h := b.sprite.Size()
-	if x > b.x && x < b.x+w && y > b.y && y < b.y+h {
+	px, py := b.sprite.GetPivot()
+
+	px = px * w
+	py = py * h
+
+	left := b.x - px
+	right := left + w
+	top := b.y - py
+	bottom := top + h
+
+	if x >= left && x <= right && y >= top && y <= bottom {
 		return true
 	}
 	return false

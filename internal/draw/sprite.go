@@ -29,6 +29,7 @@ type Sprite interface {
 	SetScale(scale float64)
 	Size() (float64, float64)
 	SetPivot(x, y float64)
+	GetPivot() (float64, float64)
 	SetColor(color color.Color)
 	Filter(filter bool)
 }
@@ -78,6 +79,11 @@ func (s *spriteImpl) SetPivot(x, y float64) {
 	s.pivotX = x
 	s.pivotY = y
 }
+
+func (s spriteImpl) GetPivot() (x, y float64) {
+	return s.pivotX, s.pivotY
+}
+
 func (s *spriteImpl) SetColor(color color.Color) {
 	s.drawOptions.ColorScale.Reset()
 	s.drawOptions.ColorScale.ScaleWithColor(color)
