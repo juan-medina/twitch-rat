@@ -177,6 +177,7 @@ func (p *playing) End() {
 	p.ui.SetSliderVisible(ui.AUDIO_VOLUME_SLIDER, false)
 	p.ui.SetLabelVisible(ui.LABEL_OPTIONS_AUDIO_VOLUME, false)
 	p.ui.SetPanelVisible(ui.OPTIONS_PANEL, false)
+	p.ui.HideFlyingTexts()
 }
 
 type status int

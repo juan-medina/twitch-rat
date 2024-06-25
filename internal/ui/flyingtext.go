@@ -59,6 +59,11 @@ func (u *uiImpl) AddFlyingText(text string, color colors.CustomColor, x, y float
 		alpha:   step.NewFromMiddleToPauseValue(255, 255, 0, FLYING_TIME_FULL, FLYING_TIME_TO_VANISH, FLYING_TIME_TO_FREE),
 	})
 }
+func (u *uiImpl) HideFlyingTexts() {
+	for i := range u.flyingTexts {
+		u.flyingTexts[i].visible = false
+	}
+}
 
 func (f flyingText) draw(screen *ebiten.Image, font draw.Font) {
 	if !f.visible {
