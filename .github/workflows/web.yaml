@@ -29,10 +29,12 @@ on:
 permissions:
   contents: write
   packages: write
+  pages: write
+  id-token: write
 
 jobs:
-  releases-matrix:
-    name: Release Web
+  build:
+    name: Build Web
     runs-on: ubuntu-latest
     steps:
       - name: Install golang
@@ -72,3 +74,20 @@ jobs:
           asset_name: "${{ github.event.repository.name }}-${{ github.event.release.name }}-web.zip.md5"
           tag: ${{ github.ref }}
           overwrite: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
